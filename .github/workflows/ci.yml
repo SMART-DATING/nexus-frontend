@@ -27,8 +27,16 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
+      - name: Prepare PostgreSQL with legacy mandatory interest category
+        run: |
+          docker compose -f nexus-frontend/docker-compose.yml up -d postgres --wait --wait-timeout 180
+          docker compose -f nexus-frontend/docker-compose.yml exec -T postgres psql -v ON_ERROR_STOP=1 -U nexus -d nexus < nexus-backend/src/test/resources/legacy-interests.sql
       - run: docker compose -f nexus-frontend/docker-compose.yml up -d --build --wait --wait-timeout 180
       - run: node nexus-frontend/scripts/smoke.mjs http://127.0.0.1:8088
+      - name: Verify preserved legacy category
+        run: |
+          result=$(docker compose -f nexus-frontend/docker-compose.yml exec -T postgres psql -At -U nexus -d nexus -c "select category from interests where name='Музыка'")
+          test "$result" = "Творчество"
       - run: docker compose -f nexus-backend/compose.h2.yaml up -d --build --wait --wait-timeout 180
       - run: npm ci
         working-directory: nexus-frontend

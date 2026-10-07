@@ -12,3 +12,24 @@ jobs:
       - run: npm ci
       - run: npm test
       - run: npm run build
+  docker-integration:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          path: nexus-frontend
+      - uses: actions/checkout@v4
+        with:
+          repository: SMART-DATING/nexus-backend
+          ref: feature/working-prototype
+          path: nexus-backend
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: docker compose -f nexus-frontend/docker-compose.yml up -d --build --wait --wait-timeout 180
+      - run: node nexus-frontend/scripts/smoke.mjs http://127.0.0.1:8088
+      - if: failure()
+        run: docker compose -f nexus-frontend/docker-compose.yml logs --no-color
+      - if: always()
+        run: docker compose -f nexus-frontend/docker-compose.yml down

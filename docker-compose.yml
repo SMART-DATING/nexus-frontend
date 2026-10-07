@@ -1,0 +1,33 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: nexus
+      POSTGRES_USER: nexus
+      POSTGRES_PASSWORD: ${DATABASE_PASSWORD:-nexus-local-dev}
+    volumes:
+      - nexus-postgres:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U nexus -d nexus"]
+      interval: 5s
+      retries: 20
+  backend:
+    build: ../nexus-backend
+    environment:
+      SPRING_PROFILES_ACTIVE: postgres
+      DATABASE_URL: jdbc:postgresql://postgres:5432/nexus
+      DATABASE_USER: nexus
+      DATABASE_PASSWORD: ${DATABASE_PASSWORD:-nexus-local-dev}
+      NEXUS_DEMO: "true"
+    depends_on:
+      postgres:
+        condition: service_healthy
+  frontend:
+    build: .
+    ports:
+      - "127.0.0.1:8088:80"
+    depends_on:
+      backend:
+        condition: service_healthy
+volumes:
+  nexus-postgres:

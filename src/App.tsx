@@ -18,6 +18,7 @@ import {
 } from "lucide-react";
 import {
   api,
+  ApiError,
   value,
   type Profile,
   type User,
@@ -175,25 +176,39 @@ export function App() {
   useEffect(() => {
     if (!user) return;
     let alive = true;
-    const poll = () =>
-      api<{ items: Notice[] }>("/notifications")
-        .then((r) => {
-          if (alive) setNotices(r.items);
-        })
-        .catch(() => {});
+    let inFlight = false;
+    const poll = async () => {
+      if (inFlight) return;
+      inFlight = true;
+      try {
+        const r = await api<{ items: Notice[] }>("/notifications");
+        if (alive) setNotices(r.items);
+        if (tab === "matches") {
+          const m = await api<{ items: Match[] }>("/matches");
+          if (alive) setMatches(m.items);
+        }
+      } catch (e) {
+        if (alive) report(e);
+      } finally {
+        inFlight = false;
+      }
+    };
     poll();
     const t = setInterval(poll, 7000);
     return () => {
       alive = false;
       clearInterval(t);
     };
-  }, [user?.id]);
+  }, [user?.id, tab]);
   useEffect(() => {
     if (!selected || !user || tab !== "matches") return;
     let alive = true;
     setMessages([]);
     let after = 0;
+    let inFlight = false;
     async function poll() {
+      if (inFlight) return;
+      inFlight = true;
       try {
         const r = await api<{ items: Message[] }>(
           `/matches/${selected!.id}/messages?after=${after}`,
@@ -201,13 +216,17 @@ export function App() {
         if (!alive) return;
         if (r.items.length) {
           after = r.items[r.items.length - 1].id;
-          setMessages((old) => [
-            ...old,
-            ...r.items.filter((m) => !old.some((x) => x.id === m.id)),
-          ]);
+          setMessages((old) =>
+            [
+              ...old,
+              ...r.items.filter((m) => !old.some((x) => x.id === m.id)),
+            ].sort((a, b) => a.id - b.id),
+          );
         }
       } catch (e) {
         if (alive) report(e);
+      } finally {
+        inFlight = false;
       }
     }
     poll();
@@ -254,6 +273,8 @@ export function App() {
             : "Перейдём к следующему знакомству",
       );
     } catch (e) {
+      if (e instanceof ApiError && e.status === 409)
+        setPeople((old) => old.filter((x) => x.userId !== p.userId));
       report(e);
     } finally {
       setBusy(false);

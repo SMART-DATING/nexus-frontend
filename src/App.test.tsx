@@ -88,9 +88,7 @@ describe("Nexus user flows", () => {
     const name = await screen.findByLabelText("Как вас зовут");
     await ui.clear(name);
     await ui.type(name, "Новое имя");
-    await ui.click(
-      await screen.findByRole("button", { name: "Кино" }),
-    );
+    await ui.click(await screen.findByRole("button", { name: "Кино" }));
     await ui.click(screen.getByRole("button", { name: "Сохранить профиль" }));
     await screen.findByText("Профиль сохранён");
     const saved = requests.find(
@@ -138,4 +136,3 @@ describe("Nexus user flows", () => {
     );
   });
 });
-

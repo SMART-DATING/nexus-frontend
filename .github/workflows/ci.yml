@@ -29,7 +29,22 @@ jobs:
           node-version: '22'
       - run: docker compose -f nexus-frontend/docker-compose.yml up -d --build --wait --wait-timeout 180
       - run: node nexus-frontend/scripts/smoke.mjs http://127.0.0.1:8088
+      - run: docker compose -f nexus-backend/compose.h2.yaml up -d --build --wait --wait-timeout 180
+      - run: npm ci
+        working-directory: nexus-frontend
+      - name: Verify Vite proxy with H2 backend
+        working-directory: nexus-frontend
+        run: |
+          npm run dev > vite.log 2>&1 &
+          for attempt in $(seq 1 30); do
+            if curl --fail --silent http://127.0.0.1:5173/api/v1/health; then break; fi
+            sleep 1
+          done
+          node scripts/smoke.mjs http://127.0.0.1:5173
       - if: failure()
         run: docker compose -f nexus-frontend/docker-compose.yml logs --no-color
       - if: always()
         run: docker compose -f nexus-frontend/docker-compose.yml down
+      - if: always()
+        run: docker compose -f nexus-backend/compose.h2.yaml down
+

@@ -1,6 +1,7 @@
 export type Property = { name: string; value: string; visible: boolean };
 export type Profile = {
   userId: number;
+  avatarUrl?: string;
   properties: Property[];
   interests: string[];
   commonInterests?: string[];

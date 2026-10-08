@@ -15,6 +15,7 @@ import {
   Sparkles,
   MapPin,
   LoaderCircle,
+  RotateCcw,
 } from "lucide-react";
 import {
   api,
@@ -29,6 +30,17 @@ import {
 } from "./api";
 import "./style.css";
 type Tab = "discover" | "matches" | "profile" | "notifications";
+function readRoute(): { tab: Tab; matchId: number | null } {
+  const id = window.location.pathname.match(/^\/match\/(\d+)$/)?.[1];
+  if (id) return { tab: "matches", matchId: Number(id) };
+  const section = window.location.hash.slice(1);
+  return {
+    tab: ["matches", "profile", "notifications"].includes(section)
+      ? (section as Tab)
+      : "discover",
+    matchId: null,
+  };
+}
 const date = (s: string) =>
   new Date(s).toLocaleString("ru-RU", {
     day: "numeric",
@@ -51,7 +63,10 @@ const age = (birth: string) => {
 export function App() {
   const [user, setUser] = useState<User | null>(null),
     [boot, setBoot] = useState(true),
-    [tab, setTab] = useState<Tab>("discover"),
+    [tab, setTab] = useState<Tab>(() => readRoute().tab),
+    [routeMatchId, setRouteMatchId] = useState<number | null>(
+      () => readRoute().matchId,
+    ),
     [error, setError] = useState(""),
     [toast, setToast] = useState(""),
     [busy, setBusy] = useState(false);
@@ -63,12 +78,44 @@ export function App() {
     [text, setText] = useState(""),
     [interests, setInterests] = useState<string[]>([]),
     [loading, setLoading] = useState(false),
-    [filters, setFilters] = useState(false);
+    [filters, setFilters] = useState(false),
+    [skippedCount, setSkippedCount] = useState(0),
+    [celebration, setCelebration] = useState<Match | null>(null);
   const [register, setRegister] = useState(false),
     [email, setEmail] = useState(""),
     [password, setPassword] = useState("");
   const currentMatch = useRef<number | null>(null);
   currentMatch.current = selected?.id ?? null;
+  function navigate(next: Tab, match: Match | null = null) {
+    const url = match
+      ? `/match/${match.id}`
+      : next === "discover"
+        ? "/"
+        : `/#${next}`;
+    if (window.location.pathname + window.location.hash !== url)
+      window.history.pushState(null, "", url);
+    setTab(next);
+    setRouteMatchId(match?.id ?? null);
+    setSelected(match);
+    setText("");
+    setError("");
+  }
+  useEffect(() => {
+    const sync = () => {
+      const route = readRoute();
+      setTab(route.tab);
+      setRouteMatchId(route.matchId);
+      setSelected(null);
+      setText("");
+      setError("");
+    };
+    window.addEventListener("popstate", sync);
+    window.addEventListener("hashchange", sync);
+    return () => {
+      window.removeEventListener("popstate", sync);
+      window.removeEventListener("hashchange", sync);
+    };
+  }, []);
   function reset() {
     setUser(null);
     setPeople([]);
@@ -79,6 +126,10 @@ export function App() {
     setError("");
     setPassword("");
     setToast("");
+    setCelebration(null);
+    setSkippedCount(0);
+    setTab("discover");
+    setRouteMatchId(null);
     window.history.replaceState(null, "", "/");
     sessionStorage.removeItem("nexus-token");
   }
@@ -108,11 +159,11 @@ export function App() {
   useEffect(() => {
     if (!user) return;
     let alive = true;
-    const matchId = window.location.pathname.match(/^\/match\/(\d+)$/)?.[1];
+    const matchId = routeMatchId;
     if (matchId)
       api<Match>(`/matches/${matchId}`)
         .then((m) => {
-          if (alive) {
+          if (alive && readRoute().matchId === matchId) {
             setSelected(m);
             setTab("matches");
           }
@@ -123,7 +174,7 @@ export function App() {
     return () => {
       alive = false;
     };
-  }, [user?.id]);
+  }, [user?.id, routeMatchId]);
   useEffect(() => {
     if (toast) {
       const t = setTimeout(() => setToast(""), 4500);
@@ -148,10 +199,15 @@ export function App() {
             ? "/notifications"
             : null;
     if (path)
-      api<{ items: Profile[] | Match[] | Notice[] }>(path)
+      api<{ items: Profile[] | Match[] | Notice[]; skippedCount?: number }>(
+        path,
+      )
         .then((r) => {
           if (!alive) return;
-          if (tab === "discover") setPeople(r.items as Profile[]);
+          if (tab === "discover") {
+            setPeople(r.items as Profile[]);
+            setSkippedCount(r.skippedCount ?? 0);
+          }
           if (tab === "matches") setMatches(r.items as Match[]);
           if (tab === "notifications") setNotices(r.items as Notice[]);
         })
@@ -249,7 +305,8 @@ export function App() {
       sessionStorage.setItem("nexus-token", r.accessToken);
       setUser(r.user);
       setPassword("");
-      setTab(r.user.profile.properties.length ? "discover" : "profile");
+      if (!readRoute().matchId)
+        navigate(r.user.profile.properties.length ? "discover" : "profile");
     } catch (e) {
       report(e);
     } finally {
@@ -260,11 +317,19 @@ export function App() {
     setBusy(true);
     setError("");
     try {
-      const r = await api<{ matched: boolean }>(
+      const r = await api<{ matched: boolean; matchId?: number }>(
         `/users/${p.userId}/${like ? "like" : "skip"}`,
         "POST",
       );
       setPeople((old) => old.filter((x) => x.userId !== p.userId));
+      if (!like) setSkippedCount((old) => old + 1);
+      if (r.matched && r.matchId) {
+        setCelebration({
+          id: r.matchId,
+          user: p,
+          createdAt: new Date().toISOString(),
+        });
+      }
       setToast(
         r.matched
           ? "Это взаимно! Новый чат уже в совпадениях."
@@ -275,6 +340,30 @@ export function App() {
     } catch (e) {
       if (e instanceof ApiError && e.status === 409)
         setPeople((old) => old.filter((x) => x.userId !== p.userId));
+      report(e);
+    } finally {
+      setBusy(false);
+    }
+  }
+  async function restartRecommendations() {
+    setBusy(true);
+    setError("");
+    try {
+      const result = await api<{ restored: number }>(
+        "/recommendations/restart",
+        "POST",
+      );
+      const next = await api<{ items: Profile[]; skippedCount?: number }>(
+        "/recommendations",
+      );
+      setPeople(next.items);
+      setSkippedCount(next.skippedCount ?? 0);
+      setToast(
+        result.restored
+          ? "Пропущенные анкеты снова в подборке"
+          : "Пропущенных анкет пока нет",
+      );
+    } catch (e) {
       report(e);
     } finally {
       setBusy(false);
@@ -311,7 +400,8 @@ export function App() {
       <div className="auth">
         <section className="auth-story">
           <a className="brand" href="/">
-            nexus<span>✳</span>
+            <img className="brand-icon" src="/nexus-mark.svg" alt="" />
+            nexus
           </a>
           <div>
             <span className="eyebrow">ЗНАКОМСТВА СО СМЫСЛОМ</span>
@@ -417,7 +507,8 @@ export function App() {
     <div className="app">
       <aside>
         <a className="brand" href="/">
-          nexus<span>✳</span>
+          <img className="brand-icon" src="/nexus-mark.svg" alt="" />
+          nexus
         </a>
         <span className="nav-caption">ВАШЕ ПРОСТРАНСТВО</span>
         <nav>
@@ -425,10 +516,8 @@ export function App() {
             <button
               key={n.id}
               className={tab === n.id ? "active" : ""}
-              onClick={() => {
-                setTab(n.id);
-                setError("");
-              }}
+              onClick={() => navigate(n.id)}
+              aria-current={tab === n.id ? "page" : undefined}
             >
               <n.icon size={20} />
               {n.label}
@@ -444,9 +533,7 @@ export function App() {
           <p>Добавьте интересы — и мы найдём больше точек соприкосновения.</p>
         </div>
         <div className="account">
-          <div className="avatar">
-            {value(user.profile, "display_name").slice(0, 1) || "Я"}
-          </div>
+          <Avatar profile={user.profile} />
           <div>
             <strong>
               {value(user.profile, "display_name") || "Ваш профиль"}
@@ -492,7 +579,7 @@ export function App() {
           <button
             className="icon-button"
             aria-label="Открыть уведомления"
-            onClick={() => setTab("notifications")}
+            onClick={() => navigate("notifications")}
           >
             <Bell size={19} />
             {notices.some((n) => !n.seen) && <i />}
@@ -511,6 +598,17 @@ export function App() {
             <Check size={18} />
             {toast}
           </div>
+        )}
+        {celebration && (
+          <MatchCelebration
+            match={celebration}
+            me={user.profile}
+            onClose={() => setCelebration(null)}
+            onOpen={() => {
+              navigate("matches", celebration);
+              setCelebration(null);
+            }}
+          />
         )}
         {tab === "discover" && (
           <>
@@ -540,10 +638,12 @@ export function App() {
                       maxAge: Number(d.get("maxAge")),
                     });
                     await refresh();
-                    const r = await api<{ items: Profile[] }>(
-                      "/recommendations",
-                    );
+                    const r = await api<{
+                      items: Profile[];
+                      skippedCount?: number;
+                    }>("/recommendations");
                     setPeople(r.items);
+                    setSkippedCount(r.skippedCount ?? 0);
                     setFilters(false);
                     setToast("Предпочтения сохранены");
                   } catch (e) {
@@ -594,7 +694,7 @@ export function App() {
               <Empty
                 title="Давайте сначала познакомимся"
                 text="Заполните профиль и выберите интересы — это основа вашей подборки."
-                action={() => setTab("profile")}
+                action={() => navigate("profile")}
                 label="Заполнить профиль"
               />
             ) : loading ? (
@@ -603,22 +703,69 @@ export function App() {
                 Ищем общее…
               </div>
             ) : people.length === 0 ? (
-              <Empty
-                title="Вы посмотрели всю подборку"
-                text="Попробуйте расширить возрастной диапазон. Новые участники появятся здесь."
-                action={() => setFilters(true)}
-                label="Изменить предпочтения"
-              />
+              <div className="empty">
+                <Sparkles size={40} />
+                <h2>Новые лица ещё появятся</h2>
+                <p>
+                  {skippedCount > 0
+                    ? "Можно дать второй шанс пропущенным анкетам. Отправленные симпатии и ваши чаты сохранятся."
+                    : "Вы посмотрели всех, кто подходит под ваши предпочтения. Попробуйте расширить возрастной диапазон или начните разговор в совпадениях."}
+                </p>
+                <div className="empty-actions">
+                  {skippedCount > 0 && (
+                    <button
+                      className="primary"
+                      disabled={busy}
+                      onClick={restartRecommendations}
+                    >
+                      <RotateCcw size={18} />
+                      {busy
+                        ? "Обновляем подборку…"
+                        : "Пересмотреть пропущенные"}
+                    </button>
+                  )}
+                  <button className="outline" onClick={() => setFilters(true)}>
+                    <SlidersHorizontal size={17} />
+                    Изменить предпочтения
+                  </button>
+                  <button
+                    className="text-button"
+                    onClick={() => navigate("matches")}
+                  >
+                    К совпадениям <ArrowRight size={17} />
+                  </button>
+                </div>
+              </div>
             ) : (
               <div className="cards">
                 {people.map((p, index) => (
-                  <article className="person" key={p.userId}>
+                  <article
+                    className="person reveal-card"
+                    key={p.userId}
+                    style={
+                      {
+                        "--card-order": Math.min(index, 8),
+                      } as React.CSSProperties
+                    }
+                    aria-label={`Анкета: ${value(p, "display_name")}`}
+                  >
                     <div className={"portrait art-" + (p.userId % 6)}>
                       <div className="art-shape one" />
                       <div className="art-shape two" />
                       <span className="monogram">
                         {value(p, "display_name").slice(0, 1)}
                       </span>
+                      {p.avatarUrl && (
+                        <img
+                          className="profile-portrait"
+                          src={p.avatarUrl}
+                          alt={`Аватар: ${value(p, "display_name")}`}
+                          loading="lazy"
+                          onError={(e) => {
+                            e.currentTarget.hidden = true;
+                          }}
+                        />
+                      )}
                       <span className="card-index">
                         N° {String(index + 1).padStart(2, "0")}
                       </span>
@@ -735,7 +882,7 @@ export function App() {
               <Empty
                 title="Ваша история ещё впереди"
                 text="Поставьте симпатию в подборке. Если она взаимна, здесь появится чат."
-                action={() => setTab("discover")}
+                action={() => navigate("discover")}
                 label="К знакомствам"
               />
             ) : (
@@ -745,16 +892,9 @@ export function App() {
                     <button
                       className={selected?.id === m.id ? "selected" : ""}
                       key={m.id}
-                      onClick={() => {
-                        setSelected(m);
-                        setText("");
-                        setError("");
-                        window.history.replaceState(null, "", `/match/${m.id}`);
-                      }}
+                      onClick={() => navigate("matches", m)}
                     >
-                      <div className="avatar">
-                        {value(m.user, "display_name").slice(0, 1)}
-                      </div>
+                      <Avatar profile={m.user} />
                       <div>
                         <strong>{value(m.user, "display_name")}</strong>
                         <small>У вас есть общее ♡</small>
@@ -767,14 +907,32 @@ export function App() {
                   {selected ? (
                     <>
                       <div className="chat-title">
+                        <Avatar profile={selected.user} />
                         <strong>{value(selected.user, "display_name")}</strong>
                         <small>Совпадение · {date(selected.createdAt)}</small>
                       </div>
                       <div className="messages" aria-live="polite">
                         {messages.length === 0 && (
-                          <p className="chat-hint">
-                            Начните с вопроса об общих интересах.
-                          </p>
+                          <div className="chat-hint">
+                            <p>
+                              Первый шаг — самый интересный. Начните с общего:
+                            </p>
+                            <div className="icebreaker-row">
+                              {conversationStarters(
+                                user.profile,
+                                selected.user,
+                              ).map((prompt) => (
+                                <button
+                                  type="button"
+                                  className="icebreaker"
+                                  key={prompt}
+                                  onClick={() => setText(prompt)}
+                                >
+                                  {prompt}
+                                </button>
+                              ))}
+                            </div>
+                          </div>
                         )}
                         {messages.map((m) => (
                           <div
@@ -847,8 +1005,7 @@ export function App() {
                           ),
                         );
                         const m = await api<Match>(`/matches/${n.matchId}`);
-                        setSelected(m);
-                        setTab("matches");
+                        navigate("matches", m);
                       } catch (e) {
                         report(e);
                       }
@@ -874,6 +1031,124 @@ export function App() {
           <small>Учебный прототип · 2026</small>
         </footer>
       </main>
+    </div>
+  );
+}
+function Avatar({
+  profile,
+  large = false,
+}: {
+  profile: Profile;
+  large?: boolean;
+}) {
+  return (
+    <div className={"avatar" + (large ? " large" : "")}>
+      {value(profile, "display_name").slice(0, 1) || "Я"}
+      {profile.avatarUrl && (
+        <img
+          className="avatar-photo"
+          src={profile.avatarUrl}
+          alt=""
+          onError={(e) => {
+            e.currentTarget.hidden = true;
+          }}
+        />
+      )}
+    </div>
+  );
+}
+function conversationStarters(me: Profile, other: Profile): string[] {
+  const common = other.interests.filter((i) => me.interests.includes(i));
+  const prompts: Record<string, string> = {
+    Музыка: "Какую песню ты сейчас слушаешь на повторе?",
+    Кофе: "Кофе с собой на прогулку или уютная кофейня?",
+    Кино: "Какой фильм посоветуешь на вечер?",
+    Путешествия: "Куда бы ты отправился на выходные?",
+    Книги: "Какая книга тебя недавно зацепила?",
+    Игры: "Во что сыграем: настолки или видеоигры?",
+  };
+  const specific = common.map((interest) => prompts[interest]).filter(Boolean);
+  return [
+    ...new Set([
+      ...specific,
+      "Как выглядит твой идеальный выходной?",
+      "Что хорошего случилось у тебя на этой неделе?",
+    ]),
+  ].slice(0, 3);
+}
+function MatchCelebration({
+  match,
+  me,
+  onClose,
+  onOpen,
+}: {
+  match: Match;
+  me: Profile;
+  onClose: () => void;
+  onOpen: () => void;
+}) {
+  const dialog = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const previous = document.activeElement as HTMLElement | null;
+    const element = dialog.current;
+    element?.focus();
+    return () => {
+      if (previous?.isConnected) previous.focus();
+    };
+  }, []);
+  return (
+    <div
+      className="match-celebration"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="match-celebration-title"
+      tabIndex={-1}
+      ref={dialog}
+      onKeyDown={(e) => {
+        if (e.key === "Escape") onClose();
+        if (e.key === "Tab") {
+          const buttons = Array.from(
+            dialog.current?.querySelectorAll<HTMLButtonElement>("button") ?? [],
+          );
+          const first = buttons[0],
+            last = buttons[buttons.length - 1];
+          if (
+            e.shiftKey &&
+            (document.activeElement === first ||
+              document.activeElement === dialog.current)
+          ) {
+            e.preventDefault();
+            last?.focus();
+          }
+          if (!e.shiftKey && document.activeElement === last) {
+            e.preventDefault();
+            first?.focus();
+          }
+        }
+      }}
+    >
+      <div className="celebration-card">
+        <div className="celebration-icon">
+          <Avatar profile={me} large />
+          <Heart size={32} />
+          <Avatar profile={match.user} large />
+        </div>
+        <span className="eyebrow">ВАША ВОЛНА СОВПАЛА</span>
+        <h2 id="match-celebration-title">Это взаимно!</h2>
+        <p>
+          Вы и {value(match.user, "display_name")} понравились друг другу. Самое
+          время начать разговор.
+        </p>
+        <div className="celebration-actions">
+          <button className="primary" onClick={onOpen}>
+            <MessageCircle size={18} />
+            Начать разговор
+          </button>
+          <button className="outline" onClick={onClose}>
+            Продолжить знакомства
+          </button>
+        </div>
+      </div>
     </div>
   );
 }
@@ -944,7 +1219,7 @@ function ProfileEditor({
       }}
     >
       <div className="form-intro">
-        <div className="avatar large">{props[0].value.slice(0, 1) || "Я"}</div>
+        <Avatar profile={{ ...user.profile, properties: props }} large />
         <div>
           <h2>Всё начинается с вас</h2>
           <p>

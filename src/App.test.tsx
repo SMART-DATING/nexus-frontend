@@ -29,10 +29,12 @@ const match = {
   createdAt: "2026-10-07T10:00:00Z",
 };
 let requests: { path: string; method: string; body: unknown }[] = [];
+let restarted = false;
 beforeEach(() => {
   sessionStorage.clear();
   window.history.replaceState(null, "", "/");
   requests = [];
+  restarted = false;
   vi.stubGlobal(
     "fetch",
     vi.fn(async (input: string, init: RequestInit = {}) => {
@@ -46,6 +48,15 @@ beforeEach(() => {
       if (path === "/users/me") data = user;
       if (path === "/interests") data = { items: ["Музыка", "Кофе", "Кино"] };
       if (path === "/profiles/me") data = profile;
+      if (path === "/recommendations")
+        data = {
+          items: restarted ? [match.user] : [],
+          skippedCount: restarted ? 0 : 2,
+        };
+      if (path === "/recommendations/restart" && method === "POST") {
+        restarted = true;
+        data = { restored: 2 };
+      }
       if (path === "/matches") data = { items: [match] };
       if (path === "/matches/7") data = match;
       if (path === "/matches/7/messages" && method === "POST")
@@ -134,5 +145,57 @@ describe("Nexus user flows", () => {
     await waitFor(() =>
       expect(sessionStorage.getItem("nexus-token")).toBeNull(),
     );
+  });
+  it("keeps the selected section after leaving a chat and reloading", async () => {
+    sessionStorage.setItem("nexus-token", "test-token");
+    window.history.replaceState(null, "", "/match/7");
+    const ui = userEvent.setup();
+    const first = render(<App />);
+    await screen.findByLabelText("Сообщение");
+    await ui.click(screen.getByRole("button", { name: "Мой профиль" }));
+    await screen.findByLabelText("Как вас зовут");
+    expect(window.location.pathname).toBe("/");
+    expect(window.location.hash).toBe("#profile");
+    first.unmount();
+    requests = [];
+    render(<App />);
+    await screen.findByLabelText("Как вас зовут");
+    expect(screen.queryByLabelText("Сообщение")).toBeNull();
+    expect(requests.some((r) => r.path === "/matches/7")).toBe(false);
+  });
+  it("restores the chat for browser Back and clears it on Forward", async () => {
+    sessionStorage.setItem("nexus-token", "test-token");
+    const ui = userEvent.setup();
+    render(<App />);
+    await ui.click(await screen.findByRole("button", { name: "Совпадения" }));
+    await ui.click(await screen.findByRole("button", { name: /Саша/ }));
+    await screen.findByLabelText("Сообщение");
+    await ui.click(
+      screen.getByRole("button", { name: "Уведомления" }),
+    );
+    expect(window.location.hash).toBe("#notifications");
+    window.history.back();
+    await screen.findByLabelText("Сообщение");
+    window.history.forward();
+    await screen.findByRole("heading", { name: /Новые события/ });
+    expect(screen.queryByLabelText("Сообщение")).toBeNull();
+  });
+  it("restarts only when asked and loads the restored recommendations", async () => {
+    sessionStorage.setItem("nexus-token", "test-token");
+    const ui = userEvent.setup();
+    render(<App />);
+    const restart = await screen.findByRole("button", {
+      name: "Пересмотреть пропущенные",
+    });
+    expect(requests.some((r) => r.path === "/recommendations/restart")).toBe(
+      false,
+    );
+    await ui.click(restart);
+    await screen.findByRole("heading", { name: "Саша" });
+    expect(
+      requests.filter((r) => r.path === "/recommendations/restart"),
+    ).toEqual([
+      { path: "/recommendations/restart", method: "POST", body: undefined },
+    ]);
   });
 });

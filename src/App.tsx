@@ -29,6 +29,9 @@ import {
   type Property,
 } from "./api";
 import "./style.css";
+import "./swipe.css";
+import { SwipeDeck } from "./SwipeDeck";
+import { PhotoUpload } from "./PhotoUpload";
 type Tab = "discover" | "matches" | "profile" | "notifications";
 function readRoute(): { tab: Tab; matchId: number | null } {
   const id = window.location.pathname.match(/^\/match\/(\d+)$/)?.[1];
@@ -81,6 +84,9 @@ export function App() {
     [filters, setFilters] = useState(false),
     [skippedCount, setSkippedCount] = useState(0),
     [celebration, setCelebration] = useState<Match | null>(null);
+  const [cycle, setCycle] = useState(1),
+    [reviewed, setReviewed] = useState(0),
+    [liked, setLiked] = useState(0);
   const [register, setRegister] = useState(false),
     [email, setEmail] = useState(""),
     [password, setPassword] = useState("");
@@ -128,6 +134,9 @@ export function App() {
     setToast("");
     setCelebration(null);
     setSkippedCount(0);
+    setCycle(1);
+    setReviewed(0);
+    setLiked(0);
     setTab("discover");
     setRouteMatchId(null);
     window.history.replaceState(null, "", "/");
@@ -192,21 +201,27 @@ export function App() {
     setError("");
     const path =
       tab === "discover" && complete
-        ? "/recommendations"
+        ? "/recommendations/next"
         : tab === "matches"
           ? "/matches"
           : tab === "notifications"
             ? "/notifications"
             : null;
     if (path)
-      api<{ items: Profile[] | Match[] | Notice[]; skippedCount?: number }>(
-        path,
-      )
+      api<{
+        items: Profile[] | Match[] | Notice[];
+        skippedCount?: number;
+        cycleRestarted?: boolean;
+      }>(path, tab === "discover" ? "POST" : "GET")
         .then((r) => {
           if (!alive) return;
           if (tab === "discover") {
             setPeople(r.items as Profile[]);
             setSkippedCount(r.skippedCount ?? 0);
+            if (r.cycleRestarted) {
+              setCycle((old) => old + 1);
+              setToast("Новый круг: пропущенные анкеты снова здесь");
+            }
           }
           if (tab === "matches") setMatches(r.items as Match[]);
           if (tab === "notifications") setNotices(r.items as Notice[]);
@@ -322,6 +337,8 @@ export function App() {
         "POST",
       );
       setPeople((old) => old.filter((x) => x.userId !== p.userId));
+      setReviewed((old) => old + 1);
+      if (like) setLiked((old) => old + 1);
       if (!like) setSkippedCount((old) => old + 1);
       if (r.matched && r.matchId) {
         setCelebration({
@@ -337,10 +354,25 @@ export function App() {
             ? "Симпатия отправлена"
             : "Перейдём к следующему знакомству",
       );
+      if (people.length === 1) {
+        const next = await api<{
+          items: Profile[];
+          skippedCount: number;
+          cycleRestarted: boolean;
+        }>("/recommendations/next", "POST");
+        setPeople(next.items);
+        setSkippedCount(next.skippedCount);
+        if (next.cycleRestarted) {
+          setCycle((old) => old + 1);
+          setToast("Новый круг: пропущенные анкеты снова здесь");
+        }
+      }
+      return true;
     } catch (e) {
       if (e instanceof ApiError && e.status === 409)
         setPeople((old) => old.filter((x) => x.userId !== p.userId));
       report(e);
+      return false;
     } finally {
       setBusy(false);
     }
@@ -349,19 +381,18 @@ export function App() {
     setBusy(true);
     setError("");
     try {
-      const result = await api<{ restored: number }>(
-        "/recommendations/restart",
-        "POST",
-      );
-      const next = await api<{ items: Profile[]; skippedCount?: number }>(
-        "/recommendations",
-      );
+      const next = await api<{
+        items: Profile[];
+        skippedCount?: number;
+        cycleRestarted?: boolean;
+      }>("/recommendations/next", "POST");
       setPeople(next.items);
       setSkippedCount(next.skippedCount ?? 0);
+      if (next.cycleRestarted) setCycle((old) => old + 1);
       setToast(
-        result.restored
-          ? "Пропущенные анкеты снова в подборке"
-          : "Пропущенных анкет пока нет",
+        next.items.length
+          ? "Подборка обновлена"
+          : "Пока нет анкет по вашим предпочтениям",
       );
     } catch (e) {
       report(e);
@@ -641,9 +672,11 @@ export function App() {
                     const r = await api<{
                       items: Profile[];
                       skippedCount?: number;
-                    }>("/recommendations");
+                      cycleRestarted?: boolean;
+                    }>("/recommendations/next", "POST");
                     setPeople(r.items);
                     setSkippedCount(r.skippedCount ?? 0);
+                    if (r.cycleRestarted) setCycle((c) => c + 1);
                     setFilters(false);
                     setToast("Предпочтения сохранены");
                   } catch (e) {
@@ -707,23 +740,22 @@ export function App() {
                 <Sparkles size={40} />
                 <h2>Новые лица ещё появятся</h2>
                 <p>
-                  {skippedCount > 0
-                    ? "Можно дать второй шанс пропущенным анкетам. Отправленные симпатии и ваши чаты сохранятся."
-                    : "Вы посмотрели всех, кто подходит под ваши предпочтения. Попробуйте расширить возрастной диапазон или начните разговор в совпадениях."}
+                  Вы поставили симпатии всем подходящим анкетам или фильтр пока
+                  слишком узкий. Попробуйте расширить возрастной диапазон.
+                  Пропущенные анкеты возвращаются автоматически, когда круг
+                  заканчивается.
                 </p>
                 <div className="empty-actions">
-                  {skippedCount > 0 && (
+                  {
                     <button
                       className="primary"
                       disabled={busy}
                       onClick={restartRecommendations}
                     >
                       <RotateCcw size={18} />
-                      {busy
-                        ? "Обновляем подборку…"
-                        : "Пересмотреть пропущенные"}
+                      {busy ? "Обновляем подборку…" : "Обновить подборку"}
                     </button>
-                  )}
+                  }
                   <button className="outline" onClick={() => setFilters(true)}>
                     <SlidersHorizontal size={17} />
                     Изменить предпочтения
@@ -737,95 +769,20 @@ export function App() {
                 </div>
               </div>
             ) : (
-              <div className="cards">
-                {people.map((p, index) => (
-                  <article
-                    className="person reveal-card"
-                    key={p.userId}
-                    style={
-                      {
-                        "--card-order": Math.min(index, 8),
-                      } as React.CSSProperties
-                    }
-                    aria-label={`Анкета: ${value(p, "display_name")}`}
-                  >
-                    <div className={"portrait art-" + (p.userId % 6)}>
-                      <div className="art-shape one" />
-                      <div className="art-shape two" />
-                      <span className="monogram">
-                        {value(p, "display_name").slice(0, 1)}
-                      </span>
-                      {p.avatarUrl && (
-                        <img
-                          className="profile-portrait"
-                          src={p.avatarUrl}
-                          alt={`Аватар: ${value(p, "display_name")}`}
-                          loading="lazy"
-                          onError={(e) => {
-                            e.currentTarget.style.display = "none";
-                          }}
-                        />
-                      )}
-                      <span className="card-index">
-                        N° {String(index + 1).padStart(2, "0")}
-                      </span>
-                      <span className="score">
-                        <Sparkles size={13} />
-                        {Math.round((p.compatibilityScore || 0) * 100)}% общих
-                        интересов
-                      </span>
-                    </div>
-                    <div className="person-body">
-                      <h2>
-                        {value(p, "display_name")}
-                        {value(p, "birth_date") && (
-                          <span>, {age(value(p, "birth_date"))}</span>
-                        )}
-                      </h2>
-                      {value(p, "city") && (
-                        <div className="city">
-                          <MapPin size={13} />
-                          {value(p, "city")}
-                        </div>
-                      )}
-                      <p className="bio">
-                        {value(p, "bio") ||
-                          "Лучшие истории начинаются с «привет»."}
-                      </p>
-                      <div className="tags">
-                        {p.interests.map((i) => (
-                          <span
-                            key={i}
-                            className={
-                              p.commonInterests?.includes(i) ? "common" : ""
-                            }
-                          >
-                            {i}
-                          </span>
-                        ))}
-                      </div>
-                      <div className="card-actions">
-                        <button
-                          disabled={busy}
-                          className="skip"
-                          onClick={() => react(p, false)}
-                        >
-                          <X size={18} />
-                          Пропустить
-                        </button>
-                        <button
-                          disabled={busy}
-                          className="like"
-                          onClick={() => react(p, true)}
-                        >
-                          <Heart size={18} />
-                          Нравится
-                        </button>
-                      </div>
-                    </div>
-                  </article>
-                ))}
-              </div>
+              <SwipeDeck
+                people={people}
+                busy={busy}
+                onReact={react}
+                cycle={cycle}
+                reviewed={reviewed}
+                liked={liked}
+                onFocus={(id) =>
+                  setPeople((old) => [
+                    ...old.filter((p) => p.userId === id),
+                    ...old.filter((p) => p.userId !== id),
+                  ])
+                }
+              />
             )}
             <div className="quiet-note">
               <Heart size={16} />
@@ -844,6 +801,38 @@ export function App() {
                 <p>Расскажите, что делает вас вами.</p>
               </div>
             </div>
+            <div className="profile-progress">
+              <div>
+                <Sparkles size={18} />
+                <span>Ваша анкета становится ближе к вам</span>
+                <strong>
+                  {Math.round(
+                    ((user.profile.properties.filter((p) => p.value.trim())
+                      .length +
+                      (user.profile.interests.length ? 1 : 0) +
+                      (user.profile.avatarUrl ? 1 : 0)) /
+                      6) *
+                      100,
+                  )}
+                  %
+                </strong>
+              </div>
+              <progress
+                aria-label="Заполненность профиля"
+                max={6}
+                value={
+                  user.profile.properties.filter((p) => p.value.trim()).length +
+                  (user.profile.interests.length ? 1 : 0) +
+                  (user.profile.avatarUrl ? 1 : 0)
+                }
+              />
+            </div>
+            <PhotoUpload
+              profile={user.profile}
+              onSaved={(profile) =>
+                setUser((old) => (old ? { ...old, profile } : old))
+              }
+            />
             <ProfileEditor
               key={user.id}
               user={user}

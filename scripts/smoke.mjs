@@ -6,10 +6,17 @@ async function request(path, method = "GET", body, token, status = 200) {
     method,
     signal: AbortSignal.timeout(15000),
     headers: {
-      ...(body !== undefined ? { "Content-Type": "application/json" } : {}),
+      ...(body !== undefined && !(body instanceof FormData)
+        ? { "Content-Type": "application/json" }
+        : {}),
       ...(token ? { Authorization: `Bearer ${token}` } : {}),
     },
-    body: body === undefined ? undefined : JSON.stringify(body),
+    body:
+      body === undefined
+        ? undefined
+        : body instanceof FormData
+          ? body
+          : JSON.stringify(body),
   });
   const text = await response.text();
   assert.equal(response.status, status, `${method} ${path}: ${text}`);
@@ -73,6 +80,43 @@ const recommendations = await request(
   undefined,
   a.accessToken,
 );
+const photo = new FormData();
+photo.append(
+  "file",
+  new Blob(
+    [
+      Buffer.from(
+        "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=",
+        "base64",
+      ),
+    ],
+    { type: "image/png" },
+  ),
+  "photo.png",
+);
+const uploaded = await request(
+  "/profiles/me/avatar",
+  "POST",
+  photo,
+  a.accessToken,
+);
+assert.match(
+  uploaded.avatarUrl,
+  new RegExp(`^/api/v1/avatars/${a.user.id}\\?v=`),
+);
+const image = await fetch(base + uploaded.avatarUrl);
+assert.equal(image.status, 200);
+assert.match(image.headers.get("content-type"), /image\/jpeg/);
+assert.equal(image.headers.get("x-content-type-options"), "nosniff");
+assert.equal(
+  (await request("/profiles/me", "GET", undefined, a.accessToken)).avatarUrl,
+  uploaded.avatarUrl,
+);
+assert.ok(
+  !(await request("/profiles/me", "GET", undefined, b.accessToken)).avatarUrl,
+);
+await request("/profiles/me/avatar", "DELETE", undefined, a.accessToken);
+assert.equal((await fetch(base + uploaded.avatarUrl)).status, 404);
 assert.ok(recommendations.items.some((x) => x.userId === b.user.id));
 const publicProfile = await request(
   `/profiles/${b.user.id}`,
@@ -136,6 +180,48 @@ const notices = await request(
   undefined,
   b.accessToken,
 );
+const remaining = await request(
+  "/recommendations?limit=50",
+  "GET",
+  undefined,
+  a.accessToken,
+);
+const firstPage = await request(
+  "/recommendations/next?limit=50",
+  "POST",
+  undefined,
+  a.accessToken,
+);
+assert.equal(firstPage.cycleRestarted, false);
+for (const candidate of remaining.items)
+  await request(
+    `/users/${candidate.userId}/skip`,
+    "POST",
+    undefined,
+    a.accessToken,
+  );
+const circle = await request(
+  "/recommendations/next?limit=50",
+  "POST",
+  undefined,
+  a.accessToken,
+);
+assert.equal(circle.cycleRestarted, remaining.items.length > 0);
+assert.ok(
+  !circle.items.some((x) => x.userId === b.user.id || x.userId === a.user.id),
+);
+assert.equal(circle.items.length, remaining.items.length);
+assert.equal(
+  (
+    await request(
+      `/matches/${match.matchId}/messages`,
+      "GET",
+      undefined,
+      b.accessToken,
+    )
+  ).items[0].text,
+  "Привет через прокси!",
+);
 assert.equal(
   (
     await request(
@@ -150,6 +236,6 @@ assert.equal(
 await request("/auth/logout", "POST", undefined, a.accessToken, 204);
 await request("/users/me", "GET", undefined, a.accessToken, 401);
 console.log(
-  "PASS: UI document and GET/POST/PUT/PATCH/204, profiles, interests, preferences, recommendations, match, chat, notifications, logout through " +
+  "PASS: UI, multipart photo upload/delete, automatic skip circle excluding likes, profiles, preferences, match, chat, notifications and logout through " +
     base,
 );

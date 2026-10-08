@@ -45,15 +45,22 @@ export async function api<T>(
   const token = sessionStorage.getItem("nexus-token");
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), 15000);
+  const multipart = body instanceof FormData;
   try {
     const res = await fetch("/api/v1" + path, {
       method,
       signal: controller.signal,
       headers: {
-        ...(body !== undefined ? { "Content-Type": "application/json" } : {}),
+        ...(body !== undefined && !multipart
+          ? { "Content-Type": "application/json" }
+          : {}),
         ...(token ? { Authorization: `Bearer ${token}` } : {}),
       },
-      body: body !== undefined ? JSON.stringify(body) : undefined,
+      body: multipart
+        ? body
+        : body !== undefined
+          ? JSON.stringify(body)
+          : undefined,
     });
     if (!res.ok) {
       const data = await res

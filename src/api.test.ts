@@ -1,6 +1,17 @@
 import { afterEach, beforeEach, expect, it, vi } from "vitest";
 import { api, ApiError } from "./api";
 beforeEach(() => sessionStorage.clear());
+it("uploads FormData with authentication and lets the browser set its boundary", async () => {
+  sessionStorage.setItem("nexus-token", "token");
+  const mock = vi.fn(async () => new Response("{}"));
+  vi.stubGlobal("fetch", mock);
+  const body = new FormData();
+  body.append("file", new File(["photo"], "photo.png", { type: "image/png" }));
+  await api("/profiles/me/avatar", "POST", body);
+  const init = (mock.mock.calls as unknown as [string, RequestInit][])[0][1];
+  expect(init.body).toBe(body);
+  expect(init.headers).toEqual({ Authorization: "Bearer token" });
+});
 afterEach(() => {
   vi.unstubAllGlobals();
   vi.restoreAllMocks();

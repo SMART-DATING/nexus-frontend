@@ -1766,3 +1766,11 @@ footer small:last-child {
   flex-shrink: 0;
   animation: heartbeat 1.8s ease infinite;
 }
+
+.avatar {
+  position: relative;
+}
+.avatar-photo {
+  position: absolute;
+  inset: 0;
+}

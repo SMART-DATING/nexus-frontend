@@ -988,7 +988,242 @@ export function App() {
             {notices.length === 0 ? (
               <Empty
                 title="Пока всё спокойно"
-                text="З…1884 tokens truncated…ользуется для
+                text="Здесь появятся новые совпадения и сообщения."
+              />
+            ) : (
+              <div className="notices">
+                {notices.map((n) => (
+                  <button
+                    key={n.id}
+                    className={n.seen ? "" : "unread"}
+                    onClick={async () => {
+                      try {
+                        await api(`/notifications/${n.id}/read`, "PATCH");
+                        setNotices((old) =>
+                          old.map((x) =>
+                            x.id === n.id ? { ...x, seen: true } : x,
+                          ),
+                        );
+                        const m = await api<Match>(`/matches/${n.matchId}`);
+                        navigate("matches", m);
+                      } catch (e) {
+                        report(e);
+                      }
+                    }}
+                  >
+                    <div className="avatar">
+                      <Heart size={20} />
+                    </div>
+                    <div>
+                      <strong>{n.text}</strong>
+                      <small>{date(n.createdAt)}</small>
+                    </div>
+                    <ArrowUpRight size={20} />
+                  </button>
+                ))}
+              </div>
+            )}
+          </>
+        )}
+        <footer>
+          <span>nexus ✳</span>
+          <small>Знакомства со смыслом</small>
+          <small>Учебный прототип · 2026</small>
+        </footer>
+      </main>
+    </div>
+  );
+}
+function Avatar({
+  profile,
+  large = false,
+}: {
+  profile: Profile;
+  large?: boolean;
+}) {
+  return (
+    <div className={"avatar" + (large ? " large" : "")}>
+      {value(profile, "display_name").slice(0, 1) || "Я"}
+      {profile.avatarUrl && (
+        <img
+          className="avatar-photo"
+          src={profile.avatarUrl}
+          alt=""
+          onError={(e) => {
+            e.currentTarget.style.display = "none";
+          }}
+        />
+      )}
+    </div>
+  );
+}
+function conversationStarters(me: Profile, other: Profile): string[] {
+  const common = other.interests.filter((i) => me.interests.includes(i));
+  const prompts: Record<string, string> = {
+    Музыка: "Какую песню ты сейчас слушаешь на повторе?",
+    Кофе: "Кофе с собой на прогулку или уютная кофейня?",
+    Кино: "Какой фильм посоветуешь на вечер?",
+    Путешествия: "Куда бы ты отправился на выходные?",
+    Книги: "Какая книга тебя недавно зацепила?",
+    Игры: "Во что сыграем: настолки или видеоигры?",
+  };
+  const specific = common.map((interest) => prompts[interest]).filter(Boolean);
+  return [
+    ...new Set([
+      ...specific,
+      "Как выглядит твой идеальный выходной?",
+      "Что хорошего случилось у тебя на этой неделе?",
+    ]),
+  ].slice(0, 3);
+}
+function MatchCelebration({
+  match,
+  me,
+  onClose,
+  onOpen,
+}: {
+  match: Match;
+  me: Profile;
+  onClose: () => void;
+  onOpen: () => void;
+}) {
+  const dialog = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const previous = document.activeElement as HTMLElement | null;
+    const element = dialog.current;
+    element?.focus();
+    return () => {
+      if (previous?.isConnected) previous.focus();
+    };
+  }, []);
+  return (
+    <div
+      className="match-celebration"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="match-celebration-title"
+      tabIndex={-1}
+      ref={dialog}
+      onKeyDown={(e) => {
+        if (e.key === "Escape") onClose();
+        if (e.key === "Tab") {
+          const buttons = Array.from(
+            dialog.current?.querySelectorAll<HTMLButtonElement>("button") ?? [],
+          );
+          const first = buttons[0],
+            last = buttons[buttons.length - 1];
+          if (
+            e.shiftKey &&
+            (document.activeElement === first ||
+              document.activeElement === dialog.current)
+          ) {
+            e.preventDefault();
+            last?.focus();
+          }
+          if (!e.shiftKey && document.activeElement === last) {
+            e.preventDefault();
+            first?.focus();
+          }
+        }
+      }}
+    >
+      <div className="celebration-card">
+        <div className="celebration-icon">
+          <Avatar profile={me} large />
+          <Heart size={32} />
+          <Avatar profile={match.user} large />
+        </div>
+        <span className="eyebrow">ВАША ВОЛНА СОВПАЛА</span>
+        <h2 id="match-celebration-title">Это взаимно!</h2>
+        <p>
+          Вы и {value(match.user, "display_name")} понравились друг другу. Самое
+          время начать разговор.
+        </p>
+        <div className="celebration-actions">
+          <button className="primary" onClick={onOpen}>
+            <MessageCircle size={18} />
+            Начать разговор
+          </button>
+          <button className="outline" onClick={onClose}>
+            Продолжить знакомства
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+function Empty({
+  title,
+  text,
+  action,
+  label,
+}: {
+  title: string;
+  text: string;
+  action?: () => void;
+  label?: string;
+}) {
+  return (
+    <div className="empty">
+      <Sparkles size={34} />
+      <h2>{title}</h2>
+      <p>{text}</p>
+      {action && (
+        <button className="primary" onClick={action}>
+          {label}
+          <ArrowRight size={17} />
+        </button>
+      )}
+    </div>
+  );
+}
+function ProfileEditor({
+  user,
+  interests,
+  busy,
+  onSave,
+}: {
+  user: User;
+  interests: string[];
+  busy: boolean;
+  onSave: (p: { properties: Property[]; interests: string[] }) => void;
+}) {
+  const [props, setProps] = useState<Property[]>(
+      ["display_name", "bio", "birth_date", "city"].map(
+        (name) =>
+          user.profile.properties.find((p) => p.name === name) || {
+            name,
+            value: "",
+            visible: name !== "birth_date",
+          },
+      ),
+    ),
+    [chosen, setChosen] = useState(user.profile.interests);
+  const labels: Record<string, string> = {
+    display_name: "Как вас зовут",
+    bio: "Немного о себе",
+    birth_date: "Дата рождения",
+    city: "Город",
+  };
+  function update(name: string, data: Partial<Property>) {
+    setProps((old) =>
+      old.map((p) => (p.name === name ? { ...p, ...data } : p)),
+    );
+  }
+  return (
+    <form
+      className="profile-form"
+      onSubmit={(e) => {
+        e.preventDefault();
+        onSave({ properties: props, interests: chosen });
+      }}
+    >
+      <div className="form-intro">
+        <Avatar profile={{ ...user.profile, properties: props }} large />
+        <div>
+          <h2>Всё начинается с вас</h2>
+          <p>
+            Скрытые поля видны только вам. Дата рождения используется для
             подбора.
           </p>
         </div>

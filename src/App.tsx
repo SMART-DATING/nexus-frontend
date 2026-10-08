@@ -32,6 +32,8 @@ import "./style.css";
 import "./swipe.css";
 import { SwipeDeck } from "./SwipeDeck";
 import { PhotoUpload } from "./PhotoUpload";
+import { ContextEditor } from "./ContextEditor";
+import "./semantic.css";
 type Tab = "discover" | "matches" | "profile" | "notifications";
 function readRoute(): { tab: Tab; matchId: number | null } {
   const id = window.location.pathname.match(/^\/match\/(\d+)$/)?.[1];
@@ -193,7 +195,7 @@ export function App() {
   const complete =
     !!user &&
     user.profile.properties.length === 4 &&
-    user.profile.interests.length > 0;
+    (user.profile.contextCount ?? 0) > 0;
   useEffect(() => {
     if (!user) return;
     let alive = true;
@@ -561,7 +563,7 @@ export function App() {
         <div className="sidebar-note">
           <Sparkles size={22} />
           <h3>Начните с общего</h3>
-          <p>Добавьте интересы — и мы найдём больше точек соприкосновения.</p>
+          <p>Расскажите, что вам важно. Личные тексты видны только вам.</p>
         </div>
         <div className="account">
           <Avatar profile={user.profile} />
@@ -716,7 +718,7 @@ export function App() {
             <div className="discover-bar">
               <span>
                 <span className="live-dot" />
-                Подобрано по вашим интересам
+                Подобрано по смыслу ваших рассказов
               </span>
               <small>
                 {people.length} {people.length === 1 ? "профиль" : "профилей"} в
@@ -726,7 +728,7 @@ export function App() {
             {!complete ? (
               <Empty
                 title="Давайте сначала познакомимся"
-                text="Заполните профиль и выберите интересы — это основа вашей подборки."
+                text="Заполните основные данные и добавьте личный рассказ — по нему мы найдём близких по духу людей. Рассказ виден только вам."
                 action={() => navigate("profile")}
                 label="Заполнить профиль"
               />
@@ -810,8 +812,9 @@ export function App() {
                     ((user.profile.properties.filter((p) => p.value.trim())
                       .length +
                       (user.profile.interests.length ? 1 : 0) +
-                      (user.profile.avatarUrl ? 1 : 0)) /
-                      6) *
+                      (user.profile.avatarUrl ? 1 : 0) +
+                      ((user.profile.contextCount ?? 0) > 0 ? 1 : 0)) /
+                      7) *
                       100,
                   )}
                   %
@@ -819,11 +822,12 @@ export function App() {
               </div>
               <progress
                 aria-label="Заполненность профиля"
-                max={6}
+                max={7}
                 value={
                   user.profile.properties.filter((p) => p.value.trim()).length +
                   (user.profile.interests.length ? 1 : 0) +
-                  (user.profile.avatarUrl ? 1 : 0)
+                  (user.profile.avatarUrl ? 1 : 0) +
+                  ((user.profile.contextCount ?? 0) > 0 ? 1 : 0)
                 }
               />
             </div>
@@ -833,6 +837,7 @@ export function App() {
                 setUser((old) => (old ? { ...old, profile } : old))
               }
             />
+            <ContextEditor onChanged={refresh} />
             <ProfileEditor
               key={user.id}
               user={user}
@@ -1190,7 +1195,7 @@ function ProfileEditor({
     [chosen, setChosen] = useState(user.profile.interests);
   const labels: Record<string, string> = {
     display_name: "Как вас зовут",
-    bio: "Немного о себе",
+    bio: "Короткая подпись (необязательно)",
     birth_date: "Дата рождения",
     city: "Город",
   };
@@ -1255,9 +1260,12 @@ function ProfileEditor({
         ))}
       </div>
       <h3>
-        Ваши интересы <small>{chosen.length}/10</small>
+        Публичные темы <small>{chosen.length}/10</small>
       </h3>
-      <p>Выберите от 1 до 10. Общие интересы помогут найти своих людей.</p>
+      <p>
+        До 10 тем, которые можно показать собеседнику. Подбор работает по вашим
+        личным рассказам.
+      </p>
       <div className="interest-picker">
         {interests.map((i) => (
           <button
@@ -1275,7 +1283,7 @@ function ProfileEditor({
           </button>
         ))}
       </div>
-      <button className="primary" disabled={busy || !chosen.length}>
+      <button className="primary" disabled={busy}>
         {busy ? "Сохраняем…" : "Сохранить профиль"}
         <Check size={17} />
       </button>

@@ -5,6 +5,7 @@ import userEvent from "@testing-library/user-event";
 import { App } from "./App";
 const profile = {
   userId: 1,
+  contextCount: 1,
   properties: [
     { name: "display_name", value: "Алекс", visible: true },
     { name: "bio", value: "Музыка и кофе", visible: true },
@@ -50,6 +51,7 @@ beforeEach(() => {
       if (path === "/users/me") data = user;
       if (path === "/interests") data = { items: ["Музыка", "Кофе", "Кино"] };
       if (path === "/profiles/me") data = profile;
+      if (path === "/contexts/me") data = { items:[],modelAvailable:true };
       if (path === "/users/2/like") liked = true;
       if (path === "/recommendations/next")
         data = {

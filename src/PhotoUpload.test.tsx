@@ -13,19 +13,23 @@ beforeEach(() => {
 afterEach(cleanup);
 it("previews locally, saves only on confirmation, then releases the preview", async () => {
   const saved = vi.fn();
-  const result = { ...profile, avatarUrl: "/api/v1/avatars/1?v=new" };
+  const result = {
+    ...profile,
+    photos: [{ id: 1, position: 0, url: "/api/v1/photos/1?access=new" }],
+    photoCount: 1,
+  };
   vi.mocked(api).mockResolvedValue(result);
   render(<PhotoUpload profile={profile} onSaved={saved} />);
   const file = new File(["png"], "me.png", { type: "image/png" });
   fireEvent.change(screen.getByLabelText("Выбрать фото профиля"), {
     target: { files: [file] },
   });
-  expect(
-    screen.getByAltText("Предпросмотр фото профиля").getAttribute("src"),
-  ).toBe("blob:preview");
+  expect(screen.getByAltText("Предпросмотр фото 1").getAttribute("src")).toBe(
+    "blob:preview",
+  );
   expect(api).not.toHaveBeenCalled();
   await userEvent.click(screen.getByRole("button", { name: "Сохранить фото" }));
-  await screen.findByText("Фото обновлено");
+  await screen.findByText("Фото обновлены");
   expect(saved).toHaveBeenCalledWith(result);
   const body = vi.mocked(api).mock.calls[0][2] as FormData;
   expect(body.get("file")).toBe(file);
@@ -52,12 +56,22 @@ it("deletes the uploaded photo through the authenticated profile endpoint", asyn
   const saved = vi.fn();
   render(
     <PhotoUpload
-      profile={{ ...profile, avatarUrl: "/api/v1/avatars/1?v=old" }}
+      profile={{
+        ...profile,
+        photos: [{ id: 1, position: 0, url: "/api/v1/photos/1?access=old" }],
+        photoCount: 1,
+      }}
       onSaved={saved}
     />,
   );
-  await userEvent.click(screen.getByRole("button", { name: "Удалить фото" }));
-  await screen.findByText("Фото обновлено");
-  expect(api).toHaveBeenCalledWith("/profiles/me/avatar", "DELETE", undefined);
+  await userEvent.click(screen.getByRole("button", { name: "Удалить фото 1" }));
+  expect(api).not.toHaveBeenCalled();
+  await userEvent.click(
+    screen.getByRole("button", { name: "Да, удалить фото" }),
+  );
+  await screen.findByRole("button", { name: "Добавить фото" });
+  await vi.waitFor(() =>
+    expect(api).toHaveBeenCalledWith("/profiles/me/photos/1", "DELETE"),
+  );
   expect(saved).toHaveBeenCalledWith(profile);
 });

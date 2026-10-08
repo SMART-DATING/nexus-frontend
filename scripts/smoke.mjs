@@ -68,6 +68,17 @@ for (const account of [a, b]) {
     { minAge: 18, maxAge: 100 },
     account.accessToken,
   );
+  await request(
+    "/contexts/me",
+    "POST",
+    {
+      title: "Мои ценности",
+      content:
+        "Ценю доверие и честность. Люблю музыку, прогулки и спокойные разговоры.",
+    },
+    account.accessToken,
+    201,
+  );
   assert.ok(
     (
       await request("/interests", "GET", undefined, account.accessToken)
@@ -100,10 +111,7 @@ const uploaded = await request(
   photo,
   a.accessToken,
 );
-assert.match(
-  uploaded.avatarUrl,
-  new RegExp(`^/api/v1/avatars/${a.user.id}\\?v=`),
-);
+assert.match(uploaded.avatarUrl, /^\/api\/v1\/photos\/\d+\?access=/);
 const image = await fetch(base + uploaded.avatarUrl);
 assert.equal(image.status, 200);
 assert.match(image.headers.get("content-type"), /image\/jpeg/);

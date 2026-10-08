@@ -6,6 +6,11 @@ export type Profile = {
   interests: string[];
   commonInterests?: string[];
   compatibilityScore?: number;
+  photos?: { id: number; position: number; url: string }[];
+  photoCount?: number;
+  photoAllowance?: number;
+  contextCount?: number;
+  matchingBasis?: "semantic";
 };
 export type User = {
   id: number;

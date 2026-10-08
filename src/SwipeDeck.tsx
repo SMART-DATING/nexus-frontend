@@ -10,6 +10,7 @@ import {
   ChevronDown,
 } from "lucide-react";
 import { value, type Profile } from "./api";
+import { PhotoGallery } from "./PhotoGallery";
 
 const ideas: Record<string, string> = {
   Музыка: "Какой трек у тебя сейчас на повторе?",
@@ -154,19 +155,11 @@ export function SwipeDeck({
           >
             <div className={`swipe-portrait art-${p.userId % 6}`}>
               <span className="swipe-fallback">{name.slice(0, 1)}</span>
-              {p.avatarUrl && (
-                <img
-                  src={p.avatarUrl}
-                  alt={`Фото: ${name}`}
-                  draggable={false}
-                  onError={(e) => {
-                    e.currentTarget.style.display = "none";
-                  }}
-                />
-              )}
+              <PhotoGallery profile={p} />
               <span className="swipe-score">
                 <Sparkles size={15} />
-                {Math.round((p.compatibilityScore ?? 0) * 100)}% общих интересов
+                {Math.round(Math.max(0, p.compatibilityScore ?? 0) * 100)}%
+                сходства рассказов
               </span>
               <span
                 aria-hidden="true"
@@ -285,7 +278,10 @@ export function SwipeDeck({
           <div className="conversation-idea" aria-live="polite">
             <span>ИДЕЯ ДЛЯ ЗНАКОМСТВА</span>
             <p>{idea || "Как выглядит твой идеальный выходной?"}</p>
-            <small>Пообщаться получится, когда симпатия станет взаимной.</small>
+            <small>
+              Сходство текстов — ориентир для знакомства. Личные рассказы
+              собеседника остаются скрытыми.
+            </small>
           </div>
         </section>
         <section className="rhythm-panel">

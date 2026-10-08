@@ -37,6 +37,11 @@ jobs:
         run: |
           result=$(docker compose -f nexus-frontend/docker-compose.yml exec -T postgres psql -At -U nexus -d nexus -c "select category from interests where name='Музыка'")
           test "$result" = "Творчество"
+      - name: Test semantic privacy and gallery boundaries on PostgreSQL
+        run: |
+          docker compose -f nexus-frontend/docker-compose.yml exec -T postgres createdb -U nexus nexus_tests
+          docker build --target build -t nexus-backend-tests nexus-backend
+          docker run --rm --network nexus-frontend_default -e TEST_POSTGRES_URL=jdbc:postgresql://postgres:5432/nexus_tests -e TEST_POSTGRES_USER=nexus -e TEST_POSTGRES_PASSWORD=nexus-local-dev nexus-backend-tests mvn -B test -Dtest=PostgresIntegrationTest
       - run: docker compose -f nexus-backend/compose.h2.yaml up -d --build --wait --wait-timeout 180
       - run: npm ci
         working-directory: nexus-frontend
@@ -55,4 +60,3 @@ jobs:
         run: docker compose -f nexus-frontend/docker-compose.yml down
       - if: always()
         run: docker compose -f nexus-backend/compose.h2.yaml down
-

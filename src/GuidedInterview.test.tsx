@@ -20,6 +20,10 @@ it("keeps answers local, preserves them on Back and saves only reviewed text", a
     target: { value: "Люблю читать фантастику и обсуждать героев." },
   });
   await userEvent.click(screen.getByRole("button", { name: "Дальше" }));
+  expect(screen.getAllByRole("heading", { level: 2 })).toHaveLength(1);
+  expect(screen.getByRole("heading", { level: 2 }).textContent).toBe(
+    "Что у тебя сейчас на повторе?",
+  );
   await userEvent.click(screen.getByRole("button", { name: "Назад" }));
   expect(
     (screen.getByLabelText("Твой ответ") as HTMLTextAreaElement).value,
@@ -32,6 +36,10 @@ it("keeps answers local, preserves them on Back and saves only reviewed text", a
     screen.getByRole("button", { name: "Пропустить вопрос" }),
   );
   expect(save).not.toHaveBeenCalled();
+  expect(screen.getAllByRole("heading", { level: 2 })).toHaveLength(1);
+  expect(screen.getByRole("heading", { level: 2 }).textContent).toBe(
+    "Уже звучит как ты.",
+  );
   expect(
     (screen.getByLabelText("Твой личный рассказ") as HTMLTextAreaElement).value,
   ).toBe("Книги: Люблю читать фантастику и обсуждать героев.");

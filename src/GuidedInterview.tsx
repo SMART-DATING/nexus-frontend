@@ -175,7 +175,10 @@ export function GuidedInterview({
           <i key={p.id} className={review || i <= index ? "done" : ""} />
         ))}
       </div>
-      <div className="question-message" key={review ? "review" : q.id}>
+      <div
+        className="question-message"
+        key={`question-${review ? "review" : q.id}`}
+      >
         <div className="nexus-guide">
           <img src="/nexus-mark.svg" alt="" />
           <span>
@@ -193,7 +196,7 @@ export function GuidedInterview({
         </p>
       </div>
       <VoiceInput
-        key={review ? "review" : q.id}
+        key={`answer-${review ? "review" : q.id}`}
         maxLength={review ? 6000 : 1800}
         label={review ? "Твой личный рассказ" : "Твой ответ"}
         value={review ? draft : answers[index]}

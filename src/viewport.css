@@ -1,0 +1,285 @@
+/* The task surface uses the available viewport; scrolling belongs to its content. */
+html {
+  scrollbar-gutter: stable;
+}
+.app .toast,
+.app .error {
+  top: 16px;
+  bottom: auto;
+  left: 50%;
+  right: auto;
+  height: auto;
+  min-height: 0;
+  width: fit-content;
+  max-width: min(560px, calc(100vw - 32px));
+  max-height: calc(100dvh - 32px);
+  overflow-y: auto;
+}
+.primary-navigation button.active::before {
+  content: none;
+}
+.primary-navigation button:active {
+  transform: none;
+}
+.profile-gallery .gallery-prev,
+.profile-gallery .gallery-next {
+  translate: 0 -50%;
+  transform: none;
+  transition: background 160ms ease;
+}
+.profile-gallery .gallery-prev:hover,
+.profile-gallery .gallery-next:hover,
+.profile-gallery .gallery-prev:active,
+.profile-gallery .gallery-next:active,
+.gallery-expand:hover,
+.gallery-expand:active {
+  transform: none;
+}
+.nexus-dialog {
+  padding: 0;
+  overflow: hidden;
+  max-height: calc(100dvh - 32px);
+}
+.nexus-dialog[open] {
+  display: flex;
+  flex-direction: column;
+}
+.dialog-heading {
+  flex: 0 0 auto;
+  margin: 0;
+  padding: 20px 24px 14px;
+}
+.dialog-content {
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+  scrollbar-color: #536183 transparent;
+  padding: 4px 24px 24px;
+}
+.photo-viewer .dialog-heading {
+  padding: 14px 20px;
+  margin: 0;
+}
+.photo-viewer .dialog-content {
+  padding: 0 16px 16px;
+}
+.viewer-prev,
+.viewer-next {
+  translate: 0 -50%;
+  transform: none;
+  transition: background 160ms ease;
+}
+.viewer-prev:hover,
+.viewer-next:hover,
+.viewer-prev:active,
+.viewer-next:active {
+  transform: none;
+}
+.auth-dialog .dialog-content > .text-button {
+  width: 100%;
+  margin-top: 16px;
+  padding-block: 12px;
+}
+.preferences-dialog .filter-panel {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: none;
+}
+.unread-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  min-width: 21px;
+  height: 21px;
+  padding-inline: 6px;
+  border-radius: 12px;
+  background: #8672ed;
+  color: white;
+  font-size: 11px;
+  font-weight: 700;
+}
+.messages > * {
+  flex-shrink: 0;
+}
+@media (min-width: 761px) and (min-height: 480px) {
+  body:has(.app.is-discover),
+  body:has(.app.is-matches),
+  body:has(.app.is-notifications) {
+    overflow: hidden;
+  }
+  .app.is-discover,
+  .app.is-matches,
+  .app.is-notifications {
+    display: flex;
+    flex-direction: column;
+    height: 100dvh;
+    min-height: 0;
+    overflow: hidden;
+  }
+  .app .app-navigation {
+    flex: 0 0 76px;
+    height: 76px;
+    padding-block: 10px;
+  }
+  .app:is(.is-discover, .is-matches, .is-notifications) .workspace {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    min-height: 0;
+    overflow: hidden;
+    padding: 0 clamp(24px, 4vw, 80px) 20px;
+  }
+  .app .workspace > * {
+    width: 100%;
+    max-width: 1400px;
+    flex-shrink: 0;
+  }
+  .app .page-heading {
+    padding: 20px 0 16px;
+  }
+  .app .discover-bar {
+    padding-bottom: 12px;
+  }
+  .app.is-discover .swipe-experience {
+    width: 100%;
+    max-width: 1400px;
+    flex: 1;
+    min-height: 0;
+    margin: 0 auto;
+  }
+  .app.is-discover .deck-column {
+    display: grid;
+    grid-template-rows: minmax(0, 1fr) auto auto;
+    height: 100%;
+    min-height: 0;
+    gap: 12px;
+  }
+  .app.is-discover .deck-stack {
+    min-height: 0;
+  }
+  .app.is-discover .swipe-card {
+    height: 100%;
+    min-height: 0;
+    grid-template-columns: 48% 52%;
+  }
+  .app.is-discover .swipe-portrait {
+    min-height: 0;
+  }
+  .app.is-discover .swipe-story {
+    min-height: 0;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    scrollbar-width: thin;
+    gap: clamp(12px, 2.2vh, 26px);
+  }
+  .app.is-discover .swipe-story > * {
+    flex-shrink: 0;
+  }
+  .app.is-discover .swipe-story:has(.profile-details) {
+    justify-content: flex-start;
+  }
+  .app.is-discover .swipe-controls {
+    position: static;
+    width: min(100%, 640px);
+    margin: 0 auto;
+  }
+  .app.is-discover .discovery-help {
+    padding: 0;
+    max-height: 88px;
+    overflow-y: auto;
+    scrollbar-width: thin;
+  }
+  .app.is-matches .chat-layout {
+    flex: 1;
+    height: auto;
+    min-height: 0;
+    margin-bottom: 0;
+    overflow: hidden;
+  }
+  .app.is-matches .match-list,
+  .app.is-matches .messages {
+    min-height: 0;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    scrollbar-width: thin;
+  }
+  .app.is-matches .chat-title {
+    flex-shrink: 0;
+  }
+  .app.is-notifications .notices {
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+  }
+  .app:is(.is-discover, .is-matches, .is-notifications) .workspace > .empty,
+  .app:is(.is-discover, .is-matches) .workspace > .boot {
+    flex: 1;
+    min-height: 0;
+    padding: 24px;
+    overflow-y: auto;
+  }
+}
+@media (min-width: 761px) and (max-height: 650px) {
+  .app .page-heading {
+    padding-block: 12px;
+  }
+  .app .page-heading h1 {
+    font-size: 28px;
+  }
+  .app .page-heading p {
+    display: none;
+  }
+  .app.is-discover .swipe-story {
+    padding: 18px 24px;
+    justify-content: flex-start;
+  }
+  .app.is-discover .swipe-story > p {
+    font-size: 17px;
+  }
+}
+@media (max-width: 760px) {
+  .app .swipe-controls {
+    bottom: calc(94px + env(safe-area-inset-bottom, 0px));
+  }
+  .primary-navigation button {
+    position: relative;
+  }
+  .primary-navigation .unread-badge {
+    position: absolute;
+    top: 3px;
+    right: 12px;
+  }
+  .dialog-heading {
+    padding-inline: 18px;
+  }
+  .dialog-content {
+    padding-inline: 18px;
+  }
+}
+@media (min-width: 761px) and (max-width: 1150px) {
+  .app-navigation {
+    grid-template-columns: auto 1fr auto;
+    gap: 12px;
+    padding-inline: 20px;
+  }
+  .primary-navigation {
+    justify-self: center;
+  }
+  .primary-navigation button {
+    padding-inline: 12px;
+    font-size: 12px;
+  }
+  .app-navigation .brand {
+    font-size: 24px;
+  }
+  .navigation-actions {
+    gap: 6px;
+  }
+  .account-name {
+    display: none;
+  }
+}

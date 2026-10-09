@@ -1,0 +1,62 @@
+name: Frontend checks
+on: [push, pull_request]
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      - run: npm test
+      - run: npm run build
+  docker-integration:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          path: nexus-frontend
+      - uses: actions/checkout@v4
+        with:
+          repository: SMART-DATING/nexus-backend
+          ref: main
+          path: nexus-backend
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Prepare PostgreSQL with legacy mandatory interest category
+        run: |
+          docker compose -f nexus-frontend/docker-compose.yml up -d postgres --wait --wait-timeout 180
+          docker compose -f nexus-frontend/docker-compose.yml exec -T postgres psql -v ON_ERROR_STOP=1 -U nexus -d nexus < nexus-backend/src/test/resources/legacy-interests.sql
+      - run: docker compose -f nexus-frontend/docker-compose.yml up -d --build --wait --wait-timeout 180
+      - run: node nexus-frontend/scripts/smoke.mjs http://127.0.0.1:8088
+      - name: Verify preserved legacy category
+        run: |
+          result=$(docker compose -f nexus-frontend/docker-compose.yml exec -T postgres psql -At -U nexus -d nexus -c "select category from interests where name='Музыка'")
+          test "$result" = "Творчество"
+      - name: Test semantic privacy and gallery boundaries on PostgreSQL
+        run: |
+          docker compose -f nexus-frontend/docker-compose.yml exec -T postgres createdb -U nexus nexus_tests
+          docker build --target build -t nexus-backend-tests nexus-backend
+          docker run --rm --network nexus-frontend_default -e TEST_POSTGRES_URL=jdbc:postgresql://postgres:5432/nexus_tests -e TEST_POSTGRES_USER=nexus -e TEST_POSTGRES_PASSWORD=nexus-local-dev nexus-backend-tests mvn -B test -Dtest=PostgresIntegrationTest
+      - run: docker compose -f nexus-backend/compose.h2.yaml up -d --build --wait --wait-timeout 180
+      - run: npm ci
+        working-directory: nexus-frontend
+      - name: Verify Vite proxy with H2 backend
+        working-directory: nexus-frontend
+        run: |
+          npm run dev > vite.log 2>&1 &
+          for attempt in $(seq 1 30); do
+            if curl --fail --silent http://127.0.0.1:5173/api/v1/health; then break; fi
+            sleep 1
+          done
+          node scripts/smoke.mjs http://127.0.0.1:5173
+      - if: failure()
+        run: docker compose -f nexus-frontend/docker-compose.yml logs --no-color
+      - if: always()
+        run: docker compose -f nexus-frontend/docker-compose.yml down
+      - if: always()
+        run: docker compose -f nexus-backend/compose.h2.yaml down

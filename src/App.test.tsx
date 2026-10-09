@@ -88,7 +88,7 @@ describe("Nexus user flows", () => {
     await screen.findByRole("region", { name: "Фото профиля" });
     expect(
       screen
-        .getByRole("tab", { name: "Фото", exact: true })
+        .getByRole("tab", { name: "Фото" })
         .getAttribute("aria-selected"),
     ).toBe("true");
     await ui.click(screen.getByRole("tab", { name: "Для подбора" }));

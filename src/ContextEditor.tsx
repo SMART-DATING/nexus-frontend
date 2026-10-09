@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import {
   LockKeyhole,
   Plus,
@@ -9,6 +9,8 @@ import {
   X,
 } from "lucide-react";
 import { api } from "./api";
+import { GuidedInterview } from "./GuidedInterview";
+import { VoiceInput } from "./VoiceInput";
 type Context = {
   id: number;
   title: string;
@@ -17,9 +19,13 @@ type Context = {
 };
 export function ContextEditor({
   onChanged,
+  interests = [],
 }: {
   onChanged: () => Promise<unknown>;
+  interests?: string[];
 }) {
+  const [guided, setGuided] = useState(false);
+  const guidedStory = useRef<number | null>(null);
   const [items, setItems] = useState<Context[]>([]),
     [ready, setReady] = useState(false),
     [available, setAvailable] = useState(true),
@@ -200,7 +206,47 @@ export function ContextEditor({
           </p>
         </div>
       )}
-      {editing !== undefined ? (
+      {guided && (
+        <GuidedInterview
+          interests={interests}
+          onLater={() => setGuided(false)}
+          onSave={async (text) => {
+            const story = await api<{ id: number }>(
+              guidedStory.current === null
+                ? "/contexts/me"
+                : `/contexts/me/${guidedStory.current}`,
+              guidedStory.current === null ? "POST" : "PUT",
+              {
+                title: "Моя волна",
+                content: text,
+              },
+            );
+            guidedStory.current = story.id;
+            await load();
+            await onChanged();
+            setGuided(false);
+            setSaved(true);
+          }}
+        />
+      )}
+      {!guided && editing === undefined && (
+        <button
+          type="button"
+          className="guided-start"
+          disabled={busy || !ready || items.length >= 12 || !available}
+          onClick={() => {
+            guidedStory.current = null;
+            setGuided(true);
+          }}
+        >
+          <Sparkles size={19} />
+          <span>
+            <strong>Не знаешь, с чего начать?</strong>
+            <small>Три вопроса о твоих интересах · можно голосом</small>
+          </span>
+        </button>
+      )}
+      {guided ? null : editing !== undefined ? (
         <form className="context-form" onSubmit={save}>
           <label>
             Название рассказа
@@ -211,19 +257,12 @@ export function ContextEditor({
               onChange={(e) => setTitle(e.target.value)}
             />
           </label>
-          <label>
-            Личный рассказ
-            <textarea
-              autoFocus
-              required
-              minLength={20}
-              maxLength={6000}
-              rows={8}
-              value={content}
-              onChange={(e) => setContent(e.target.value)}
-              placeholder="Мне нравится… Для меня важно… Я чувствую себя на своём месте, когда…"
-            />
-          </label>
+          <VoiceInput
+            label="Личный рассказ"
+            value={content}
+            onChange={setContent}
+            disabled={busy}
+          />
           <div className="context-form-footer">
             <small>{content.length}/6000 · минимум 20 символов</small>
             <div>

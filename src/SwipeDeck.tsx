@@ -121,7 +121,7 @@ export function SwipeDeck({
       <div className="deck-column">
         <div className="deck-meta">
           <span>
-            <Sparkles size={14} /> Ваша следующая история
+            <Sparkles size={14} /> Поймаем общий вайб
           </span>
           <span>
             <RotateCcw size={13} /> Круг {cycle}
@@ -180,7 +180,7 @@ export function SwipeDeck({
                 ПРОПУСКАЮ
               </span>
               <div className="swipe-identity">
-                <span className="eyebrow">ЕСТЬ ПОВОД ПОЗНАКОМИТЬСЯ</span>
+                <span className="eyebrow">МОЖЕТ, ЭТО ТВОЙ ЧЕЛОВЕК</span>
                 <h2>{name}</h2>
                 {value(p, "city") && (
                   <span>
@@ -285,7 +285,7 @@ export function SwipeDeck({
           </div>
         </section>
         <section className="rhythm-panel">
-          <span className="eyebrow">ВАШ РИТМ СЕГОДНЯ</span>
+          <span className="eyebrow">В ЭТОЙ ПОДБОРКЕ</span>
           <div>
             <strong>
               {reviewed}
@@ -333,8 +333,8 @@ export function SwipeDeck({
         <div className="circle-note">
           <RotateCcw size={17} />
           <p>
-            Пропущенные вернутся в новом круге. Лайкнутые анкеты сохранятся за
-            его пределами.
+            Пропустил? Анкета вернётся в новом круге. Лайки остаются — повторно
+            свайпать их не придётся.
           </p>
         </div>
       </div>

@@ -34,6 +34,8 @@ import { SwipeDeck } from "./SwipeDeck";
 import { PhotoUpload } from "./PhotoUpload";
 import { ContextEditor } from "./ContextEditor";
 import "./semantic.css";
+import { Onboarding } from "./Onboarding";
+import "./youth.css";
 type Tab = "discover" | "matches" | "profile" | "notifications";
 function readRoute(): { tab: Tab; matchId: number | null } {
   const id = window.location.pathname.match(/^\/match\/(\d+)$/)?.[1];
@@ -92,6 +94,9 @@ export function App() {
   const [register, setRegister] = useState(false),
     [email, setEmail] = useState(""),
     [password, setPassword] = useState("");
+  const [onboardingDismissed, setOnboardingDismissed] = useState<number | null>(
+    () => Number(sessionStorage.getItem("nexus-onboarding-dismissed")) || null,
+  );
   const currentMatch = useRef<number | null>(null);
   currentMatch.current = selected?.id ?? null;
   function navigate(next: Tab, match: Match | null = null) {
@@ -126,6 +131,8 @@ export function App() {
   }, []);
   function reset() {
     setUser(null);
+    setOnboardingDismissed(null);
+    sessionStorage.removeItem("nexus-onboarding-dismissed");
     setPeople([]);
     setMatches([]);
     setNotices([]);
@@ -322,8 +329,7 @@ export function App() {
       sessionStorage.setItem("nexus-token", r.accessToken);
       setUser(r.user);
       setPassword("");
-      if (!readRoute().matchId)
-        navigate(r.user.profile.properties.length ? "discover" : "profile");
+      if (!readRoute().matchId) navigate("discover");
     } catch (e) {
       report(e);
     } finally {
@@ -439,14 +445,14 @@ export function App() {
           <div>
             <span className="eyebrow">ЗНАКОМСТВА СО СМЫСЛОМ</span>
             <h1>
-              Ближе по духу.
+              Твой вайб.
               <br />
-              На одной <em>волне.</em>
+              Твои <em>люди.</em>
             </h1>
             <p>
-              Новые люди, общие интересы и разговоры,
+              Расскажи, что тебя цепляет.
               <br />
-              которые хочется продолжить.
+              Найди того, кто чувствует похоже.
             </p>
             <div className="orbit">
               <span>♫</span>
@@ -509,26 +515,57 @@ export function App() {
               ? "Уже есть аккаунт? Войти"
               : "Первый раз здесь? Зарегистрироваться"}
           </button>
-          <div className="demo">
-            <strong>Демонстрация прототипа</strong>
-            <p>
-              При запуске с демоданными: demo@nexus.local
-              <br />
-              Пароль: NexusDemo2026!
-            </p>
-            <button
-              onClick={() => {
-                setEmail("demo@nexus.local");
-                setPassword("NexusDemo2026!");
-                setRegister(false);
-              }}
-            >
-              Заполнить демоаккаунт <ArrowUpRight size={14} />
-            </button>
+          <div className="auth-benefits">
+            <span>✦ Подбор по смыслу</span>
+            <span>♡ Взаимная симпатия</span>
+            <span>◌ Личные истории скрыты</span>
           </div>
           <small>Сервис знакомств для пользователей от 18 лет.</small>
         </main>
       </div>
+    );
+  if (!complete && onboardingDismissed !== user.id)
+    return (
+      <>
+        <Onboarding
+          key={user.id}
+          user={user}
+          interests={interests}
+          onDone={async () => {
+            await refresh();
+            navigate("discover");
+            setToast("Твоя история сохранена. Пора знакомиться!");
+          }}
+          onLater={() => {
+            void refresh()
+              .then(() => {
+                sessionStorage.setItem(
+                  "nexus-onboarding-dismissed",
+                  String(user.id),
+                );
+                setOnboardingDismissed(user.id);
+                navigate("profile");
+              })
+              .catch(report);
+          }}
+        />
+        {error && (
+          <div className="onboarding-error" role="alert">
+            {error}
+            <button
+              onClick={() => {
+                void api<{ items: string[] }>("/interests")
+                  .then((r) => setInterests(r.items))
+                  .then(refresh)
+                  .then(() => setError(""))
+                  .catch(report);
+              }}
+            >
+              Повторить
+            </button>
+          </div>
+        )}
+      </>
     );
   const nav = [
     { id: "discover", label: "Знакомства", icon: Compass },
@@ -537,7 +574,7 @@ export function App() {
     { id: "notifications", label: "Уведомления", icon: Bell },
   ] as const;
   return (
-    <div className="app">
+    <div className={`app ${tab === "discover" ? "is-discover" : ""}`}>
       <aside>
         <a className="brand" href="/">
           <img className="brand-icon" src="/nexus-mark.svg" alt="" />
@@ -562,8 +599,11 @@ export function App() {
         </nav>
         <div className="sidebar-note">
           <Sparkles size={22} />
-          <h3>Начните с общего</h3>
-          <p>Расскажите, что вам важно. Личные тексты видны только вам.</p>
+          <h3>На какой ты волне?</h3>
+          <p>Твои истории помогают найти тех, кто тебя понимает.</p>
+          <button className="text-button" onClick={() => navigate("profile")}>
+            Добавить свой вайб <ArrowRight size={15} />
+          </button>
         </div>
         <div className="account">
           <Avatar profile={user.profile} />
@@ -651,7 +691,7 @@ export function App() {
                 <h1>
                   На одной волне<span className="dot">.</span>
                 </h1>
-                <p>Хорошее знакомство начинается с маленького совпадения.</p>
+                <p>Новый человек. Знакомое чувство.</p>
               </div>
               <button className="outline" onClick={() => setFilters(!filters)}>
                 <SlidersHorizontal size={17} />
@@ -837,7 +877,10 @@ export function App() {
                 setUser((old) => (old ? { ...old, profile } : old))
               }
             />
-            <ContextEditor onChanged={refresh} />
+            <ContextEditor
+              interests={user.profile.interests}
+              onChanged={refresh}
+            />
             <ProfileEditor
               key={user.id}
               user={user}
@@ -1022,7 +1065,7 @@ export function App() {
         <footer>
           <span>nexus ✳</span>
           <small>Знакомства со смыслом</small>
-          <small>Учебный прототип · 2026</small>
+          <small>Nexus · 2026</small>
         </footer>
       </main>
     </div>

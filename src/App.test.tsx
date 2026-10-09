@@ -51,7 +51,7 @@ beforeEach(() => {
       if (path === "/users/me") data = user;
       if (path === "/interests") data = { items: ["Музыка", "Кофе", "Кино"] };
       if (path === "/profiles/me") data = profile;
-      if (path === "/contexts/me") data = { items:[],modelAvailable:true };
+      if (path === "/contexts/me") data = { items: [], modelAvailable: true };
       if (path === "/users/2/like") liked = true;
       if (path === "/recommendations/next")
         data = {
@@ -97,7 +97,7 @@ describe("Nexus user flows", () => {
     sessionStorage.setItem("nexus-token", "test-token");
     const ui = userEvent.setup();
     render(<App />);
-    await ui.click(await screen.findByRole("button", { name: "Мой профиль" }));
+    await ui.click(await screen.findByRole("button", { name: "Профиль" }));
     const name = await screen.findByLabelText("Как вас зовут");
     await ui.clear(name);
     await ui.type(name, "Новое имя");
@@ -119,7 +119,7 @@ describe("Nexus user flows", () => {
     sessionStorage.setItem("nexus-token", "test-token");
     const ui = userEvent.setup();
     render(<App />);
-    await ui.click(await screen.findByRole("button", { name: "Совпадения" }));
+    await ui.click(await screen.findByRole("button", { name: "Чаты" }));
     await ui.click(await screen.findByRole("button", { name: /Саша/ }));
     await ui.type(screen.getByLabelText("Сообщение"), "Привет, Саша!");
     await ui.click(screen.getByRole("button", { name: "Отправить сообщение" }));
@@ -154,7 +154,7 @@ describe("Nexus user flows", () => {
     const ui = userEvent.setup();
     const first = render(<App />);
     await screen.findByLabelText("Сообщение");
-    await ui.click(screen.getByRole("button", { name: "Мой профиль" }));
+    await ui.click(screen.getByRole("button", { name: "Профиль" }));
     await screen.findByLabelText("Как вас зовут");
     expect(window.location.pathname).toBe("/");
     expect(window.location.hash).toBe("#profile");
@@ -169,15 +169,15 @@ describe("Nexus user flows", () => {
     sessionStorage.setItem("nexus-token", "test-token");
     const ui = userEvent.setup();
     render(<App />);
-    await ui.click(await screen.findByRole("button", { name: "Совпадения" }));
+    await ui.click(await screen.findByRole("button", { name: "Чаты" }));
     await ui.click(await screen.findByRole("button", { name: /Саша/ }));
     await screen.findByLabelText("Сообщение");
-    await ui.click(screen.getByRole("button", { name: "Уведомления" }));
+    await ui.click(screen.getByRole("button", { name: "Открыть уведомления" }));
     expect(window.location.hash).toBe("#notifications");
     window.history.back();
     await screen.findByLabelText("Сообщение");
     window.history.forward();
-    await screen.findByRole("heading", { name: /Новые события/ });
+    await screen.findByRole("heading", { name: "Уведомления" });
     expect(screen.queryByLabelText("Сообщение")).toBeNull();
   });
   it("automatically repeats skips but removes a liked final candidate", async () => {
@@ -187,7 +187,7 @@ describe("Nexus user flows", () => {
     await ui.click(
       await screen.findByRole("button", { name: "Пропустить Саша" }),
     );
-    await screen.findByText("Круг 2");
+    await screen.findByText("Новый круг · 2");
     await ui.click(screen.getByRole("button", { name: "Нравится Саша" }));
     await waitFor(() => expect(screen.queryByRole("article")).toBeNull());
     expect(

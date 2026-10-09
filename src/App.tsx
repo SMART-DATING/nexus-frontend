@@ -16,6 +16,8 @@ import {
   MapPin,
   LoaderCircle,
   RotateCcw,
+  ArrowLeft,
+  LockKeyhole,
 } from "lucide-react";
 import {
   api,
@@ -35,7 +37,8 @@ import { PhotoUpload } from "./PhotoUpload";
 import { ContextEditor } from "./ContextEditor";
 import "./semantic.css";
 import { Onboarding } from "./Onboarding";
-import "./youth.css";
+import "./layout.css";
+import { ProfileTabs } from "./ProfileTabs";
 type Tab = "discover" | "matches" | "profile" | "notifications";
 function readRoute(): { tab: Tab; matchId: number | null } {
   const id = window.location.pathname.match(/^\/match\/(\d+)$/)?.[1];
@@ -569,19 +572,18 @@ export function App() {
     );
   const nav = [
     { id: "discover", label: "Знакомства", icon: Compass },
-    { id: "matches", label: "Совпадения", icon: MessageCircle },
-    { id: "profile", label: "Мой профиль", icon: UserRound },
-    { id: "notifications", label: "Уведомления", icon: Bell },
+    { id: "matches", label: "Чаты", icon: MessageCircle },
+    { id: "profile", label: "Профиль", icon: UserRound },
   ] as const;
   return (
-    <div className={`app ${tab === "discover" ? "is-discover" : ""}`}>
+    <div className={`app is-${tab} ${selected ? "has-chat" : ""}`}>
       <aside>
         <a className="brand" href="/">
           <img className="brand-icon" src="/nexus-mark.svg" alt="" />
           nexus
         </a>
-        <span className="nav-caption">ВАШЕ ПРОСТРАНСТВО</span>
-        <nav>
+        <span className="nav-caption">Твои люди. Твоя история.</span>
+        <nav aria-label="Основные разделы">
           {nav.map((n) => (
             <button
               key={n.id}
@@ -591,19 +593,12 @@ export function App() {
             >
               <n.icon size={20} />
               {n.label}
-              {n.id === "notifications" && notices.some((n) => !n.seen) && (
-                <i />
-              )}
             </button>
           ))}
         </nav>
         <div className="sidebar-note">
-          <Sparkles size={22} />
-          <h3>На какой ты волне?</h3>
-          <p>Твои истории помогают найти тех, кто тебя понимает.</p>
-          <button className="text-button" onClick={() => navigate("profile")}>
-            Добавить свой вайб <ArrowRight size={15} />
-          </button>
+          <LockKeyhole size={18} />
+          <p>Твоя история — только для тебя. Знакомства — для двоих.</p>
         </div>
         <div className="account">
           <Avatar profile={user.profile} />
@@ -632,23 +627,16 @@ export function App() {
       <main className="workspace">
         <header>
           <span>
-            NEXUS / <b>{nav.find((n) => n.id === tab)?.label.toUpperCase()}</b>
+            <a className="mobile-brand" href="/" aria-label="Nexus">
+              <img src="/nexus-mark.svg" alt="" />
+              nexus
+            </a>
+            <b className="desktop-section">
+              {tab === "notifications"
+                ? "Уведомления"
+                : nav.find((n) => n.id === tab)?.label}
+            </b>
           </span>
-          <button
-            className="icon-button mobile-logout"
-            aria-label="Выйти из аккаунта"
-            disabled={busy}
-            onClick={async () => {
-              try {
-                await api("/auth/logout", "POST");
-                reset();
-              } catch (e) {
-                report(e);
-              }
-            }}
-          >
-            <LogOut size={18} />
-          </button>
           <button
             className="icon-button"
             aria-label="Открыть уведомления"
@@ -687,13 +675,19 @@ export function App() {
           <>
             <div className="page-heading">
               <div>
-                <span className="eyebrow">ЛЮДИ, С КОТОРЫМИ ЕСТЬ ОБЩЕЕ</span>
+                <span className="eyebrow">БЛИЖЕ, ЧЕМ КАЖЕТСЯ</span>
                 <h1>
                   На одной волне<span className="dot">.</span>
                 </h1>
-                <p>Новый человек. Знакомое чувство.</p>
+                <p>Знакомься с теми, кто тебя понимает.</p>
               </div>
-              <button className="outline" onClick={() => setFilters(!filters)}>
+              <button
+                className="outline preferences-button"
+                title="Предпочтения"
+                aria-expanded={filters}
+                aria-controls="preferences-panel"
+                onClick={() => setFilters(!filters)}
+              >
                 <SlidersHorizontal size={17} />
                 Предпочтения
               </button>
@@ -701,6 +695,7 @@ export function App() {
             {filters && (
               <form
                 className="filter-panel"
+                id="preferences-panel"
                 onSubmit={async (e) => {
                   e.preventDefault();
                   const d = new FormData(e.currentTarget);
@@ -758,7 +753,7 @@ export function App() {
             <div className="discover-bar">
               <span>
                 <span className="live-dot" />
-                Подобрано по смыслу ваших рассказов
+                Подбор по твоим интересам
               </span>
               <small>
                 {people.length} {people.length === 1 ? "профиль" : "профилей"} в
@@ -806,7 +801,7 @@ export function App() {
                     className="text-button"
                     onClick={() => navigate("matches")}
                   >
-                    К совпадениям <ArrowRight size={17} />
+                    К чатам <ArrowRight size={17} />
                   </button>
                 </div>
               </div>
@@ -826,10 +821,6 @@ export function App() {
                 }
               />
             )}
-            <div className="quiet-note">
-              <Heart size={16} />
-              Общение начинается, когда симпатия взаимна.
-            </div>
           </>
         )}
         {tab === "profile" && (
@@ -837,69 +828,61 @@ export function App() {
             <div className="page-heading">
               <div>
                 <span className="eyebrow">БЫТЬ СОБОЙ — ЛУЧШЕЕ НАЧАЛО</span>
-                <h1>
-                  Ваш профиль<span className="dot">.</span>
-                </h1>
-                <p>Расскажите, что делает вас вами.</p>
+                <h1>Твой профиль</h1>
+                <p>Фото, пара слов и то, что важно тебе.</p>
               </div>
             </div>
-            <div className="profile-progress">
-              <div>
-                <Sparkles size={18} />
-                <span>Ваша анкета становится ближе к вам</span>
-                <strong>
-                  {Math.round(
-                    ((user.profile.properties.filter((p) => p.value.trim())
-                      .length +
-                      (user.profile.interests.length ? 1 : 0) +
-                      (user.profile.avatarUrl ? 1 : 0) +
-                      ((user.profile.contextCount ?? 0) > 0 ? 1 : 0)) /
-                      7) *
-                      100,
-                  )}
-                  %
-                </strong>
-              </div>
-              <progress
-                aria-label="Заполненность профиля"
-                max={7}
-                value={
-                  user.profile.properties.filter((p) => p.value.trim()).length +
-                  (user.profile.interests.length ? 1 : 0) +
-                  (user.profile.avatarUrl ? 1 : 0) +
-                  ((user.profile.contextCount ?? 0) > 0 ? 1 : 0)
-                }
-              />
-            </div>
-            <PhotoUpload
-              profile={user.profile}
-              onSaved={(profile) =>
-                setUser((old) => (old ? { ...old, profile } : old))
+            <ProfileTabs
+              about={
+                <ProfileEditor
+                  key={user.id}
+                  user={user}
+                  interests={interests}
+                  busy={busy}
+                  onSave={async (p) => {
+                    setBusy(true);
+                    setError("");
+                    try {
+                      await api("/profiles/me", "PUT", p);
+                      await refresh();
+                      setToast("Профиль сохранён");
+                    } catch (e) {
+                      report(e);
+                    } finally {
+                      setBusy(false);
+                    }
+                  }}
+                />
+              }
+              photos={
+                <PhotoUpload
+                  profile={user.profile}
+                  onSaved={(profile) =>
+                    setUser((old) => (old ? { ...old, profile } : old))
+                  }
+                />
+              }
+              story={
+                <ContextEditor
+                  interests={user.profile.interests}
+                  onChanged={refresh}
+                />
               }
             />
-            <ContextEditor
-              interests={user.profile.interests}
-              onChanged={refresh}
-            />
-            <ProfileEditor
-              key={user.id}
-              user={user}
-              interests={interests}
-              busy={busy}
-              onSave={async (p) => {
-                setBusy(true);
-                setError("");
+            <button
+              className="text-button profile-logout"
+              onClick={async () => {
                 try {
-                  await api("/profiles/me", "PUT", p);
-                  await refresh();
-                  setToast("Профиль сохранён");
+                  await api("/auth/logout", "POST");
+                  reset();
                 } catch (e) {
                   report(e);
-                } finally {
-                  setBusy(false);
                 }
               }}
-            />
+            >
+              <LogOut size={17} />
+              Выйти из аккаунта
+            </button>
           </>
         )}
         {tab === "matches" && (
@@ -907,10 +890,8 @@ export function App() {
             <div className="page-heading">
               <div>
                 <span className="eyebrow">СИМПАТИЯ ВЗАИМНА</span>
-                <h1>
-                  Есть контакт<span className="dot">.</span>
-                </h1>
-                <p>Самое время сказать «привет».</p>
+                <h1>Чаты</h1>
+                <p>Здесь начинается ваш разговор.</p>
               </div>
             </div>
             {loading ? (
@@ -923,7 +904,9 @@ export function App() {
                 label="К знакомствам"
               />
             ) : (
-              <div className="chat-layout">
+              <div
+                className={`chat-layout ${selected ? "conversation-open" : ""}`}
+              >
                 <div className="match-list">
                   {matches.map((m) => (
                     <button
@@ -934,7 +917,7 @@ export function App() {
                       <Avatar profile={m.user} />
                       <div>
                         <strong>{value(m.user, "display_name")}</strong>
-                        <small>У вас есть общее ♡</small>
+                        <small>Открыть чат</small>
                       </div>
                       <ArrowUpRight size={16} />
                     </button>
@@ -944,6 +927,13 @@ export function App() {
                   {selected ? (
                     <>
                       <div className="chat-title">
+                        <button
+                          className="chat-back icon-button"
+                          aria-label="Все чаты"
+                          onClick={() => navigate("matches")}
+                        >
+                          <ArrowLeft size={20} />
+                        </button>
                         <Avatar profile={selected.user} />
                         <strong>{value(selected.user, "display_name")}</strong>
                         <small>Совпадение · {date(selected.createdAt)}</small>
@@ -987,7 +977,7 @@ export function App() {
                       <form className="composer" onSubmit={send}>
                         <input
                           aria-label="Сообщение"
-                          placeholder="Напишите что-нибудь хорошее…"
+                          placeholder="Сообщение…"
                           maxLength={5000}
                           value={text}
                           onChange={(e) => setText(e.target.value)}
@@ -1017,9 +1007,7 @@ export function App() {
             <div className="page-heading">
               <div>
                 <span className="eyebrow">НЕ ПРОПУСТИТЕ ВАЖНОЕ</span>
-                <h1>
-                  Новые события<span className="dot">.</span>
-                </h1>
+                <h1>Уведомления</h1>
               </div>
             </div>
             {notices.length === 0 ? (
@@ -1258,7 +1246,7 @@ function ProfileEditor({
       <div className="form-intro">
         <Avatar profile={{ ...user.profile, properties: props }} large />
         <div>
-          <h2>Всё начинается с вас</h2>
+          <h2>Твоя анкета</h2>
           <p>
             Скрытые поля видны только вам. Дата рождения используется для
             подбора.
@@ -1287,21 +1275,31 @@ function ProfileEditor({
                 />
               )}
             </label>
-            {p.name !== "display_name" && (
-              <label className="checkbox">
-                <input
-                  type="checkbox"
-                  checked={p.visible}
-                  onChange={(e) =>
-                    update(p.name, { visible: e.target.checked })
-                  }
-                />
-                Показывать в профиле
-              </label>
-            )}
           </div>
         ))}
       </div>
+      <details className="privacy-settings">
+        <summary>
+          <LockKeyhole size={17} />
+          Что видно другим
+        </summary>
+        <p>
+          Имя видно всегда. Остальные поля можно скрыть. Личный рассказ из
+          раздела «Для подбора» не виден никому.
+        </p>
+        {props
+          .filter((p) => p.name !== "display_name")
+          .map((p) => (
+            <label className="checkbox" key={p.name}>
+              <input
+                type="checkbox"
+                checked={p.visible}
+                onChange={(e) => update(p.name, { visible: e.target.checked })}
+              />
+              Показывать: {labels[p.name].toLowerCase()}
+            </label>
+          ))}
+      </details>
       <h3>
         Публичные темы <small>{chosen.length}/10</small>
       </h3>
@@ -1315,6 +1313,7 @@ function ProfileEditor({
             type="button"
             key={i}
             className={chosen.includes(i) ? "chosen" : ""}
+            aria-pressed={chosen.includes(i)}
             disabled={!chosen.includes(i) && chosen.length >= 10}
             onClick={() =>
               setChosen((old) =>

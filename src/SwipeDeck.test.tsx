@@ -87,9 +87,10 @@ it("supports keyboard likes and restores controls after a rejected request", asy
 });
 it("reveals interest-specific conversation ideas without recording a reaction", async () => {
   const { react } = setup();
+  expect(screen.queryByRole("button", { name: "Музыка" })).toBeNull();
+  await userEvent.click(screen.getByRole("button", { name: "Узнать поближе" }));
   await userEvent.click(screen.getByRole("button", { name: "Музыка" }));
   expect(screen.getByText("Какой трек у тебя сейчас на повторе?")).toBeTruthy();
-  await userEvent.click(screen.getByRole("button", { name: "Узнать поближе" }));
   expect(
     screen
       .getByRole("button", { name: "Свернуть анкету" })

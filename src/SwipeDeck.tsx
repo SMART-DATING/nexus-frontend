@@ -1,7 +1,5 @@
 import { useEffect, useRef, useState, type PointerEvent } from "react";
 import {
-  ArrowLeft,
-  ArrowRight,
   Heart,
   MapPin,
   RotateCcw,
@@ -25,10 +23,7 @@ export function SwipeDeck({
   people,
   busy,
   onReact,
-  onFocus,
   cycle,
-  reviewed,
-  liked,
 }: {
   people: Profile[];
   busy: boolean;
@@ -119,17 +114,7 @@ export function SwipeDeck({
   return (
     <div className="swipe-experience">
       <div className="deck-column">
-        <div className="deck-meta">
-          <span>
-            <Sparkles size={14} /> Поймаем общий вайб
-          </span>
-          <span>
-            <RotateCcw size={13} /> Круг {cycle}
-          </span>
-        </div>
         <div className="deck-stack">
-          <div className="stack-ghost ghost-two" />
-          <div className="stack-ghost ghost-one" />
           <article
             key={p.userId}
             aria-label={`Анкета: ${name}`}
@@ -156,11 +141,6 @@ export function SwipeDeck({
             <div className={`swipe-portrait art-${p.userId % 6}`}>
               <span className="swipe-fallback">{name.slice(0, 1)}</span>
               <PhotoGallery profile={p} />
-              <span className="swipe-score">
-                <Sparkles size={15} />
-                {Math.round(Math.max(0, p.compatibilityScore ?? 0) * 100)}%
-                сходства рассказов
-              </span>
               <span
                 aria-hidden="true"
                 className="swipe-stamp stamp-like"
@@ -180,7 +160,6 @@ export function SwipeDeck({
                 ПРОПУСКАЮ
               </span>
               <div className="swipe-identity">
-                <span className="eyebrow">МОЖЕТ, ЭТО ТВОЙ ЧЕЛОВЕК</span>
                 <h2>{name}</h2>
                 {value(p, "city") && (
                   <span>
@@ -191,12 +170,22 @@ export function SwipeDeck({
               </div>
             </div>
             <div className="swipe-story">
+              <span className="story-label">
+                <Sparkles size={15} /> По твоей истории
+              </span>
               <p className={expanded ? "expanded" : ""}>
                 {value(p, "bio") || "Лучшие истории начинаются с «привет»."}
               </p>
               <div className="tags">
                 {p.interests.slice(0, expanded ? 10 : 4).map((i) => (
-                  <span key={i} className={common.includes(i) ? "common" : ""}>
+                  <span
+                    key={i}
+                    className={common.includes(i) ? "common" : ""}
+                    title={common.includes(i) ? "Ваш общий интерес" : undefined}
+                  >
+                    {common.includes(i) && (
+                      <Heart size={12} aria-hidden="true" />
+                    )}
                     {i}
                   </span>
                 ))}
@@ -205,11 +194,49 @@ export function SwipeDeck({
                 type="button"
                 className="story-toggle"
                 aria-expanded={expanded}
+                aria-controls={expanded ? `details-${p.userId}` : undefined}
                 onClick={() => setExpanded(!expanded)}
               >
                 {expanded ? "Свернуть анкету" : "Узнать поближе"}
                 <ChevronDown size={16} />
               </button>
+              {expanded && (
+                <div className="profile-details" id={`details-${p.userId}`}>
+                  <h3>С чего начать разговор</h3>
+                  <div className="connection-interests">
+                    {(common.length ? common : p.interests.slice(0, 3)).map(
+                      (i) => (
+                        <button
+                          type="button"
+                          key={i}
+                          aria-pressed={
+                            idea ===
+                            (ideas[i] ||
+                              `Что тебе больше всего нравится в теме «${i}»?`)
+                          }
+                          onClick={() =>
+                            setIdea(
+                              ideas[i] ||
+                                `Что тебе больше всего нравится в теме «${i}»?`,
+                            )
+                          }
+                        >
+                          {i}
+                        </button>
+                      ),
+                    )}
+                  </div>
+                  <p className="conversation-prompt" aria-live="polite">
+                    {idea || "Как выглядит твой идеальный выходной?"}
+                  </p>
+                  <p className="matching-explanation">
+                    Сходство личных рассказов:{" "}
+                    {Math.round(Math.max(0, p.compatibilityScore ?? 0) * 100)}%.
+                    Это ориентир, а не оценка отношений. Чужие рассказы остаются
+                    скрытыми.
+                  </p>
+                </div>
+              )}
             </div>
           </article>
         </div>
@@ -223,9 +250,6 @@ export function SwipeDeck({
             <X size={28} />
             <span>Пропустить</span>
           </button>
-          <span className="gesture-caption">
-            <ArrowLeft size={13} /> свайп <ArrowRight size={13} />
-          </span>
           <button
             className="swipe-choice swipe-yes"
             disabled={busy || !!leaving}
@@ -236,107 +260,17 @@ export function SwipeDeck({
             <span>Нравится</span>
           </button>
         </div>
-        <p className="keyboard-hint">
-          Потяните карточку или используйте ← / →, когда она выбрана
-        </p>
-      </div>
-      <div className="discovery-side">
-        <section className="connection-panel">
-          <span className="eyebrow">НАЧНИТЕ С ОБЩЕГО</span>
-          <h3>
-            {common.length
-              ? "Ваша общая волна"
-              : "Разные интересы. Новая история."}
-          </h3>
+        <details className="discovery-help">
+          <summary>
+            <RotateCcw size={14} />{" "}
+            {cycle > 1 ? `Новый круг · ${cycle}` : "Как работает подбор"}
+          </summary>
           <p>
-            {common.length
-              ? "Нажмите на интерес — найдём повод для первого разговора."
-              : "Иногда самое интересное начинается с любопытства."}
+            Сначала — новые люди, потом — пропущенные. Те, кто понравился,
+            повторяться не будут. Можно свайпать карточку или выбрать её и
+            нажимать ← / →.
           </p>
-          <div className="connection-interests">
-            {(common.length ? common : p.interests.slice(0, 3)).map((i) => (
-              <button
-                key={i}
-                type="button"
-                onClick={() =>
-                  setIdea(
-                    ideas[i] || `Что тебе больше всего нравится в теме «${i}»?`,
-                  )
-                }
-                className={
-                  idea ===
-                  (ideas[i] || `Что тебе больше всего нравится в теме «${i}»?`)
-                    ? "selected"
-                    : ""
-                }
-              >
-                <Sparkles size={13} />
-                {i}
-              </button>
-            ))}
-          </div>
-          <div className="conversation-idea" aria-live="polite">
-            <span>ИДЕЯ ДЛЯ ЗНАКОМСТВА</span>
-            <p>{idea || "Как выглядит твой идеальный выходной?"}</p>
-            <small>
-              Сходство текстов — ориентир для знакомства. Личные рассказы
-              собеседника остаются скрытыми.
-            </small>
-          </div>
-        </section>
-        <section className="rhythm-panel">
-          <span className="eyebrow">В ЭТОЙ ПОДБОРКЕ</span>
-          <div>
-            <strong>
-              {reviewed}
-              <small>просмотрено</small>
-            </strong>
-            <strong>
-              {liked}
-              <small>симпатий</small>
-            </strong>
-          </div>
-          <p>Без спешки. Ваш человек может быть на следующей карточке.</p>
-        </section>
-        {people.length > 1 && (
-          <section className="up-next">
-            <div>
-              <h3>Дальше в подборке</h3>
-              <small>{people.length - 1} анкет</small>
-            </div>
-            <div className="preview-people">
-              {people.slice(1, 5).map((other) => (
-                <button
-                  key={other.userId}
-                  disabled={busy || !!leaving}
-                  onClick={() => onFocus(other.userId)}
-                  aria-label={`Посмотреть анкету ${value(other, "display_name")}`}
-                >
-                  <span>
-                    {value(other, "display_name").slice(0, 1)}
-                    {other.avatarUrl && (
-                      <img
-                        src={other.avatarUrl}
-                        alt=""
-                        onError={(e) => {
-                          e.currentTarget.style.display = "none";
-                        }}
-                      />
-                    )}
-                  </span>
-                  <small>{value(other, "display_name")}</small>
-                </button>
-              ))}
-            </div>
-          </section>
-        )}
-        <div className="circle-note">
-          <RotateCcw size={17} />
-          <p>
-            Пропустил? Анкета вернётся в новом круге. Лайки остаются — повторно
-            свайпать их не придётся.
-          </p>
-        </div>
+        </details>
       </div>
     </div>
   );

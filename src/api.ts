@@ -15,6 +15,7 @@ export type Profile = {
 export type User = {
   id: number;
   email: string;
+  discoveryHidden?: boolean;
   profile: Profile;
   preferences: { minAge: number; maxAge: number };
 };

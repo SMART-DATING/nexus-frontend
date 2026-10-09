@@ -1,9 +1,7 @@
 import React, { useEffect, useState, useRef, type FormEvent } from "react";
 import {
   Heart,
-  Compass,
   MessageCircle,
-  UserRound,
   Bell,
   LogOut,
   ArrowUpRight,
@@ -39,6 +37,13 @@ import "./semantic.css";
 import { Onboarding } from "./Onboarding";
 import "./layout.css";
 import { ProfileTabs } from "./ProfileTabs";
+import { PublicHome } from "./PublicHome";
+import { AppNavigation } from "./AppNavigation";
+import { Dialog } from "./Dialog";
+import { PrivacyNotice } from "./PrivacyNotice";
+import { ProfilePreview } from "./ProfilePreview";
+import { DataControls } from "./DataControls";
+import "./experience.css";
 type Tab = "discover" | "matches" | "profile" | "notifications";
 function readRoute(): { tab: Tab; matchId: number | null } {
   const id = window.location.pathname.match(/^\/match\/(\d+)$/)?.[1];
@@ -98,12 +103,31 @@ export function App() {
   const [cycle, setCycle] = useState(1),
     [reviewed, setReviewed] = useState(0),
     [liked, setLiked] = useState(0);
-  const [register, setRegister] = useState(false),
+  const [register, setRegister] = useState(
+      () => window.location.hash === "#register",
+    ),
     [email, setEmail] = useState(""),
     [password, setPassword] = useState("");
   const [onboardingDismissed, setOnboardingDismissed] = useState<number | null>(
     () => Number(sessionStorage.getItem("nexus-onboarding-dismissed")) || null,
   );
+  const [authOpen, setAuthOpen] = useState(() =>
+    ["#login", "#register"].includes(window.location.hash),
+  );
+  const [privacyOpen, setPrivacyOpen] = useState(false),
+    [previewOpen, setPreviewOpen] = useState(false);
+  function openAuth(signup: boolean) {
+    setRegister(signup);
+    setAuthOpen(true);
+    setError("");
+    window.history.pushState(null, "", signup ? "/#register" : "/#login");
+  }
+  function closeAuth() {
+    setAuthOpen(false);
+    setError("");
+    setPassword("");
+    window.history.pushState(null, "", "/");
+  }
   const currentMatch = useRef<number | null>(null);
   const [profileSection, setProfileSection] = useState(readProfileSection);
   currentMatch.current = selected?.id ?? null;
@@ -124,6 +148,8 @@ export function App() {
   }
   useEffect(() => {
     const sync = () => {
+      setAuthOpen(["#login", "#register"].includes(window.location.hash));
+      setRegister(window.location.hash === "#register");
       const route = readRoute();
       setTab(route.tab);
       setProfileSection(readProfileSection());
@@ -141,6 +167,9 @@ export function App() {
   }, []);
   function reset() {
     setUser(null);
+    setAuthOpen(false);
+    setPrivacyOpen(false);
+    setPreviewOpen(false);
     setOnboardingDismissed(null);
     sessionStorage.removeItem("nexus-onboarding-dismissed");
     setPeople([]);
@@ -174,6 +203,7 @@ export function App() {
   useEffect(() => {
     const expired = () => {
       reset();
+      setAuthOpen(true);
       setError("Сессия истекла. Войдите снова");
     };
     window.addEventListener("nexus-session-expired", expired);
@@ -446,93 +476,90 @@ export function App() {
     );
   if (!user)
     return (
-      <div className="auth">
-        <section className="auth-story">
-          <a className="brand" href="/">
-            <img className="brand-icon" src="/nexus-mark.svg" alt="" />
-            nexus
-          </a>
-          <div>
-            <span className="eyebrow">ЗНАКОМСТВА СО СМЫСЛОМ</span>
-            <h1>
-              Твой вайб.
-              <br />
-              Твои <em>люди.</em>
-            </h1>
-            <p>
-              Расскажи, что тебя цепляет.
-              <br />
-              Найди того, кто чувствует похоже.
-            </p>
-            <div className="orbit">
-              <span>♫</span>
-              <span>✳</span>
-              <span>♡</span>
-            </div>
-          </div>
-          <small>Меньше случайностей. Больше общего.</small>
-        </section>
-        <main className="auth-form">
-          <span className="eyebrow">ВАША СЛЕДУЮЩАЯ ИСТОРИЯ</span>
-          <h2>{register ? "Начнём знакомство" : "С возвращением"}</h2>
-          <p>
-            {register
-              ? "Создайте аккаунт и расскажите о себе."
-              : "Ваши люди уже где-то рядом."}
-          </p>
-          <form onSubmit={login}>
-            <label>
-              Email
-              <input
-                type="email"
-                autoComplete="email"
-                required
-                maxLength={254}
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-              />
-            </label>
-            <label>
-              Пароль
-              <input
-                type="password"
-                autoComplete={register ? "new-password" : "current-password"}
-                required
-                minLength={8}
-                maxLength={72}
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-              />
-            </label>
-            {error && (
-              <div role="alert" className="error">
-                {error}
-              </div>
-            )}
-            <button disabled={busy} className="primary">
-              {busy ? "Подождите…" : register ? "Создать аккаунт" : "Войти"}
-              <ArrowRight size={18} />
-            </button>
-          </form>
-          <button
-            className="text-button"
-            onClick={() => {
-              setRegister(!register);
-              setError("");
-            }}
+      <>
+        <div
+          aria-hidden={authOpen || privacyOpen ? true : undefined}
+          inert={authOpen || privacyOpen}
+        >
+          <PublicHome
+            onAuth={openAuth}
+            onPrivacy={() => setPrivacyOpen(true)}
+          />
+        </div>
+        {authOpen && (
+          <Dialog
+            title={register ? "Начнём знакомство" : "С возвращением"}
+            onClose={closeAuth}
+            className="auth-dialog"
           >
-            {register
-              ? "Уже есть аккаунт? Войти"
-              : "Первый раз здесь? Зарегистрироваться"}
-          </button>
-          <div className="auth-benefits">
-            <span>✦ Подбор по смыслу</span>
-            <span>♡ Взаимная симпатия</span>
-            <span>◌ Личные истории скрыты</span>
-          </div>
-          <small>Сервис знакомств для пользователей от 18 лет.</small>
-        </main>
-      </div>
+            <p className="auth-dialog-intro">
+              {register
+                ? "Создай аккаунт — дальше познакомимся с твоими интересами."
+                : "Твоя следующая история начинается здесь."}
+            </p>
+            <form onSubmit={login}>
+              <label>
+                Email
+                <input
+                  type="email"
+                  autoComplete="email"
+                  required
+                  maxLength={254}
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                />
+              </label>
+              <label>
+                Пароль
+                <input
+                  type="password"
+                  autoComplete={register ? "new-password" : "current-password"}
+                  required
+                  minLength={8}
+                  maxLength={72}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                />
+              </label>
+              {register && (
+                <p className="prototype-note">
+                  Локальный прототип · только для 18+. Используй тестовые
+                  данные.{" "}
+                  <button
+                    type="button"
+                    className="inline-link"
+                    onClick={() => setPrivacyOpen(true)}
+                  >
+                    О данных и приватности
+                  </button>
+                </p>
+              )}
+              {error && (
+                <div role="alert" className="error">
+                  {error}
+                </div>
+              )}
+              <button disabled={busy} className="primary">
+                {busy ? "Подождите…" : register ? "Создать аккаунт" : "Войти"}
+                <ArrowRight size={18} />
+              </button>
+            </form>
+            <button className="text-button" onClick={() => openAuth(!register)}>
+              {register
+                ? "Уже есть аккаунт? Войти"
+                : "Первый раз здесь? Зарегистрироваться"}
+            </button>
+          </Dialog>
+        )}
+        {privacyOpen && (
+          <Dialog
+            title="О данных и приватности"
+            onClose={() => setPrivacyOpen(false)}
+          >
+            <PrivacyNotice />
+          </Dialog>
+        )}
+      </>
     );
   if (!complete && onboardingDismissed !== user.id)
     return (
@@ -577,82 +604,40 @@ export function App() {
         )}
       </>
     );
-  const nav = [
-    { id: "discover", label: "Знакомства", icon: Compass },
-    { id: "matches", label: "Чаты", icon: MessageCircle },
-    { id: "profile", label: "Профиль", icon: UserRound },
-  ] as const;
   return (
     <div className={`app is-${tab} ${selected ? "has-chat" : ""}`}>
-      <aside>
-        <a className="brand" href="/">
-          <img className="brand-icon" src="/nexus-mark.svg" alt="" />
-          nexus
-        </a>
-        <span className="nav-caption">Твои люди. Твоя история.</span>
-        <nav aria-label="Основные разделы">
-          {nav.map((n) => (
-            <button
-              key={n.id}
-              className={tab === n.id ? "active" : ""}
-              onClick={() => navigate(n.id)}
-              aria-current={tab === n.id ? "page" : undefined}
-            >
-              <n.icon size={20} />
-              {n.label}
-            </button>
-          ))}
-        </nav>
-        <div className="sidebar-note">
-          <LockKeyhole size={18} />
-          <p>Твоя история — только для тебя. Знакомства — для двоих.</p>
-        </div>
-        <div className="account">
-          <Avatar profile={user.profile} />
-          <div>
-            <strong>
-              {value(user.profile, "display_name") || "Ваш профиль"}
-            </strong>
-            <small>На своей волне</small>
-          </div>
-          <button
-            aria-label="Выйти"
-            title="Выйти"
-            onClick={async () => {
-              try {
-                await api("/auth/logout", "POST");
-                reset();
-              } catch (e) {
-                report(e);
-              }
+      <AppNavigation
+        user={user}
+        tab={tab}
+        unread={notices.some((n) => !n.seen)}
+        onNavigate={navigate}
+        onPreview={() => setPreviewOpen(true)}
+        onPrivacy={() => setPrivacyOpen(true)}
+        onLogout={() => {
+          void api("/auth/logout", "POST").then(reset).catch(report);
+        }}
+      />
+      {previewOpen && (
+        <ProfilePreview
+          profile={user.profile}
+          onClose={() => setPreviewOpen(false)}
+          onEdit={() => {
+            setPreviewOpen(false);
+            navigate("profile");
+          }}
+        />
+      )}
+      {privacyOpen && (
+        <Dialog title="Мои данные" onClose={() => setPrivacyOpen(false)}>
+          <DataControls
+            user={user}
+            onChanged={async () => {
+              await refresh();
             }}
-          >
-            <LogOut size={18} />
-          </button>
-        </div>
-      </aside>
+          />
+        </Dialog>
+      )}
       <main className="workspace">
-        <header>
-          <span>
-            <a className="mobile-brand" href="/" aria-label="Nexus">
-              <img src="/nexus-mark.svg" alt="" />
-              nexus
-            </a>
-            <b className="desktop-section">
-              {tab === "notifications"
-                ? "Уведомления"
-                : nav.find((n) => n.id === tab)?.label}
-            </b>
-          </span>
-          <button
-            className="icon-button"
-            aria-label="Открыть уведомления"
-            onClick={() => navigate("notifications")}
-          >
-            <Bell size={19} />
-            {notices.some((n) => !n.seen) && <i />}
-          </button>
-        </header>
         {error && (
           <div role="alert" className="error">
             {error}
@@ -680,6 +665,18 @@ export function App() {
         )}
         {tab === "discover" && (
           <>
+            {user.discoveryHidden && (
+              <div className="hidden-profile-notice">
+                <LockKeyhole size={18} />
+                <span>Анкета скрыта от новых людей.</span>
+                <button
+                  className="text-button"
+                  onClick={() => setPrivacyOpen(true)}
+                >
+                  Изменить
+                </button>
+              </div>
+            )}
             <div className="page-heading">
               <div>
                 <span className="eyebrow">БЛИЖЕ, ЧЕМ КАЖЕТСЯ</span>
@@ -838,6 +835,13 @@ export function App() {
                 <h1>Твой профиль</h1>
                 <p>Фото, пара слов и то, что важно тебе.</p>
               </div>
+              <button
+                className="outline own-preview-button"
+                onClick={() => setPreviewOpen(true)}
+              >
+                <Avatar profile={user.profile} />
+                Посмотреть анкету
+              </button>
             </div>
             <ProfileTabs
               initialTab={profileSection}

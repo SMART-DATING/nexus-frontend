@@ -1,15 +1,24 @@
 import { useEffect, useState } from "react";
-import { ChevronLeft, ChevronRight, LockKeyhole, Camera } from "lucide-react";
+import {
+  ChevronLeft,
+  ChevronRight,
+  LockKeyhole,
+  Camera,
+  Expand,
+} from "lucide-react";
 import type { Profile } from "./api";
+import { PhotoViewer } from "./PhotoViewer";
 export function PhotoGallery({ profile }: { profile: Profile }) {
   const [index, setIndex] = useState(0);
   const photos =
     profile.photos ??
     (profile.avatarUrl ? [{ id: 0, position: 0, url: profile.avatarUrl }] : []);
   const [broken, setBroken] = useState(false);
+  const [viewer, setViewer] = useState(false);
   useEffect(() => {
     setIndex(0);
     setBroken(false);
+    setViewer(false);
   }, [profile.userId]);
   useEffect(() => setBroken(false), [index, photos[index]?.url]);
   useEffect(
@@ -24,10 +33,28 @@ export function PhotoGallery({ profile }: { profile: Profile }) {
     <div className="profile-gallery" aria-label="Фотографии анкеты">
       {!!photos.length && !broken && (
         <img
+          key={`${photos[Math.min(index, photos.length - 1)].id}-${index}`}
           src={photos[Math.min(index, photos.length - 1)].url}
           alt={`Фото ${index + 1} из ${photos.length}`}
           draggable={false}
           onError={() => setBroken(true)}
+        />
+      )}
+      {!!photos.length && !broken && (
+        <button
+          type="button"
+          className="gallery-expand"
+          aria-label="Открыть фотографии"
+          onClick={() => setViewer(true)}
+        >
+          <Expand size={17} />
+        </button>
+      )}
+      {viewer && !!photos.length && (
+        <PhotoViewer
+          photos={photos}
+          initialIndex={Math.min(index, photos.length - 1)}
+          onClose={() => setViewer(false)}
         />
       )}
       {!photos.length && (
@@ -68,6 +95,7 @@ export function PhotoGallery({ profile }: { profile: Profile }) {
                 key={p.id}
                 className={i === index ? "active" : ""}
                 aria-label={`Показать фото ${i + 1}`}
+                aria-pressed={i === index}
                 onClick={() => setIndex(i)}
               />
             ))}

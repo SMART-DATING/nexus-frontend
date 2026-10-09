@@ -8,6 +8,8 @@ import {
 } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { SwipeDeck } from "./SwipeDeck";
+import { installDialogMock } from "./testDialog";
+installDialogMock();
 const person = {
   userId: 2,
   properties: [{ name: "display_name", value: "Саша", visible: true }],
@@ -96,5 +98,41 @@ it("reveals interest-specific conversation ideas without recording a reaction", 
       .getByRole("button", { name: "Свернуть анкету" })
       .getAttribute("aria-expanded"),
   ).toBe("true");
+  expect(react).not.toHaveBeenCalled();
+});
+
+it("swipes photos inside the viewer without moving or reacting to the dating card", async () => {
+  const react = vi.fn(async () => true);
+  render(
+    <SwipeDeck
+      people={[
+        {
+          ...person,
+          photos: [
+            { id: 1, position: 0, url: "/one" },
+            { id: 2, position: 1, url: "/two" },
+          ],
+        },
+      ]}
+      busy={false}
+      onReact={react}
+      onFocus={vi.fn()}
+      cycle={1}
+      reviewed={0}
+      liked={0}
+    />,
+  );
+  const card = screen.getByRole("article");
+  await userEvent.click(
+    screen.getByRole("button", { name: "Открыть фотографии" }),
+  );
+  const dialog = screen.getByRole("dialog", { name: "Фотографии" });
+  const img = dialog.querySelector(".viewer-stage img") as HTMLElement;
+  drag(img, -150);
+  expect(dialog.querySelector(".viewer-stage img")?.getAttribute("src")).toBe(
+    "/two",
+  );
+  expect(card.className).not.toContain("leaving-");
+  expect(card.style.transform).toBe("translateX(0px) rotate(0deg)");
   expect(react).not.toHaveBeenCalled();
 });

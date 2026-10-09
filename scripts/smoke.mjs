@@ -149,6 +149,32 @@ assert.ok(
     await request("/recommendations?limit=50", "GET", undefined, a.accessToken)
   ).items.some((x) => x.userId === b.user.id),
 );
+const exported = await request(
+  "/users/me/data",
+  "GET",
+  undefined,
+  a.accessToken,
+);
+assert.equal(exported.account.id, a.user.id);
+assert.equal(exported.privateContexts.length, 1);
+assert.ok(!JSON.stringify(exported).includes("?access="));
+assert.ok(!JSON.stringify(exported).includes(a.accessToken));
+await request("/users/me/data", "GET", undefined, undefined, 401);
+await request("/users/me/discovery", "PUT", { hidden: true }, a.accessToken);
+await request(`/profiles/${a.user.id}`, "GET", undefined, b.accessToken, 404);
+await request(
+  `/users/${a.user.id}/like`,
+  "POST",
+  undefined,
+  b.accessToken,
+  404,
+);
+assert.equal(
+  (await request("/users/me", "GET", undefined, a.accessToken)).discoveryHidden,
+  true,
+);
+await request("/users/me/discovery", "PUT", { hidden: false }, a.accessToken);
+await request(`/profiles/${a.user.id}`, "GET", undefined, b.accessToken);
 assert.equal(
   (await request(`/users/${b.user.id}/like`, "POST", undefined, a.accessToken))
     .matched,
@@ -244,6 +270,6 @@ assert.equal(
 await request("/auth/logout", "POST", undefined, a.accessToken, 204);
 await request("/users/me", "GET", undefined, a.accessToken, 401);
 console.log(
-  "PASS: UI, multipart photo upload/delete, automatic skip circle excluding likes, profiles, preferences, match, chat, notifications and logout through " +
+  "PASS: UI, multipart photo upload/delete, automatic skip circle excluding likes, profiles, preferences, match, chat, own data export, profile hiding, notifications and logout through " +
     base,
 );

@@ -3,6 +3,8 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { render, screen, waitFor, cleanup } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { App } from "./App";
+import { installDialogMock } from "./testDialog";
+installDialogMock();
 const profile = {
   userId: 1,
   contextCount: 1,
@@ -80,6 +82,38 @@ afterEach(() => {
   vi.unstubAllGlobals();
 });
 describe("Nexus user flows", () => {
+  it("starts with the product story, opens signup deliberately, and restores the home page", async () => {
+    const ui = userEvent.setup();
+    render(<App />);
+    await screen.findByRole("heading", { name: /Встреть того/ });
+    expect(screen.queryByLabelText("Email")).toBeNull();
+    await ui.click(screen.getByRole("button", { name: "Зарегистрироваться" }));
+    expect(window.location.hash).toBe("#register");
+    expect(
+      screen.getByRole("dialog", { name: "Начнём знакомство" }),
+    ).toBeTruthy();
+    await ui.click(screen.getByRole("button", { name: "Закрыть окно" }));
+    expect(screen.queryByRole("dialog")).toBeNull();
+    expect(window.location.hash).toBe("");
+    expect(requests.some((r) => r.path === "/auth/register")).toBe(false);
+  });
+  it("opens own profile preview from the avatar without exposing private fields", async () => {
+    sessionStorage.setItem("nexus-token", "test-token");
+    const ui = userEvent.setup();
+    render(<App />);
+    await ui.click(
+      await screen.findByRole("button", { name: "Профиль и настройки: Алекс" }),
+    );
+    await ui.click(screen.getByRole("button", { name: "Посмотреть анкету" }));
+    const dialog = screen.getByRole("dialog", { name: "Твоя анкета" });
+    expect(dialog.textContent).toContain("Музыка и кофе");
+    expect(dialog.textContent).not.toContain("2001-04-12");
+    await ui.click(
+      screen.getByRole("button", { name: "Редактировать профиль" }),
+    );
+    await screen.findByLabelText("Как вас зовут");
+    expect(window.location.hash).toBe("#profile");
+  });
   it("opens photo management directly and retains the profile section after reload", async () => {
     sessionStorage.setItem("nexus-token", "test-token");
     window.history.replaceState(null, "", "/#profile/photos");
@@ -87,9 +121,7 @@ describe("Nexus user flows", () => {
     const first = render(<App />);
     await screen.findByRole("region", { name: "Фото профиля" });
     expect(
-      screen
-        .getByRole("tab", { name: "Фото" })
-        .getAttribute("aria-selected"),
+      screen.getByRole("tab", { name: "Фото" }).getAttribute("aria-selected"),
     ).toBe("true");
     await ui.click(screen.getByRole("tab", { name: "Для подбора" }));
     expect(window.location.hash).toBe("#profile/story");
@@ -105,6 +137,9 @@ describe("Nexus user flows", () => {
   it("logs in using the API and opens recommendations", async () => {
     const ui = userEvent.setup();
     render(<App />);
+    await ui.click(
+      await screen.findByRole("button", { name: "Войти" }),
+    );
     await ui.type(await screen.findByLabelText("Email"), "demo@nexus.local");
     await ui.type(screen.getByLabelText("Пароль"), "NexusDemo2026!");
     await ui.click(screen.getByRole("button", { name: "Войти" }));
@@ -219,3 +254,4 @@ describe("Nexus user flows", () => {
     expect(requests.filter((r) => r.path === "/users/2/like")).toHaveLength(1);
   });
 });
+

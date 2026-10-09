@@ -64,6 +64,26 @@ function drag(card: HTMLElement, x: number, y = 0) {
     clientY: 300 + y,
   });
 }
+it.each([0, 0.684, 1])(
+  "shows semantic similarity %s without expanding the profile",
+  (score) => {
+    render(
+      <SwipeDeck
+        people={[{ ...person, compatibilityScore: score }]}
+        busy={false}
+        onReact={vi.fn()}
+        onFocus={vi.fn()}
+        cycle={1}
+        reviewed={0}
+        liked={0}
+      />,
+    );
+    expect(
+      screen.getByText(`${Math.round(score * 100)}% совпадения`),
+    ).toBeTruthy();
+    expect(screen.queryByText("С чего начать разговор")).toBeNull();
+  },
+);
 it("ignores small drags and vertical scrolls, submits one horizontal swipe", async () => {
   const { react, card } = setup();
   drag(card, 30);

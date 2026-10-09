@@ -172,7 +172,10 @@ export function SwipeDeck({
             </div>
             <div className="swipe-story">
               <span className="story-label">
-                <Sparkles size={15} /> По твоей истории
+                <Sparkles size={15} />
+                {typeof p.compatibilityScore === "number"
+                  ? `${Math.round(Math.min(1, Math.max(0, p.compatibilityScore)) * 100)}% совпадения`
+                  : "По твоей истории"}
               </span>
               <p className={expanded ? "expanded" : ""}>
                 {value(p, "bio") || "Лучшие истории начинаются с «привет»."}

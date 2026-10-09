@@ -197,7 +197,7 @@ svg {
   display: flex;
   min-height: 100vh;
 }
-aside {
+.app > aside {
   width: 252px;
   flex-shrink: 0;
   position: fixed;
@@ -1335,7 +1335,7 @@ footer small:last-child {
   }
 }
 @media (max-width: 1200px) {
-  aside {
+  .app > aside {
     width: 221px;
     padding: 27px 17px 21px;
   }
@@ -1394,7 +1394,7 @@ footer small:last-child {
   }
 }
 @media (max-width: 760px) {
-  aside {
+  .app > aside {
     width: 100%;
     height: calc(72px + env(safe-area-inset-bottom));
     top: auto;
@@ -1407,7 +1407,7 @@ footer small:last-child {
     backdrop-filter: blur(20px);
     box-shadow: 0 -8px 35px #070b182e;
   }
-  aside > .brand,
+  .app > aside > .brand,
   .nav-caption,
   .sidebar-note,
   .account {

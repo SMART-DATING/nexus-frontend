@@ -838,7 +838,7 @@ export function App() {
                 Ищем общее…
               </div>
             ) : people.length === 0 ? (
-              <div className="empty">
+              <div className="empty discovery-empty">
                 <Sparkles size={40} />
                 <h2>Новые лица ещё появятся</h2>
                 <p>

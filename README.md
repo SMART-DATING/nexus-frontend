@@ -10,14 +10,14 @@
 
 В профиле доступны шесть фотографий с взаимным раскрытием, настройки видимости и дополнительные истории. Подборкой можно управлять жестами, кнопками или стрелками клавиатуры. Skip возвращаются по кругу, Like не повторяются. Взаимная симпатия открывает чат.
 
-Основные разделы — «Знакомства», «Чаты», «Профиль», «Для подбора»; уведомления открываются в шапке. «Для подбора» ведёт к закрытым рассказам и повторному интервью. На компьютере подборка помещается в высоту окна, список чатов и история сообщений прокручиваются отдельно. На телефоне переписка открывается отдельным экраном с возвратом к списку. [Основания дизайна](https://github.com/SMART-DATING/nexus-docs/blob/feature/working-prototype/design/interface.md).
+Основные разделы — «Знакомства», «Чаты», «Профиль», «Для подбора»; уведомления открываются в шапке. «Для подбора» ведёт к закрытым рассказам и повторному интервью. На компьютере подборка помещается в высоту окна, список чатов и история сообщений прокручиваются отдельно. На телефоне переписка открывается отдельным экраном с возвратом к списку. [Основания дизайна](https://github.com/SMART-DATING/nexus-docs/blob/main/design/interface.md).
 
 ## Запуск разработки
 
-Текущая ветка — `feature/working-prototype`, [PR #5](https://github.com/SMART-DATING/nexus-frontend/pull/5). `main` пока содержит первоначальный каркас. Нужны Node.js 22.12+ и запущенный [backend](https://github.com/SMART-DATING/nexus-backend/blob/feature/working-prototype/README.md) на 8080.
+Рабочий прототип находится в `main`; история реализации — в [PR #5](https://github.com/SMART-DATING/nexus-frontend/pull/5). Новые изменения оформляются отдельными ветками и Pull Request в `main`. Нужны Node.js 22.12+ и запущенный [backend](https://github.com/SMART-DATING/nexus-backend/blob/main/README.md) на 8080.
 
 ```sh
-git clone --branch feature/working-prototype https://github.com/SMART-DATING/nexus-frontend.git
+git clone --branch main https://github.com/SMART-DATING/nexus-frontend.git
 cd nexus-frontend
 npm ci
 npm run dev
@@ -81,4 +81,4 @@ Build проверяет TypeScript и создаёт `dist/`; preview обсл�
 
 В «Мои данные» доступны скрытие анкеты от новых участников и собственная выгрузка JSON. Пауза сохраняет существующие чаты и не удаляет аккаунт. Выгрузка не содержит токенов, хешей паролей и полученных сообщений.
 
-Сборка предназначена для локальных проверок на вымышленных данных. Готовность публичного запуска не заявляется. [Потоки данных, ограничения и задачи выпуска](https://github.com/SMART-DATING/nexus-docs/blob/feature/working-prototype/privacy/data-handling.md).
+Сборка предназначена для локальных проверок на вымышленных данных. Готовность публичного запуска не заявляется. [Потоки данных, ограничения и задачи выпуска](https://github.com/SMART-DATING/nexus-docs/blob/main/privacy/data-handling.md).

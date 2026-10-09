@@ -46,7 +46,7 @@ export function PhotoGallery({ profile }: { profile: Profile }) {
               : "Добавьте своё фото, чтобы увидеть первое фото этого человека."}
           </p>
           {hidden > 0 && (
-            <a className="gallery-unlock" href="/#profile">
+            <a className="gallery-unlock" href="/#profile/photos">
               <Camera size={14} />
               Добавить своё фото
             </a>

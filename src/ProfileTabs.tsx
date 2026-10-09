@@ -1,4 +1,4 @@
-import { useId, useState, type ReactNode } from "react";
+import { useEffect, useId, useState, type ReactNode } from "react";
 import { Camera, LockKeyhole, UserRound } from "lucide-react";
 
 /** Keep draft editors mounted when a person switches sections. */
@@ -6,13 +6,22 @@ export function ProfileTabs({
   about,
   photos,
   story,
+  initialTab = 0,
+  onChange,
 }: {
   about: ReactNode;
   photos: ReactNode;
   story: ReactNode;
+  initialTab?: number;
+  onChange?: (index: number) => void;
 }) {
   const id = useId();
-  const [active, setActive] = useState(0);
+  const [active, setActive] = useState(initialTab);
+  useEffect(() => setActive(initialTab), [initialTab]);
+  function select(index: number) {
+    setActive(index);
+    onChange?.(index);
+  }
   const sections = [
     { title: "Анкета", icon: UserRound, content: about },
     { title: "Фото", icon: Camera, content: photos },
@@ -30,7 +39,7 @@ export function ProfileTabs({
             aria-controls={`${id}-panel-${i}`}
             aria-selected={active === i}
             tabIndex={active === i ? 0 : -1}
-            onClick={() => setActive(i)}
+            onClick={() => select(i)}
             onKeyDown={(e) => {
               let next = i;
               if (e.key === "ArrowRight") next = (i + 1) % sections.length;
@@ -40,7 +49,7 @@ export function ProfileTabs({
               else if (e.key === "End") next = sections.length - 1;
               else return;
               e.preventDefault();
-              setActive(next);
+              select(next);
               e.currentTarget.parentElement
                 ?.querySelectorAll<HTMLButtonElement>('[role="tab"]')
                 [next]?.focus();

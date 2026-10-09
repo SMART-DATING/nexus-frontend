@@ -44,4 +44,9 @@ it("does not render an image or gallery controls when zero photos are permitted"
   expect(screen.queryByRole("img")).toBeNull();
   expect(screen.queryByRole("button")).toBeNull();
   expect(screen.getByText(/Добавьте своё фото/)).toBeTruthy();
+  expect(
+    screen
+      .getByRole("link", { name: "Добавить своё фото" })
+      .getAttribute("href"),
+  ).toBe("/#profile/photos");
 });

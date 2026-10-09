@@ -80,6 +80,28 @@ afterEach(() => {
   vi.unstubAllGlobals();
 });
 describe("Nexus user flows", () => {
+  it("opens photo management directly and retains the profile section after reload", async () => {
+    sessionStorage.setItem("nexus-token", "test-token");
+    window.history.replaceState(null, "", "/#profile/photos");
+    const ui = userEvent.setup();
+    const first = render(<App />);
+    await screen.findByRole("region", { name: "Фото профиля" });
+    expect(
+      screen
+        .getByRole("tab", { name: "Фото", exact: true })
+        .getAttribute("aria-selected"),
+    ).toBe("true");
+    await ui.click(screen.getByRole("tab", { name: "Для подбора" }));
+    expect(window.location.hash).toBe("#profile/story");
+    first.unmount();
+    render(<App />);
+    await screen.findByRole("region", { name: "Личные рассказы для подбора" });
+    expect(
+      screen
+        .getByRole("tab", { name: "Для подбора" })
+        .getAttribute("aria-selected"),
+    ).toBe("true");
+  });
   it("logs in using the API and opens recommendations", async () => {
     const ui = userEvent.setup();
     render(<App />);

@@ -43,13 +43,17 @@ type Tab = "discover" | "matches" | "profile" | "notifications";
 function readRoute(): { tab: Tab; matchId: number | null } {
   const id = window.location.pathname.match(/^\/match\/(\d+)$/)?.[1];
   if (id) return { tab: "matches", matchId: Number(id) };
-  const section = window.location.hash.slice(1);
+  const section = window.location.hash.slice(1).split("/")[0];
   return {
     tab: ["matches", "profile", "notifications"].includes(section)
       ? (section as Tab)
       : "discover",
     matchId: null,
   };
+}
+function readProfileSection() {
+  const section = window.location.hash.split("/")[1];
+  return section === "photos" ? 1 : section === "story" ? 2 : 0;
 }
 const date = (s: string) =>
   new Date(s).toLocaleString("ru-RU", {
@@ -101,6 +105,7 @@ export function App() {
     () => Number(sessionStorage.getItem("nexus-onboarding-dismissed")) || null,
   );
   const currentMatch = useRef<number | null>(null);
+  const [profileSection, setProfileSection] = useState(readProfileSection);
   currentMatch.current = selected?.id ?? null;
   function navigate(next: Tab, match: Match | null = null) {
     const url = match
@@ -111,6 +116,7 @@ export function App() {
     if (window.location.pathname + window.location.hash !== url)
       window.history.pushState(null, "", url);
     setTab(next);
+    if (next === "profile") setProfileSection(0);
     setRouteMatchId(match?.id ?? null);
     setSelected(match);
     setText("");
@@ -120,6 +126,7 @@ export function App() {
     const sync = () => {
       const route = readRoute();
       setTab(route.tab);
+      setProfileSection(readProfileSection());
       setRouteMatchId(route.matchId);
       setSelected(null);
       setText("");
@@ -833,6 +840,17 @@ export function App() {
               </div>
             </div>
             <ProfileTabs
+              initialTab={profileSection}
+              onChange={(i) => {
+                setProfileSection(i);
+                window.history.replaceState(
+                  null,
+                  "",
+                  i === 0
+                    ? "/#profile"
+                    : `/#profile/${i === 1 ? "photos" : "story"}`,
+                );
+              }}
               about={
                 <ProfileEditor
                   key={user.id}

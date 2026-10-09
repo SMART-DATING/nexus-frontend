@@ -44,6 +44,7 @@ import { PrivacyNotice } from "./PrivacyNotice";
 import { ProfilePreview } from "./ProfilePreview";
 import { DataControls } from "./DataControls";
 import "./experience.css";
+import "./viewport.css";
 type Tab = "discover" | "matches" | "profile" | "notifications";
 function readRoute(): { tab: Tab; matchId: number | null } {
   const id = window.location.pathname.match(/^\/match\/(\d+)$/)?.[1];
@@ -129,6 +130,8 @@ export function App() {
     window.history.pushState(null, "", "/");
   }
   const currentMatch = useRef<number | null>(null);
+  const messagesViewport = useRef<HTMLDivElement>(null);
+  const followMessages = useRef(true);
   const [profileSection, setProfileSection] = useState(readProfileSection);
   currentMatch.current = selected?.id ?? null;
   function navigate(next: Tab, match: Match | null = null) {
@@ -303,10 +306,8 @@ export function App() {
       try {
         const r = await api<{ items: Notice[] }>("/notifications");
         if (alive) setNotices(r.items);
-        if (tab === "matches") {
-          const m = await api<{ items: Match[] }>("/matches");
-          if (alive) setMatches(m.items);
-        }
+        const m = await api<{ items: Match[] }>("/matches");
+        if (alive) setMatches(m.items);
       } catch (e) {
         if (alive) report(e);
       } finally {
@@ -324,6 +325,7 @@ export function App() {
     if (!selected || !user || tab !== "matches") return;
     let alive = true;
     setMessages([]);
+    followMessages.current = true;
     let after = 0;
     let inFlight = false;
     async function poll() {
@@ -343,6 +345,25 @@ export function App() {
             ].sort((a, b) => a.id - b.id),
           );
         }
+        if (
+          after > 0 &&
+          selected!.unreadCount !== undefined &&
+          document.visibilityState === "visible"
+        ) {
+          const count = await api<{ unreadCount: number }>(
+            `/matches/${selected!.id}/read`,
+            "PATCH",
+            { throughId: after },
+          );
+          if (alive)
+            setMatches((old) =>
+              old.map((m) =>
+                m.id === selected!.id
+                  ? { ...m, unreadCount: count.unreadCount }
+                  : m,
+              ),
+            );
+        }
       } catch (e) {
         if (alive) report(e);
       } finally {
@@ -356,6 +377,10 @@ export function App() {
       clearInterval(t);
     };
   }, [selected?.id, user?.id, tab]);
+  useEffect(() => {
+    const pane = messagesViewport.current;
+    if (pane && followMessages.current) pane.scrollTop = pane.scrollHeight;
+  }, [messages]);
   async function login(e: FormEvent) {
     e.preventDefault();
     setBusy(true);
@@ -610,6 +635,16 @@ export function App() {
         user={user}
         tab={tab}
         unread={notices.some((n) => !n.seen)}
+        unreadMessages={matches.reduce(
+          (sum, m) => sum + (m.unreadCount ?? 0),
+          0,
+        )}
+        storyActive={tab === "profile" && profileSection === 2}
+        onStory={() => {
+          navigate("profile");
+          setProfileSection(2);
+          window.history.replaceState(null, "", "/#profile/story");
+        }}
         onNavigate={navigate}
         onPreview={() => setPreviewOpen(true)}
         onPrivacy={() => setPrivacyOpen(true)}
@@ -697,62 +732,68 @@ export function App() {
               </button>
             </div>
             {filters && (
-              <form
-                className="filter-panel"
-                id="preferences-panel"
-                onSubmit={async (e) => {
-                  e.preventDefault();
-                  const d = new FormData(e.currentTarget);
-                  setBusy(true);
-                  try {
-                    await api("/preferences/me", "PUT", {
-                      minAge: Number(d.get("minAge")),
-                      maxAge: Number(d.get("maxAge")),
-                    });
-                    await refresh();
-                    const r = await api<{
-                      items: Profile[];
-                      skippedCount?: number;
-                      cycleRestarted?: boolean;
-                    }>("/recommendations/next", "POST");
-                    setPeople(r.items);
-                    setSkippedCount(r.skippedCount ?? 0);
-                    if (r.cycleRestarted) setCycle((c) => c + 1);
-                    setFilters(false);
-                    setToast("Предпочтения сохранены");
-                  } catch (e) {
-                    report(e);
-                  } finally {
-                    setBusy(false);
-                  }
-                }}
+              <Dialog
+                title="Предпочтения"
+                onClose={() => setFilters(false)}
+                className="preferences-dialog"
               >
-                <label>
-                  Возраст от
-                  <input
-                    name="minAge"
-                    type="number"
-                    min={18}
-                    max={100}
-                    defaultValue={user.preferences.minAge}
-                    required
-                  />
-                </label>
-                <label>
-                  До
-                  <input
-                    name="maxAge"
-                    type="number"
-                    min={18}
-                    max={100}
-                    defaultValue={user.preferences.maxAge}
-                    required
-                  />
-                </label>
-                <button className="primary" disabled={busy}>
-                  Применить
-                </button>
-              </form>
+                <form
+                  className="filter-panel"
+                  id="preferences-panel"
+                  onSubmit={async (e) => {
+                    e.preventDefault();
+                    const d = new FormData(e.currentTarget);
+                    setBusy(true);
+                    try {
+                      await api("/preferences/me", "PUT", {
+                        minAge: Number(d.get("minAge")),
+                        maxAge: Number(d.get("maxAge")),
+                      });
+                      await refresh();
+                      const r = await api<{
+                        items: Profile[];
+                        skippedCount?: number;
+                        cycleRestarted?: boolean;
+                      }>("/recommendations/next", "POST");
+                      setPeople(r.items);
+                      setSkippedCount(r.skippedCount ?? 0);
+                      if (r.cycleRestarted) setCycle((c) => c + 1);
+                      setFilters(false);
+                      setToast("Предпочтения сохранены");
+                    } catch (e) {
+                      report(e);
+                    } finally {
+                      setBusy(false);
+                    }
+                  }}
+                >
+                  <label>
+                    Возраст от
+                    <input
+                      name="minAge"
+                      type="number"
+                      min={18}
+                      max={100}
+                      defaultValue={user.preferences.minAge}
+                      required
+                    />
+                  </label>
+                  <label>
+                    До
+                    <input
+                      name="maxAge"
+                      type="number"
+                      min={18}
+                      max={100}
+                      defaultValue={user.preferences.maxAge}
+                      required
+                    />
+                  </label>
+                  <button className="primary" disabled={busy}>
+                    Применить
+                  </button>
+                </form>
+              </Dialog>
             )}
             <div className="discover-bar">
               <span>
@@ -832,8 +873,12 @@ export function App() {
             <div className="page-heading">
               <div>
                 <span className="eyebrow">БЫТЬ СОБОЙ — ЛУЧШЕЕ НАЧАЛО</span>
-                <h1>Твой профиль</h1>
-                <p>Фото, пара слов и то, что важно тебе.</p>
+                <h1>{profileSection === 2 ? "Для подбора" : "Твой профиль"}</h1>
+                <p>
+                  {profileSection === 2
+                    ? "Добавляй то, что важно тебе. Эти рассказы видишь только ты."
+                    : "Фото, пара слов и то, что важно тебе."}
+                </p>
               </div>
               <button
                 className="outline own-preview-button"
@@ -941,6 +986,14 @@ export function App() {
                         <strong>{value(m.user, "display_name")}</strong>
                         <small>Открыть чат</small>
                       </div>
+                      {(m.unreadCount ?? 0) > 0 && (
+                        <span
+                          className="unread-badge"
+                          aria-label={`Непрочитанных в этом чате: ${m.unreadCount}`}
+                        >
+                          {m.unreadCount! > 99 ? "99+" : m.unreadCount}
+                        </span>
+                      )}
                       <ArrowUpRight size={16} />
                     </button>
                   ))}
@@ -960,7 +1013,19 @@ export function App() {
                         <strong>{value(selected.user, "display_name")}</strong>
                         <small>Совпадение · {date(selected.createdAt)}</small>
                       </div>
-                      <div className="messages" aria-live="polite">
+                      <div
+                        className="messages"
+                        ref={messagesViewport}
+                        aria-live="polite"
+                        onScroll={(e) => {
+                          const pane = e.currentTarget;
+                          followMessages.current =
+                            pane.scrollHeight -
+                              pane.clientHeight -
+                              pane.scrollTop <
+                            100;
+                        }}
+                      >
                         {messages.length === 0 && (
                           <div className="chat-hint">
                             <p>

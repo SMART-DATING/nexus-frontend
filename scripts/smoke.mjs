@@ -203,6 +203,28 @@ const messages = await request(
 );
 assert.equal(messages.items[0].text, "Привет через прокси!");
 assert.equal(
+  (await request(`/matches/${match.matchId}`, "GET", undefined, b.accessToken))
+    .unreadCount,
+  1,
+);
+assert.equal(
+  (await request(`/matches/${match.matchId}`, "GET", undefined, a.accessToken))
+    .unreadCount,
+  0,
+);
+const readMessages = await request(
+  `/matches/${match.matchId}/read`,
+  "PATCH",
+  { throughId: messages.items[0].id },
+  b.accessToken,
+);
+assert.equal(readMessages.unreadCount, 0);
+assert.equal(
+  (await request(`/matches/${match.matchId}`, "GET", undefined, b.accessToken))
+    .unreadCount,
+  0,
+);
+assert.equal(
   (await request("/recommendations/restart", "POST", undefined, a.accessToken))
     .restored,
   0,
@@ -270,6 +292,6 @@ assert.equal(
 await request("/auth/logout", "POST", undefined, a.accessToken, 204);
 await request("/users/me", "GET", undefined, a.accessToken, 401);
 console.log(
-  "PASS: UI, multipart photo upload/delete, automatic skip circle excluding likes, profiles, preferences, match, chat, own data export, profile hiding, notifications and logout through " +
+  "PASS: UI, multipart photo upload/delete, automatic skip circle excluding likes, profiles, preferences, match, chat, unread acknowledgement, own data export, profile hiding, notifications and logout through " +
     base,
 );

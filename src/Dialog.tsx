@@ -29,7 +29,7 @@ export function Dialog({
     return () => {
       dialog.removeEventListener("cancel", cancel);
       dialog.close();
-      previous?.focus();
+      previous?.focus({ preventScroll: true });
     };
   }, []);
   return createPortal(
@@ -65,7 +65,7 @@ export function Dialog({
           <X size={20} />
         </button>
       </div>
-      {children}
+      <div className="dialog-content">{children}</div>
     </dialog>,
     document.body,
   );

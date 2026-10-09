@@ -8,6 +8,7 @@ import {
   Shield,
   LogOut,
   ChevronDown,
+  Sparkles,
 } from "lucide-react";
 import { value, type User } from "./api";
 type Tab = "discover" | "matches" | "profile" | "notifications";
@@ -15,6 +16,9 @@ export function AppNavigation({
   user,
   tab,
   unread,
+  unreadMessages,
+  storyActive,
+  onStory,
   onNavigate,
   onPreview,
   onPrivacy,
@@ -23,6 +27,9 @@ export function AppNavigation({
   user: User;
   tab: Tab;
   unread: boolean;
+  unreadMessages: number;
+  storyActive: boolean;
+  onStory: () => void;
   onNavigate: (tab: Tab) => void;
   onPreview: () => void;
   onPrivacy: () => void;
@@ -65,14 +72,30 @@ export function AppNavigation({
         ].map((n) => (
           <button
             key={n.id}
-            className={tab === n.id ? "active" : ""}
-            aria-current={tab === n.id ? "page" : undefined}
+            className={tab === n.id && !storyActive ? "active" : ""}
+            aria-current={tab === n.id && !storyActive ? "page" : undefined}
             onClick={() => onNavigate(n.id as Tab)}
           >
             <n.icon size={19} />
             <span>{n.label}</span>
+            {n.id === "matches" && unreadMessages > 0 && (
+              <span
+                className="unread-badge"
+                aria-label={`Непрочитанных сообщений: ${unreadMessages}`}
+              >
+                {unreadMessages > 99 ? "99+" : unreadMessages}
+              </span>
+            )}
           </button>
         ))}
+        <button
+          className={storyActive ? "active" : ""}
+          aria-current={storyActive ? "page" : undefined}
+          onClick={onStory}
+        >
+          <Sparkles size={19} />
+          <span>Для подбора</span>
+        </button>
       </nav>
       <div className="navigation-actions">
         <button
@@ -115,7 +138,12 @@ export function AppNavigation({
                 <Eye size={18} />
                 Посмотреть анкету
               </button>
-              <button onClick={() => onNavigate("profile")}>
+              <button
+                onClick={() => {
+                  setOpen(false);
+                  onNavigate("profile");
+                }}
+              >
                 <UserRound size={18} />
                 Редактировать профиль
               </button>

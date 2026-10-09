@@ -34,12 +34,14 @@ const match = {
 let requests: { path: string; method: string; body: unknown }[] = [];
 let feedCalls = 0;
 let liked = false;
+let unreadCount: number | undefined;
 beforeEach(() => {
   sessionStorage.clear();
   window.history.replaceState(null, "", "/");
   requests = [];
   feedCalls = 0;
   liked = false;
+  unreadCount = undefined;
   vi.stubGlobal(
     "fetch",
     vi.fn(async (input: string, init: RequestInit = {}) => {
@@ -61,8 +63,26 @@ beforeEach(() => {
           skippedCount: 0,
           cycleRestarted: ++feedCalls > 1 && !liked,
         };
-      if (path === "/matches") data = { items: [match] };
-      if (path === "/matches/7") data = match;
+      if (path === "/matches") data = { items: [{ ...match, unreadCount }] };
+      if (path === "/matches/7") data = { ...match, unreadCount };
+      if (
+        path.startsWith("/matches/7/messages?after=") &&
+        unreadCount !== undefined
+      )
+        data = {
+          items: [
+            {
+              id: 20,
+              senderId: 2,
+              text: "Новое входящее",
+              createdAt: "2026-10-09T10:00:00Z",
+            },
+          ],
+        };
+      if (path === "/matches/7/read") {
+        unreadCount = 0;
+        data = { unreadCount };
+      }
       if (path === "/matches/7/messages" && method === "POST")
         data = {
           id: 1,
@@ -82,6 +102,41 @@ afterEach(() => {
   vi.unstubAllGlobals();
 });
 describe("Nexus user flows", () => {
+  it("opens private stories from the main navigation and keeps the route after reload", async () => {
+    sessionStorage.setItem("nexus-token", "test-token");
+    const ui = userEvent.setup();
+    const first = render(<App />);
+    await ui.click(await screen.findByRole("button", { name: "Для подбора" }));
+    await screen.findByRole("heading", { name: "Для подбора" });
+    expect(window.location.hash).toBe("#profile/story");
+    first.unmount();
+    render(<App />);
+    await screen.findByRole("heading", { name: "Для подбора" });
+    expect(
+      screen
+        .getByRole("button", { name: "Для подбора" })
+        .getAttribute("aria-current"),
+    ).toBe("page");
+  });
+  it("shows incoming counts and acknowledges only the delivered message id", async () => {
+    sessionStorage.setItem("nexus-token", "test-token");
+    unreadCount = 1;
+    const ui = userEvent.setup();
+    render(<App />);
+    await screen.findByLabelText("Непрочитанных сообщений: 1");
+    await ui.click(screen.getByRole("button", { name: /Чаты/ }));
+    await screen.findByLabelText("Непрочитанных в этом чате: 1");
+    await ui.click(screen.getByRole("button", { name: /Саша/ }));
+    await screen.findByText("Новое входящее");
+    await waitFor(() =>
+      expect(requests.find((r) => r.path === "/matches/7/read")?.body).toEqual({
+        throughId: 20,
+      }),
+    );
+    await waitFor(() =>
+      expect(screen.queryByLabelText("Непрочитанных сообщений: 1")).toBeNull(),
+    );
+  });
   it("starts with the product story, opens signup deliberately, and restores the home page", async () => {
     const ui = userEvent.setup();
     render(<App />);
@@ -137,9 +192,7 @@ describe("Nexus user flows", () => {
   it("logs in using the API and opens recommendations", async () => {
     const ui = userEvent.setup();
     render(<App />);
-    await ui.click(
-      await screen.findByRole("button", { name: "Войти" }),
-    );
+    await ui.click(await screen.findByRole("button", { name: "Войти" }));
     await ui.type(await screen.findByLabelText("Email"), "demo@nexus.local");
     await ui.type(screen.getByLabelText("Пароль"), "NexusDemo2026!");
     await ui.click(screen.getByRole("button", { name: "Войти" }));
@@ -254,4 +307,3 @@ describe("Nexus user flows", () => {
     expect(requests.filter((r) => r.path === "/users/2/like")).toHaveLength(1);
   });
 });
-

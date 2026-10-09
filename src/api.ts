@@ -19,7 +19,12 @@ export type User = {
   profile: Profile;
   preferences: { minAge: number; maxAge: number };
 };
-export type Match = { id: number; user: Profile; createdAt: string };
+export type Match = {
+  id: number;
+  user: Profile;
+  createdAt: string;
+  unreadCount?: number;
+};
 export type Message = {
   id: number;
   senderId: number;

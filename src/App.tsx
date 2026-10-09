@@ -45,6 +45,9 @@ import { ProfilePreview } from "./ProfilePreview";
 import { DataControls } from "./DataControls";
 import "./experience.css";
 import "./viewport.css";
+import "./wave.css";
+import { AmbientBackdrop } from "./AmbientBackdrop";
+import { WaveGuide } from "./WaveGuide";
 type Tab = "discover" | "matches" | "profile" | "notifications";
 function readRoute(): { tab: Tab; matchId: number | null } {
   const id = window.location.pathname.match(/^\/match\/(\d+)$/)?.[1];
@@ -81,6 +84,7 @@ const age = (birth: string) => {
   );
 };
 export function App() {
+  const [ambientPhoto, setAmbientPhoto] = useState<string | undefined>();
   const [user, setUser] = useState<User | null>(null),
     [boot, setBoot] = useState(true),
     [tab, setTab] = useState<Tab>(() => readRoute().tab),
@@ -272,7 +276,7 @@ export function App() {
             setSkippedCount(r.skippedCount ?? 0);
             if (r.cycleRestarted) {
               setCycle((old) => old + 1);
-              setToast("Новый круг: пропущенные анкеты снова здесь");
+              setToast("");
             }
           }
           if (tab === "matches") setMatches(r.items as Match[]);
@@ -402,6 +406,7 @@ export function App() {
     }
   }
   async function react(p: Profile, like: boolean) {
+    let reacted = false;
     setBusy(true);
     setError("");
     try {
@@ -409,7 +414,9 @@ export function App() {
         `/users/${p.userId}/${like ? "like" : "skip"}`,
         "POST",
       );
-      setPeople((old) => old.filter((x) => x.userId !== p.userId));
+      reacted = true;
+      if (people.length > 1)
+        setPeople((old) => old.filter((x) => x.userId !== p.userId));
       setReviewed((old) => old + 1);
       if (like) setLiked((old) => old + 1);
       if (!like) setSkippedCount((old) => old + 1);
@@ -425,7 +432,7 @@ export function App() {
           ? "Это взаимно! Новый чат уже в совпадениях."
           : like
             ? "Симпатия отправлена"
-            : "Перейдём к следующему знакомству",
+            : "",
       );
       if (people.length === 1) {
         const next = await api<{
@@ -437,12 +444,12 @@ export function App() {
         setSkippedCount(next.skippedCount);
         if (next.cycleRestarted) {
           setCycle((old) => old + 1);
-          setToast("Новый круг: пропущенные анкеты снова здесь");
+          setToast("");
         }
       }
       return true;
     } catch (e) {
-      if (e instanceof ApiError && e.status === 409)
+      if (reacted || (e instanceof ApiError && e.status === 409))
         setPeople((old) => old.filter((x) => x.userId !== p.userId));
       report(e);
       return false;
@@ -496,12 +503,14 @@ export function App() {
   if (boot)
     return (
       <div className="boot">
+        <AmbientBackdrop />
         <LoaderCircle className="spin" /> Загружаем Nexus…
       </div>
     );
   if (!user)
     return (
       <>
+        <AmbientBackdrop />
         <div
           aria-hidden={authOpen || privacyOpen ? true : undefined}
           inert={authOpen || privacyOpen}
@@ -522,6 +531,14 @@ export function App() {
                 ? "Создай аккаунт — дальше познакомимся с твоими интересами."
                 : "Твоя следующая история начинается здесь."}
             </p>
+            {register && (
+              <WaveGuide compact>
+                <p>
+                  Привет! Сначала выберем твои интересы, а потом немного
+                  поболтаем. Без длинной анкеты.
+                </p>
+              </WaveGuide>
+            )}
             <form onSubmit={login}>
               <label>
                 Email
@@ -631,6 +648,9 @@ export function App() {
     );
   return (
     <div className={`app is-${tab} ${selected ? "has-chat" : ""}`}>
+      <AmbientBackdrop
+        photoUrl={tab === "discover" ? ambientPhoto : undefined}
+      />
       <AppNavigation
         user={user}
         tab={tab}
@@ -812,7 +832,7 @@ export function App() {
                 action={() => navigate("profile")}
                 label="Заполнить профиль"
               />
-            ) : loading ? (
+            ) : loading && !people.length ? (
               <div className="boot">
                 <LoaderCircle className="spin" />
                 Ищем общее…
@@ -855,6 +875,7 @@ export function App() {
                 people={people}
                 busy={busy}
                 onReact={react}
+                onPhotoChange={setAmbientPhoto}
                 cycle={cycle}
                 reviewed={reviewed}
                 liked={liked}

@@ -23,13 +23,14 @@ export function SwipeDeck({
   people,
   busy,
   onReact,
-  cycle,
+  onPhotoChange,
 }: {
   people: Profile[];
   busy: boolean;
   onReact: (p: Profile, like: boolean) => Promise<boolean>;
   onFocus: (id: number) => void;
   cycle: number;
+  onPhotoChange?: (url?: string) => void;
   reviewed: number;
   liked: number;
 }) {
@@ -140,7 +141,7 @@ export function SwipeDeck({
           >
             <div className={`swipe-portrait art-${p.userId % 6}`}>
               <span className="swipe-fallback">{name.slice(0, 1)}</span>
-              <PhotoGallery profile={p} />
+              <PhotoGallery profile={p} onPhotoChange={onPhotoChange} />
               <span
                 aria-hidden="true"
                 className="swipe-stamp stamp-like"
@@ -239,6 +240,11 @@ export function SwipeDeck({
               )}
             </div>
           </article>
+          {busy && (
+            <span className="deck-updating" role="status">
+              Момент, ищем твою волну…
+            </span>
+          )}
         </div>
         <div className="swipe-controls">
           <button
@@ -262,8 +268,7 @@ export function SwipeDeck({
         </div>
         <details className="discovery-help">
           <summary>
-            <RotateCcw size={14} />{" "}
-            {cycle > 1 ? `Новый круг · ${cycle}` : "Как работает подбор"}
+            <RotateCcw size={14} /> Как работает подбор
           </summary>
           <p>
             Сначала — новые люди, потом — пропущенные. Те, кто понравился,

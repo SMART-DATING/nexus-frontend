@@ -2,6 +2,8 @@ import { useState, useRef } from "react";
 import { ArrowRight, ArrowLeft, Check, Sparkles } from "lucide-react";
 import { api, value, type User, type Property } from "./api";
 import { GuidedInterview } from "./GuidedInterview";
+import { WaveGuide } from "./WaveGuide";
+import { AmbientBackdrop } from "./AmbientBackdrop";
 const emoji: Record<string, string> = {
   Книги: "📚",
   Музыка: "🎧",
@@ -108,6 +110,7 @@ export function Onboarding({
   }
   return (
     <div className="onboarding-screen">
+      <AmbientBackdrop />
       <header>
         <a className="brand" href="/" aria-label="Nexus">
           <img src="/nexus-mark.svg" alt="" />
@@ -134,6 +137,12 @@ export function Onboarding({
         </div>
         {step === 0 ? (
           <section className="onboarding-intro">
+            <WaveGuide compact>
+              <p>
+                Привет, я Некс. Выбери то, что тебе близко — это только начало,
+                не ярлык навсегда.
+              </p>
+            </WaveGuide>
             <span className="eyebrow">
               <Sparkles size={14} />
               НАЧНЁМ С ТОГО, ЧТО ЦЕПЛЯЕТ
@@ -164,6 +173,12 @@ export function Onboarding({
           </section>
         ) : step === 1 ? (
           <section className="onboarding-basics">
+            <WaveGuide compact>
+              <p>
+                Уже есть за что зацепиться! Ещё имя и город — и поговорим о
+                твоём.
+              </p>
+            </WaveGuide>
             <span className="eyebrow">ДОБАВИМ НЕМНОГО КОНТЕКСТА</span>
             <h1>
               Как к тебе обращаться<span className="dot">?</span>

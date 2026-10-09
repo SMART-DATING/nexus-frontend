@@ -35,6 +35,7 @@ let requests: { path: string; method: string; body: unknown }[] = [];
 let feedCalls = 0;
 let liked = false;
 let unreadCount: number | undefined;
+let nextFeed: Promise<void> | undefined;
 beforeEach(() => {
   sessionStorage.clear();
   window.history.replaceState(null, "", "/");
@@ -42,6 +43,7 @@ beforeEach(() => {
   feedCalls = 0;
   liked = false;
   unreadCount = undefined;
+  nextFeed = undefined;
   vi.stubGlobal(
     "fetch",
     vi.fn(async (input: string, init: RequestInit = {}) => {
@@ -57,12 +59,14 @@ beforeEach(() => {
       if (path === "/profiles/me") data = profile;
       if (path === "/contexts/me") data = { items: [], modelAvailable: true };
       if (path === "/users/2/like") liked = true;
-      if (path === "/recommendations/next")
+      if (path === "/recommendations/next") {
+        if (feedCalls > 0 && nextFeed) await nextFeed;
         data = {
           items: liked ? [] : [match.user],
           skippedCount: 0,
           cycleRestarted: ++feedCalls > 1 && !liked,
         };
+      }
       if (path === "/matches") data = { items: [{ ...match, unreadCount }] };
       if (path === "/matches/7") data = { ...match, unreadCount };
       if (
@@ -297,7 +301,21 @@ describe("Nexus user flows", () => {
     await ui.click(
       await screen.findByRole("button", { name: "Пропустить Саша" }),
     );
-    await screen.findByText("Новый круг · 2");
+    await waitFor(() =>
+      expect(
+        requests.filter((r) => r.path === "/recommendations/next"),
+      ).toHaveLength(2),
+    );
+    await waitFor(() =>
+      expect(
+        (
+          screen.getByRole("button", {
+            name: "Нравится Саша",
+          }) as HTMLButtonElement
+        ).disabled,
+      ).toBe(false),
+    );
+    expect(screen.queryByText(/Новый круг/)).toBeNull();
     await ui.click(screen.getByRole("button", { name: "Нравится Саша" }));
     await waitFor(() => expect(screen.queryByRole("article")).toBeNull());
     expect(
@@ -305,5 +323,35 @@ describe("Nexus user flows", () => {
     ).toHaveLength(3);
     expect(requests.filter((r) => r.path === "/users/2/skip")).toHaveLength(1);
     expect(requests.filter((r) => r.path === "/users/2/like")).toHaveLength(1);
+  });
+  it("keeps the final card mounted while the next batch is in flight", async () => {
+    sessionStorage.setItem("nexus-token", "test-token");
+    let release!: () => void;
+    const pending = new Promise<void>((resolve) => {
+      release = resolve;
+    });
+    render(<App />);
+    const card = await screen.findByRole("article", { name: "Анкета: Саша" });
+    nextFeed = pending;
+    await userEvent.click(
+      screen.getByRole("button", { name: "Пропустить Саша" }),
+    );
+    await waitFor(() =>
+      expect(
+        requests.filter((r) => r.path === "/recommendations/next"),
+      ).toHaveLength(2),
+    );
+    expect(screen.getByRole("article", { name: "Анкета: Саша" })).toBe(card);
+    expect(screen.queryByText("Новые лица ещё появятся")).toBeNull();
+    release();
+    await waitFor(() =>
+      expect(
+        (
+          screen.getByRole("button", {
+            name: "Нравится Саша",
+          }) as HTMLButtonElement
+        ).disabled,
+      ).toBe(false),
+    );
   });
 });

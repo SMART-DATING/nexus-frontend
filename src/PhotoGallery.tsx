@@ -8,7 +8,13 @@ import {
 } from "lucide-react";
 import type { Profile } from "./api";
 import { PhotoViewer } from "./PhotoViewer";
-export function PhotoGallery({ profile }: { profile: Profile }) {
+export function PhotoGallery({
+  profile,
+  onPhotoChange,
+}: {
+  profile: Profile;
+  onPhotoChange?: (url?: string) => void;
+}) {
   const [index, setIndex] = useState(0);
   const photos =
     profile.photos ??
@@ -22,6 +28,10 @@ export function PhotoGallery({ profile }: { profile: Profile }) {
   }, [profile.userId]);
   useEffect(() => setBroken(false), [index, photos[index]?.url]);
   useEffect(
+    () => onPhotoChange?.(photos[index]?.url),
+    [index, photos[index]?.url, onPhotoChange],
+  );
+  useEffect(
     () => setIndex((i) => Math.min(i, Math.max(0, photos.length - 1))),
     [photos.length],
   );
@@ -30,7 +40,17 @@ export function PhotoGallery({ profile }: { profile: Profile }) {
     (profile.photoCount ?? photos.length) - photos.length,
   );
   return (
-    <div className="profile-gallery" aria-label="Фотографии анкеты">
+    <div
+      className="profile-gallery"
+      aria-label="Фотографии анкеты"
+      style={
+        {
+          "--gallery-photo": photos[index]?.url
+            ? `url("${photos[index].url.replaceAll('"', "%22")}")`
+            : "none",
+        } as React.CSSProperties
+      }
+    >
       {!!photos.length && !broken && (
         <img
           key={`${photos[Math.min(index, photos.length - 1)].id}-${index}`}

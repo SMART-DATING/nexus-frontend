@@ -1,3 +1,5 @@
+import { useState } from "react";
+import { LandingExplore } from "./LandingExplore";
 import {
   ArrowRight,
   ArrowDown,
@@ -15,6 +17,7 @@ export function PublicHome({
   onAuth: (register: boolean) => void;
   onPrivacy: () => void;
 }) {
+  const [photoCount, setPhotoCount] = useState(2);
   return (
     <div className="public-home">
       <header className="public-header">
@@ -150,15 +153,24 @@ export function PublicHome({
             </article>
           </div>
         </section>
+        <LandingExplore />
         <section className="landing-photo-rule">
-          <div className="photo-rule-art" aria-hidden="true">
+          <div
+            className="photo-rule-art"
+            aria-label="Попробуй правило взаимных фотографий"
+          >
             {Array.from({ length: 6 }, (_, i) => (
-              <span
+              <button
+                type="button"
+                aria-label={`Пример: ${i + 1} своих фото`}
+                aria-pressed={photoCount === i + 1}
+                className={i < photoCount ? "photo-unlocked" : ""}
+                onClick={() => setPhotoCount(i + 1)}
                 key={i}
                 style={{ "--photo-index": i } as React.CSSProperties}
               >
                 {i + 1}
-              </span>
+              </button>
             ))}
           </div>
           <div>
@@ -172,6 +184,10 @@ export function PublicHome({
               Загрузи до шести фото. Сколько добавишь сам, столько сможешь
               увидеть у других. Пара слов и общие интересы помогут разглядеть
               больше.
+            </p>
+            <p className="photo-rule-result" aria-live="polite">
+              В примере: {photoCount} своих — до {photoCount} чужих. Нажми на
+              карточку слева, чтобы попробовать.
             </p>
           </div>
         </section>
@@ -192,6 +208,55 @@ export function PublicHome({
             <ArrowRight size={16} />
           </button>
         </section>
+        <section
+          className="landing-faq"
+          id="questions"
+          aria-labelledby="faq-title"
+        >
+          <div className="landing-section-heading">
+            <span className="eyebrow">ПЕРЕД ПЕРВЫМ «ПРИВЕТ»</span>
+            <h2 id="faq-title">
+              Всё чуть проще,
+              <br />
+              чем кажется.
+            </h2>
+          </div>
+          <div>
+            <details>
+              <summary>Мой личный рассказ увидят другие?</summary>
+              <p>
+                Нет. В анкете видны выбранные тобой публичные поля, интересы и
+                разрешённые фото. Подробные истории остаются в «Для подбора»: их
+                смысл помогает составлять рекомендации.
+              </p>
+            </details>
+            <details>
+              <summary>Нужно отвечать на все вопросы?</summary>
+              <p>
+                Нет. Некс задаёт три коротких вопроса по выбранным интересам.
+                Любой можно пропустить или отложить всё знакомство. Позже можно
+                написать один свободный рассказ и дополнять его.
+              </p>
+            </details>
+            <details>
+              <summary>Можно рассказать голосом?</summary>
+              <p>
+                Да, если браузер поддерживает распознавание. Микрофон включается
+                только по твоему действию после пояснения. Браузер может
+                передать звук своему сервису; Nexus сохраняет только
+                подтверждённый текст. Печатать можно всегда.
+              </p>
+            </details>
+            <details>
+              <summary>Что происходит после лайка?</summary>
+              <p>
+                Если другой человек тоже выразит симпатию, появится чат.
+                Пропущенные анкеты могут вернуться, когда новые закончатся.
+                Лайкнутые повторно не показываются.
+              </p>
+            </details>
+          </div>
+        </section>
         <section className="landing-last">
           <h2>
             Возможно, вы уже
@@ -205,9 +270,28 @@ export function PublicHome({
         </section>
       </main>
       <footer className="public-footer">
-        <span>nexus · знакомства со смыслом</span>
-        <button onClick={onPrivacy}>О данных и приватности</button>
-        <span>Локальный прототип · 18+</span>
+        <div>
+          <a className="brand" href="/">
+            nexus ✦
+          </a>
+          <p>
+            Твои люди. Твоя история.
+            <br />
+            Знакомства, которые начинаются с общего.
+          </p>
+        </div>
+        <div>
+          <strong>Знакомство</strong>
+          <a href="#how-it-works">Как это работает</a>
+          <a href="#explore-title">Попробовать разговор</a>
+          <button onClick={() => onAuth(true)}>Найти свою волну</button>
+        </div>
+        <div>
+          <strong>Твои границы</strong>
+          <a href="#questions">Частые вопросы</a>
+          <button onClick={onPrivacy}>О данных и приватности</button>
+          <span>Локальный прототип · 18+</span>
+        </div>
       </footer>
     </div>
   );

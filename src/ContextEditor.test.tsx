@@ -12,9 +12,7 @@ it("keeps drafts local until explicit save and refreshes the semantic profile", 
   const changed = vi.fn();
   vi.mocked(api).mockResolvedValue({ items: [], modelAvailable: true });
   render(<ContextEditor onChanged={changed} />);
-  await userEvent.click(
-    await screen.findByRole("button", { name: "Написать о себе" }),
-  );
+  await screen.findByLabelText("Личный рассказ");
   fireEvent.change(screen.getByLabelText("Личный рассказ"), {
     target: { value: "Люблю горы, палатки и долгие прогулки по лесу." },
   });
@@ -42,11 +40,65 @@ it("requires confirmation before deleting an existing personal story", async () 
   });
   render(<ContextEditor onChanged={vi.fn()} />);
   await userEvent.click(
+    await screen.findByText("Твои сохранённые истории · 1"),
+  );
+  await userEvent.click(
     await screen.findByRole("button", { name: "Удалить рассказ Мои ценности" }),
   );
   expect(vi.mocked(api).mock.calls.some((c) => c[1] === "DELETE")).toBe(false);
   await userEvent.click(screen.getByRole("button", { name: "Да, удалить" }));
   await vi.waitFor(() =>
     expect(api).toHaveBeenCalledWith("/contexts/me/7", "DELETE"),
+  );
+});
+
+it("offers three optional questions without losing a freeform draft", async () => {
+  vi.mocked(api).mockResolvedValue({ items: [], modelAvailable: true });
+  render(<ContextEditor onChanged={vi.fn()} interests={["Музыка"]} />);
+  fireEvent.change(await screen.findByLabelText("Личный рассказ"), {
+    target: { value: "В последнее время слушаю инди и много гуляю." },
+  });
+  await userEvent.click(
+    screen.getByRole("button", { name: /Давай немного поболтаем/ }),
+  );
+  expect(
+    await screen.findByRole("heading", {
+      name: "Что у тебя сейчас на повторе?",
+    }),
+  ).toBeTruthy();
+  await userEvent.click(screen.getByRole("button", { name: "Расскажу позже" }));
+  expect(
+    (screen.getByLabelText("Личный рассказ") as HTMLTextAreaElement).value,
+  ).toContain("слушаю инди");
+  expect(vi.mocked(api).mock.calls.every((c) => c.length === 1)).toBe(true);
+});
+
+it("updates the saved story on retry if refreshing the profile failed", async () => {
+  const changed = vi
+    .fn()
+    .mockRejectedValueOnce(new Error("Сеть недоступна"))
+    .mockResolvedValue(undefined);
+  vi.mocked(api).mockImplementation(async (_path, method) =>
+    method ? { id: 19 } : { items: [], modelAvailable: true },
+  );
+  render(<ContextEditor onChanged={changed} />);
+  fireEvent.change(await screen.findByLabelText("Личный рассказ"), {
+    target: { value: "Люблю маленькие концерты и разговоры о музыке." },
+  });
+  await userEvent.click(
+    screen.getByRole("button", { name: "Сохранить личный рассказ" }),
+  );
+  await screen.findByText("Сеть недоступна");
+  await userEvent.click(
+    screen.getByRole("button", { name: "Сохранить личный рассказ" }),
+  );
+  await vi.waitFor(() => expect(changed).toHaveBeenCalledTimes(2));
+  expect(vi.mocked(api).mock.calls.filter((c) => c[1] === "POST")).toHaveLength(
+    1,
+  );
+  expect(api).toHaveBeenCalledWith(
+    "/contexts/me/19",
+    "PUT",
+    expect.any(Object),
   );
 });

@@ -31,6 +31,7 @@ export function VoiceInput({
   placeholder = "Можно коротко. Можно голосом. Главное — своими словами.",
   disabled = false,
   maxLength = 6000,
+  onListeningChange,
 }: {
   value: string;
   onChange: (s: string) => void;
@@ -38,6 +39,7 @@ export function VoiceInput({
   placeholder?: string;
   disabled?: boolean;
   maxLength?: number;
+  onListeningChange?: (listening: boolean) => void;
 }) {
   const id = useId(),
     recognition = useRef<Recognition | null>(null),
@@ -49,6 +51,10 @@ export function VoiceInput({
   const Constructor =
     (window as VoiceWindow).SpeechRecognition ??
     (window as VoiceWindow).webkitSpeechRecognition;
+  useEffect(() => {
+    onListeningChange?.(listening);
+    return () => onListeningChange?.(false);
+  }, [listening, onListeningChange]);
   useEffect(
     () => () => {
       active.current = false;

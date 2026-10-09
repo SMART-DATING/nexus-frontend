@@ -7,6 +7,7 @@ import {
   Sparkles,
 } from "lucide-react";
 import { VoiceInput } from "./VoiceInput";
+import { WaveGuide } from "./WaveGuide";
 export type Prompt = { id: string; topic: string; text: string; hint: string };
 const prompts: Record<string, Prompt> = {
   Книги: {
@@ -129,6 +130,7 @@ export function GuidedInterview({
     [busy, setBusy] = useState(false),
     [error, setError] = useState("");
   const q = questions[index];
+  const [listening, setListening] = useState(false);
   function next() {
     if (index < questions.length - 1) setIndex((i) => i + 1);
     else {
@@ -179,21 +181,25 @@ export function GuidedInterview({
         className="question-message"
         key={`question-${review ? "review" : q.id}`}
       >
-        <div className="nexus-guide">
-          <img src="/nexus-mark.svg" alt="" />
-          <span>
-            nexus <small>познакомимся ближе</small>
+        <WaveGuide
+          mood={
+            listening
+              ? "listening"
+              : (review ? draft : answers[index]).trim()
+                ? "thinking"
+                : "idle"
+          }
+        >
+          <span className="question-topic">
+            {review ? "Без чужих глаз" : q.topic}
           </span>
-        </div>
-        <span className="question-topic">
-          {review ? "Без чужих глаз" : q.topic}
-        </span>
-        <h2>{review ? "Уже звучит как ты." : q.text}</h2>
-        <p>
-          {review
-            ? "Поправь текст, если хочется. Он останется личным и поможет найти людей с похожими интересами."
-            : q.hint}
-        </p>
+          <h2>{review ? "Уже звучит как ты." : q.text}</h2>
+          <p>
+            {review
+              ? "Поправь текст, если хочется. Он останется личным и поможет найти людей с похожими интересами."
+              : q.hint}
+          </p>
+        </WaveGuide>
       </div>
       <VoiceInput
         key={`answer-${review ? "review" : q.id}`}
@@ -206,6 +212,7 @@ export function GuidedInterview({
             : setAnswers((a) => a.map((v, i) => (i === index ? s : v)))
         }
         disabled={busy}
+        onListeningChange={setListening}
       />
       <div className="interview-footer">
         <small>

@@ -11,6 +11,7 @@ import {
 import { api } from "./api";
 import { GuidedInterview } from "./GuidedInterview";
 import { VoiceInput } from "./VoiceInput";
+import { WaveGuide } from "./WaveGuide";
 type Context = {
   id: number;
   title: string;
@@ -29,13 +30,14 @@ export function ContextEditor({
   const [items, setItems] = useState<Context[]>([]),
     [ready, setReady] = useState(false),
     [available, setAvailable] = useState(true),
-    [editing, setEditing] = useState<number | null | undefined>(undefined),
-    [title, setTitle] = useState(""),
+    [editing, setEditing] = useState<number | null | undefined>(null),
+    [title, setTitle] = useState("Что для меня важно"),
     [content, setContent] = useState(""),
     [busy, setBusy] = useState(false),
     [error, setError] = useState(""),
     [saved, setSaved] = useState(false),
     [confirm, setConfirm] = useState<number | null>(null);
+  const [listening, setListening] = useState(false);
   async function load() {
     const r = await api<{ items: Context[]; modelAvailable: boolean }>(
       "/contexts/me",
@@ -75,11 +77,12 @@ export function ContextEditor({
     setError("");
     setSaved(false);
     try {
-      await api(
+      const story = await api<{ id: number }>(
         editing == null ? "/contexts/me" : `/contexts/me/${editing}`,
         editing == null ? "POST" : "PUT",
         { title, content },
       );
+      setEditing(story.id);
       await load();
       await onChanged();
       setEditing(undefined);
@@ -110,19 +113,21 @@ export function ContextEditor({
       className="context-editor"
       aria-label="Личные рассказы для подбора"
     >
-      <div className="context-heading">
-        <span className="privacy-icon">
-          <LockKeyhole size={25} />
-        </span>
-        <div>
-          <span className="eyebrow">ЗДЕСЬ МОЖНО БЫТЬ СОБОЙ</span>
-          <h2>Ближе по смыслу</h2>
+      {!guided && (
+        <WaveGuide
+          mood={listening ? "listening" : content.trim() ? "thinking" : "idle"}
+        >
+          <h2>Что сейчас на твоей волне?</h2>
           <p>
-            Расскажите о себе глубже. Эти тексты видны только вам — по ним мы
-            ищем близких по духу людей.
+            Расскажи, что увлекает, радует или важно в общении. Можно одним
+            сообщением или голосом. Я помогу с вопросами, если захочешь.
           </p>
-        </div>
-      </div>
+          <small>
+            Этот рассказ видишь только ты. Его смысл помогает находить близких
+            людей.
+          </small>
+        </WaveGuide>
+      )}
       <div className="private-promise">
         <LockKeyhole size={16} />
         <p>
@@ -133,79 +138,77 @@ export function ContextEditor({
       </div>
       {!available && ready && (
         <p role="alert">
-          Текстовая модель пока не установлена. Установите её по инструкции
-          запуска, чтобы сохранить рассказ и начать подбор.
+          Подбор сейчас недоступен. Можно оставить текст здесь и попробовать
+          сохранить позже.
         </p>
       )}
-      <div className="context-list">
-        {items.map((item) => (
-          <article className="context-note" key={item.id}>
-            <div>
-              <h3>
-                <LockKeyhole size={15} />
-                {item.title}
-              </h3>
-              <small>
-                Только вам ·{" "}
-                {new Date(item.updatedAt).toLocaleDateString("ru-RU")}
-              </small>
-            </div>
-            <p>{item.content}</p>
-            <div className="context-note-actions">
-              <button
-                type="button"
-                className="text-button"
-                disabled={busy}
-                onClick={() => edit(item)}
-                aria-label={`Редактировать рассказ ${item.title}`}
-              >
-                <PenLine size={15} />
-                Дополнить
-              </button>
-              {confirm === item.id ? (
-                <>
-                  <span>Удалить этот рассказ?</span>
-                  <button
-                    type="button"
-                    className="text-button danger"
-                    disabled={busy}
-                    onClick={() => void remove(item.id)}
-                  >
-                    Да, удалить
-                  </button>
-                  <button
-                    type="button"
-                    className="text-button"
-                    onClick={() => setConfirm(null)}
-                  >
-                    Оставить
-                  </button>
-                </>
-              ) : (
+      <details className="saved-stories">
+        <summary>
+          Твои сохранённые истории{items.length ? ` · ${items.length}` : ""}
+        </summary>
+        <div className="context-list">
+          {items.map((item) => (
+            <article className="context-note" key={item.id}>
+              <div>
+                <h3>
+                  <LockKeyhole size={15} />
+                  {item.title}
+                </h3>
+                <small>
+                  Только вам ·{" "}
+                  {new Date(item.updatedAt).toLocaleDateString("ru-RU")}
+                </small>
+              </div>
+              <p>{item.content}</p>
+              <div className="context-note-actions">
                 <button
                   type="button"
                   className="text-button"
                   disabled={busy}
-                  onClick={() => setConfirm(item.id)}
-                  aria-label={`Удалить рассказ ${item.title}`}
+                  onClick={() => edit(item)}
+                  aria-label={`Редактировать рассказ ${item.title}`}
                 >
-                  <Trash2 size={15} />
+                  <PenLine size={15} />
+                  Дополнить
                 </button>
-              )}
-            </div>
-          </article>
-        ))}
-      </div>
-      {ready && !items.length && editing === undefined && (
-        <div className="context-empty">
-          <Sparkles size={25} />
-          <h3>С чего начать?</h3>
-          <p>
-            Что вас увлекает? Что важно в отношениях? Как выглядит идеальный
-            день? Пишите своими словами, без списка «правильных» ответов.
-          </p>
+                {confirm === item.id ? (
+                  <>
+                    <span>Удалить этот рассказ?</span>
+                    <button
+                      type="button"
+                      className="text-button danger"
+                      disabled={busy}
+                      onClick={() => void remove(item.id)}
+                    >
+                      Да, удалить
+                    </button>
+                    <button
+                      type="button"
+                      className="text-button"
+                      onClick={() => setConfirm(null)}
+                    >
+                      Оставить
+                    </button>
+                  </>
+                ) : (
+                  <button
+                    type="button"
+                    className="text-button"
+                    disabled={busy}
+                    onClick={() => setConfirm(item.id)}
+                    aria-label={`Удалить рассказ ${item.title}`}
+                  >
+                    <Trash2 size={15} />
+                  </button>
+                )}
+              </div>
+            </article>
+          ))}
         </div>
-      )}
+        {!items.length && (
+          <p>Здесь появятся твои рассказы. К ним всегда можно вернуться.</p>
+        )}
+      </details>
       {guided && (
         <GuidedInterview
           interests={interests}
@@ -229,7 +232,7 @@ export function ContextEditor({
           }}
         />
       )}
-      {!guided && editing === undefined && (
+      {!guided && (
         <button
           type="button"
           className="guided-start"
@@ -241,27 +244,32 @@ export function ContextEditor({
         >
           <Sparkles size={19} />
           <span>
-            <strong>Не знаешь, с чего начать?</strong>
-            <small>Три вопроса о твоих интересах · можно голосом</small>
+            <strong>Давай немного поболтаем</strong>
+            <small>Некс задаст три вопроса · любой можно пропустить</small>
           </span>
         </button>
       )}
       {guided ? null : editing !== undefined ? (
         <form className="context-form" onSubmit={save}>
-          <label>
-            Название рассказа
-            <input
-              required
-              maxLength={60}
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-            />
-          </label>
+          <details className="story-title-option">
+            <summary>Название истории · по желанию</summary>
+            <label>
+              Название рассказа
+              <input
+                required
+                maxLength={60}
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+              />
+            </label>
+          </details>
           <VoiceInput
             label="Личный рассказ"
             value={content}
             onChange={setContent}
             disabled={busy}
+            onListeningChange={setListening}
+            placeholder="Например: сейчас читаю фантастику, учусь играть на гитаре и люблю долгие прогулки без плана…"
           />
           <div className="context-form-footer">
             <small>{content.length}/6000 · минимум 20 символов</small>
@@ -277,7 +285,9 @@ export function ContextEditor({
               </button>
               <button
                 className="primary"
-                disabled={busy || !available || content.trim().length < 20}
+                disabled={
+                  busy || !ready || !available || content.trim().length < 20
+                }
               >
                 <Check size={16} />
                 {busy ? "Ищем смысл…" : "Сохранить личный рассказ"}

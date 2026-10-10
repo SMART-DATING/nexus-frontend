@@ -53,6 +53,7 @@ import "./polish.css";
 import { AmbientBackdrop } from "./AmbientBackdrop";
 import { useStoryReminder } from "./useStoryReminder";
 import { WaveGuide } from "./WaveGuide";
+import { ChatPartner, BlockedUsers } from "./ChatControls";
 type Tab = "discover" | "matches" | "profile" | "notifications";
 function readRoute(): { tab: Tab; matchId: number | null } {
   const id = window.location.pathname.match(/^\/match\/(\d+)$/)?.[1];
@@ -140,6 +141,7 @@ export function App() {
   }
   const storyReminder = useStoryReminder(user);
   const currentMatch = useRef<number | null>(null);
+  const blockedMatchIds = useRef(new Set<number>());
   const messagesViewport = useRef<HTMLDivElement>(null);
   const followMessages = useRef(true);
   const [profileSection, setProfileSection] = useState(readProfileSection);
@@ -183,6 +185,7 @@ export function App() {
     setAuthOpen(false);
     setPrivacyOpen(false);
     setPreviewOpen(false);
+    blockedMatchIds.current.clear();
     setOnboardingDismissed(null);
     sessionStorage.removeItem("nexus-onboarding-dismissed");
     setPeople([]);
@@ -285,7 +288,12 @@ export function App() {
               setToast("");
             }
           }
-          if (tab === "matches") setMatches(r.items as Match[]);
+          if (tab === "matches")
+            setMatches(
+              (r.items as Match[]).filter(
+                (m) => !blockedMatchIds.current.has(m.id),
+              ),
+            );
           if (tab === "notifications") setNotices(r.items as Notice[]);
         })
         .catch((e) => {
@@ -317,7 +325,14 @@ export function App() {
         const r = await api<{ items: Notice[] }>("/notifications");
         if (alive) setNotices(r.items);
         const m = await api<{ items: Match[] }>("/matches");
-        if (alive) setMatches(m.items);
+        if (alive) {
+          setMatches(m.items.filter((m) => !blockedMatchIds.current.has(m.id)));
+          const active = currentMatch.current;
+          if (active !== null && !m.items.some((m) => m.id === active)) {
+            navigate("matches");
+            setToast("Этот чат больше недоступен.");
+          }
+        }
       } catch (e) {
         if (alive) report(e);
       } finally {
@@ -995,6 +1010,18 @@ export function App() {
                 <h1>Чаты</h1>
                 <p>Здесь начинается ваш разговор.</p>
               </div>
+              <BlockedUsers
+                onError={report}
+                onUnblocked={() => {
+                  setToast("Блокировка снята.");
+                  api<{ items: Match[] }>("/matches")
+                    .then((r) => {
+                      blockedMatchIds.current.clear();
+                      setMatches(r.items);
+                    })
+                    .catch(report);
+                }}
+              />
             </div>
             {loading && !matches.length && !selected ? (
               <div className="boot">Загружаем совпадения…</div>
@@ -1044,8 +1071,21 @@ export function App() {
                         >
                           <ArrowLeft size={20} />
                         </button>
-                        <Avatar profile={selected.user} />
-                        <strong>{value(selected.user, "display_name")}</strong>
+                        <ChatPartner
+                          key={selected.id}
+                          profile={selected.user}
+                          onError={report}
+                          onBlocked={() => {
+                            const id = selected.id;
+                            blockedMatchIds.current.add(id);
+                            setMatches((old) => old.filter((m) => m.id !== id));
+                            setNotices((old) =>
+                              old.filter((n) => n.matchId !== id),
+                            );
+                            navigate("matches");
+                            setToast("Пользователь заблокирован.");
+                          }}
+                        />
                         <small>Совпадение · {date(selected.createdAt)}</small>
                       </div>
                       <div

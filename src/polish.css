@@ -755,15 +755,22 @@ body:has(.public-home) {
   }
 }
 
-/* Chapter spacing stays independent of the height of its card or illustration. */
+/* Content sets the height; viewport spacing provides rhythm without empty screens. */
 .public-home .landing-screen {
-  padding-block: clamp(32px, 5svh, 64px);
+  padding-block: clamp(24px, 4svh, 48px);
   display: flex;
   align-items: center;
 }
 .public-home .landing-screen > section {
   width: 100%;
   margin: 0;
+}
+.public-home .landing-screen h2 {
+  font-size: clamp(28px, 3.2vw, 52px);
+}
+.public-home .landing-trust,
+.public-home .explore-demo {
+  padding: clamp(24px, 3vw, 48px);
 }
 .public-home .landing-screen > .landing-how,
 .public-home .landing-screen > .landing-explore,
@@ -778,9 +785,6 @@ body:has(.public-home) {
   .public-home .landing-hero {
     min-height: calc(100svh - 140px);
     padding-block: 48px;
-  }
-  .public-home .landing-screen {
-    min-height: 100svh;
   }
 }
 .privacy-info-dialog {
@@ -892,7 +896,7 @@ body:has(.public-home) {
     margin-bottom: 16px;
   }
   .landing-explore .landing-section-heading h2 {
-    font-size: 40px;
+    font-size: clamp(28px, 3.2vw, 48px);
   }
   .landing-explore .landing-section-heading > p {
     font-size: 15px;
@@ -915,5 +919,83 @@ body:has(.public-home) {
   .landing-explore .example-answer {
     padding: 16px;
     margin-top: 18px;
+  }
+}
+
+.chat-title .chat-partner {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+  text-align: left;
+  border-radius: 12px;
+  padding: 4px;
+  color: inherit;
+  transition: background 180ms ease;
+}
+.chat-partner:hover {
+  background: #a998ee14;
+}
+.chat-partner strong {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.chat-title .chat-block {
+  order: 3;
+  margin-left: auto;
+  flex-shrink: 0;
+  color: #9faec9;
+}
+.chat-title > small {
+  margin-left: 8px;
+}
+.block-dialog-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-top: 24px;
+}
+.danger-button {
+  padding: 12px 20px;
+  border-radius: 12px;
+  color: #ffe3e9;
+  background: #943f57;
+  min-height: 44px;
+}
+.blocked-users-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+.blocked-users-list li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding-block: 14px;
+  border-bottom: 1px solid #a7b2dd26;
+}
+.blocked-users-list strong {
+  overflow-wrap: anywhere;
+  min-width: 0;
+}
+.blocked-users-list button {
+  flex-shrink: 0;
+  font-size: 13px;
+}
+.blocked-users-trigger {
+  font-size: 13px;
+}
+@media (max-width: 760px) {
+  .chat-title > small {
+    display: none;
+  }
+  .blocked-users-trigger {
+    align-self: flex-start;
+  }
+  .chat-title .chat-partner {
+    gap: 8px;
   }
 }

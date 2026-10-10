@@ -43,7 +43,7 @@ export function ProfileCard({
         {children}
       </div>
       <div className="swipe-story">
-        {!own && (
+        {!own && typeof p.compatibilityScore === "number" && (
           <span className="story-label">
             <Sparkles size={16} />
             {typeof p.compatibilityScore === "number"

@@ -57,6 +57,7 @@ beforeEach(() => {
       if (path === "/users/me") data = user;
       if (path === "/interests") data = { items: ["Музыка", "Кофе", "Кино"] };
       if (path === "/profiles/me") data = profile;
+      if (path === "/profiles/2") data = match.user;
       if (path === "/contexts/me") data = { items: [], modelAvailable: true };
       if (path === "/users/2/like") liked = true;
       if (path === "/recommendations/next") {
@@ -106,6 +107,37 @@ afterEach(() => {
   vi.unstubAllGlobals();
 });
 describe("Nexus user flows", () => {
+  it("opens the partner profile from chat and removes a blocked chat immediately", async () => {
+    sessionStorage.setItem("nexus-token", "test-token");
+    const ui = userEvent.setup();
+    render(<App />);
+    await ui.click(await screen.findByRole("button", { name: /Чаты/ }));
+    await ui.click(await screen.findByRole("button", { name: /Саша/ }));
+    await ui.click(
+      await screen.findByRole("button", { name: "Посмотреть анкету Саша" }),
+    );
+    await screen.findByRole("dialog", { name: "Анкета · Саша" });
+    await waitFor(() =>
+      expect(requests.some((r) => r.path === "/profiles/2")).toBe(true),
+    );
+    await ui.click(screen.getByRole("button", { name: "Закрыть окно" }));
+    await ui.click(screen.getByRole("button", { name: "Заблокировать Саша" }));
+    await ui.click(screen.getByRole("button", { name: "Заблокировать" }));
+    await waitFor(() =>
+      expect(
+        requests.some(
+          (r) => r.path === "/users/2/block" && r.method === "POST",
+        ),
+      ).toBe(true),
+    );
+    await waitFor(() =>
+      expect(
+        screen.queryByRole("button", { name: "Посмотреть анкету Саша" }),
+      ).toBeNull(),
+    );
+    expect(window.location.hash).toBe("#matches");
+    expect(screen.queryByRole("button", { name: /Открыть чат/ })).toBeNull();
+  });
   it("opens private stories from the main navigation and keeps the route after reload", async () => {
     sessionStorage.setItem("nexus-token", "test-token");
     const ui = userEvent.setup();

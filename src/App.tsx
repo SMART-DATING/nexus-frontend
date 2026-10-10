@@ -53,6 +53,7 @@ import "./landing.css";
 import "./polish.css";
 import "./chapters.css";
 import "./chat-menu.css";
+import "./finale.css";
 import { AmbientBackdrop } from "./AmbientBackdrop";
 import { useStoryReminder } from "./useStoryReminder";
 import { WaveGuide } from "./WaveGuide";
@@ -166,6 +167,9 @@ export function App() {
     setSelected(match);
     setText("");
     setError("");
+    requestAnimationFrame(() =>
+      window.scrollTo({ top: 0, behavior: "instant" }),
+    );
   }
   useEffect(() => {
     const sync = () => {
@@ -1000,18 +1004,24 @@ export function App() {
                 </button>
               )}
             </div>
-            <div hidden={profileSection !== 2}>
-              <PublicTopicsEditor
-                user={user}
-                interests={interests}
-                onSaved={refresh}
-              />
+            <div className="matching-editor" hidden={profileSection !== 2}>
               <ContextEditor
                 interests={user.profile.interests}
                 onChanged={refresh}
               />
+              <details className="matching-public-topics">
+                <summary>
+                  Темы в твоей анкете{" "}
+                  <small>Видны другим · можно дополнить позже</small>
+                </summary>
+                <PublicTopicsEditor
+                  user={user}
+                  interests={interests}
+                  onSaved={refresh}
+                />
+              </details>
             </div>
-            <div hidden={profileSection === 2}>
+            <div className="profile-editor-view" hidden={profileSection === 2}>
               <ProfileTabs
                 initialTab={profileSection === 2 ? 0 : profileSection}
                 onChange={(i) => {

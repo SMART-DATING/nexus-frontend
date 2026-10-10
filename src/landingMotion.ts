@@ -9,7 +9,7 @@ function stopMotion() {
 export function showLandingFrame(frame: HTMLElement) {
   stopMotion();
   const start = window.scrollY;
-  const top = Math.max(0, frame.getBoundingClientRect().top + start);
+  const top = frameTop(frame);
   if (
     Math.abs(top - start) < 1 ||
     window.matchMedia?.("(prefers-reduced-motion: reduce)").matches
@@ -35,9 +35,19 @@ export function showLandingFrame(frame: HTMLElement) {
   transition.request = requestAnimationFrame(tick);
 }
 
+function frameTop(frame: HTMLElement) {
+  // The first scene includes the header; the footer ends at the document edge.
+  if (frame.matches(".landing-hero")) return 0;
+  const top = Math.max(0, frame.getBoundingClientRect().top + window.scrollY);
+  const limit = document.documentElement.scrollHeight - window.innerHeight;
+  return limit > 0 ? Math.min(top, limit) : top;
+}
+
 export function installLandingNavigation() {
   const frames = [
-    ...document.querySelectorAll<HTMLElement>(".landing-hero, .landing-screen"),
+    ...document.querySelectorAll<HTMLElement>(
+      ".landing-hero, .landing-screen, .public-footer",
+    ),
   ];
   let lastWheel = 0;
   let switched = false;
@@ -49,6 +59,7 @@ export function installLandingNavigation() {
     !window.matchMedia?.("(prefers-reduced-motion: reduce)").matches &&
     !document.querySelector("dialog[open]");
   function target(step: number) {
+    if (!frames.length) return null;
     if (motion) {
       return frames[frames.indexOf(motion.frame) + step] ?? null;
     }
@@ -70,7 +81,12 @@ export function installLandingNavigation() {
     const rect = frames[index].getBoundingClientRect();
     // Let taller content scroll normally until its edge, including expanded FAQ answers.
     if (step > 0 && rect.bottom > window.innerHeight + 12) return null;
-    if (step < 0 && rect.top < -12) return null;
+    if (step < 0 && window.scrollY > frameTop(frames[index]) + 12) {
+      // A partially visible viewport-sized scene returns to its own start.
+      // Long content keeps ordinary scrolling until its top is reached.
+      if (rect.bottom - rect.top > window.innerHeight + 12) return null;
+      return frames[index];
+    }
     return frames[index + step] ?? null;
   }
   function scrollable(node: HTMLElement | null, step: number) {

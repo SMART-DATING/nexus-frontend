@@ -8,6 +8,7 @@ export function SwipeDeck({
   busy,
   onReact,
   onPhotoChange,
+  onSwipeProgress,
 }: {
   people: Profile[];
   busy: boolean;
@@ -17,12 +18,15 @@ export function SwipeDeck({
   reviewed: number;
   liked: number;
   onPhotoChange?: (url?: string) => void;
+  onSwipeProgress?: (progress: number) => void;
 }) {
   const p = people[0],
     name = value(p, "display_name");
   const [leaving, setLeaving] = useState<"like" | "skip" | null>(null);
   const [dragging, setDragging] = useState(false);
   const card = useRef<HTMLElement>(null);
+  const feedback = useRef(onSwipeProgress);
+  feedback.current = onSwipeProgress;
   const gesture = useRef<{
     id: number;
     x: number;
@@ -33,6 +37,7 @@ export function SwipeDeck({
   const choosing = useRef(false),
     alive = useRef(false);
   function paint(dx: number) {
+    feedback.current?.(Math.max(-1, Math.min(1, dx / 120)));
     card.current?.style.setProperty("--swipe-x", `${dx}px`);
     card.current?.style.setProperty("--swipe-rotation", `${dx / 110}deg`);
     card.current?.style.setProperty(
@@ -53,12 +58,13 @@ export function SwipeDeck({
     return () => {
       alive.current = false;
       stopFrame();
+      feedback.current?.(0);
     };
   }, []);
   useEffect(() => {
     stopFrame();
     gesture.current = null;
-    paint(0);
+    if (!choosing.current) paint(0);
     setDragging(false);
     setLeaving(null);
   }, [p.userId]);
@@ -85,6 +91,7 @@ export function SwipeDeck({
     );
     card.current?.style.setProperty("--like-opacity", like ? "1" : "0");
     card.current?.style.setProperty("--skip-opacity", like ? "0" : "1");
+    feedback.current?.(like ? 1 : -1);
     setDragging(false);
     setLeaving(like ? "like" : "skip");
     try {

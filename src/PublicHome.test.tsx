@@ -37,7 +37,11 @@ it("explains interests and reciprocal photos without starting signup or saving e
   await userEvent.click(
     screen.getByRole("button", { name: "Пример: 4 своих фото" }),
   );
-  expect(screen.getByText(/В примере: 4 своих — до 4 чужих/)).toBeTruthy();
+  expect(
+    screen.getByRole("heading", {
+      name: "Четыре фотографии? Значит, четыре у каждого.",
+    }),
+  ).toBeTruthy();
   expect(auth).not.toHaveBeenCalled();
   await userEvent.click(
     screen.getAllByRole("button", { name: "Найти свою волну" })[0],
@@ -119,4 +123,39 @@ it("animates FAQ state while keeping closed answers out of keyboard and accessib
   await userEvent.keyboard(" ");
   expect(button.getAttribute("aria-expanded")).toBe("false");
   expect(answer.hasAttribute("inert")).toBe(true);
+});
+
+it("keeps only one FAQ answer open and describes a match without queue internals", async () => {
+  render(<PublicHome onAuth={vi.fn()} onPrivacy={vi.fn()} />);
+  const first = screen.getByRole("button", {
+    name: "Мой личный рассказ увидят другие?",
+  });
+  await userEvent.click(first);
+  const last = screen.getByRole("button", {
+    name: "Что происходит после лайка?",
+  });
+  await userEvent.click(last);
+  expect(first.getAttribute("aria-expanded")).toBe("false");
+  expect(
+    document.querySelectorAll('.faq-answer[aria-hidden="false"]'),
+  ).toHaveLength(1);
+  const answer = screen.getByRole("region", {
+    name: "Что происходит после лайка?",
+  });
+  expect(answer.textContent).toContain("появится чат");
+  expect(answer.textContent).not.toMatch(/уровни|Пропущенные|повторно/);
+});
+
+it("uses the chosen photo count in both parts of the headline", async () => {
+  render(<PublicHome onAuth={vi.fn()} onPrivacy={vi.fn()} />);
+  for (const [count, title] of [
+    [1, "Одна фотография? Значит, одна у каждого."],
+    [3, "Три фотографии? Значит, три у каждого."],
+    [6, "Шесть фотографий? Значит, шесть у каждого."],
+  ] as const) {
+    await userEvent.click(
+      screen.getByRole("button", { name: `Пример: ${count} своих фото` }),
+    );
+    expect(screen.getByRole("heading", { name: title })).toBeTruthy();
+  }
 });

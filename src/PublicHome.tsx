@@ -22,6 +22,16 @@ export function PublicHome({
   onPrivacy: () => void;
 }) {
   const [photoCount, setPhotoCount] = useState(2);
+  const [openQuestion, setOpenQuestion] = useState<number | null>(null);
+  const photoWords = [
+    "Одна фотография",
+    "Две фотографии",
+    "Три фотографии",
+    "Четыре фотографии",
+    "Пять фотографий",
+    "Шесть фотографий",
+  ];
+  const countWords = ["одна", "две", "три", "четыре", "пять", "шесть"];
   const [sceneTopic, setSceneTopic] = useState(0);
   const [helpOpen, setHelpOpen] = useState(false);
   useEffect(() => {
@@ -266,9 +276,9 @@ export function PublicHome({
             <div>
               <span className="eyebrow">НА РАВНЫХ</span>
               <h2>
-                Одна фотография?
+                {photoWords[photoCount - 1]}?
                 <br />
-                Значит, одна у каждого.
+                Значит, {countWords[photoCount - 1]} у каждого.
               </h2>
               <p>
                 Загрузи до шести фото. Сколько добавишь сам, столько сможешь
@@ -276,8 +286,8 @@ export function PublicHome({
                 больше.
               </p>
               <p className="photo-rule-result" aria-live="polite">
-                В примере: {photoCount} своих — до {photoCount} чужих. Нажми на
-                карточку слева, чтобы попробовать.
+                Нажми на карточку слева и посмотри, как меняется количество
+                фото.
               </p>
             </div>
           </section>
@@ -352,21 +362,33 @@ export function PublicHome({
               <QuestionScene />
             </div>
             <div>
-              <LandingFaqItem question="Мой личный рассказ увидят другие?">
+              <LandingFaqItem
+                question="Мой личный рассказ увидят другие?"
+                expanded={openQuestion === 0}
+                onToggle={() => setOpenQuestion(openQuestion === 0 ? null : 0)}
+              >
                 <p>
                   Нет. В анкете видны выбранные тобой публичные поля, интересы и
                   разрешённые фото. Подробные истории остаются в «Для подбора»:
                   их смысл помогает составлять рекомендации.
                 </p>
               </LandingFaqItem>
-              <LandingFaqItem question="Нужно отвечать на все вопросы?">
+              <LandingFaqItem
+                question="Нужно отвечать на все вопросы?"
+                expanded={openQuestion === 1}
+                onToggle={() => setOpenQuestion(openQuestion === 1 ? null : 1)}
+              >
                 <p>
                   Нет. Некс задаёт три коротких вопроса по выбранным интересам.
                   Любой можно пропустить или отложить всё знакомство. Позже
                   можно написать один свободный рассказ и дополнять его.
                 </p>
               </LandingFaqItem>
-              <LandingFaqItem question="Можно рассказать голосом?">
+              <LandingFaqItem
+                question="Можно рассказать голосом?"
+                expanded={openQuestion === 2}
+                onToggle={() => setOpenQuestion(openQuestion === 2 ? null : 2)}
+              >
                 <p>
                   Да, если браузер поддерживает распознавание. Микрофон
                   включается только по твоему действию после пояснения. Браузер
@@ -374,12 +396,14 @@ export function PublicHome({
                   подтверждённый текст. Печатать можно всегда.
                 </p>
               </LandingFaqItem>
-              <LandingFaqItem question="Что происходит после лайка?">
+              <LandingFaqItem
+                question="Что происходит после лайка?"
+                expanded={openQuestion === 3}
+                onToggle={() => setOpenQuestion(openQuestion === 3 ? null : 3)}
+              >
                 <p>
-                  Если другой человек тоже выразит симпатию, появится чат.
-                  Сначала идут самые близкие по рассказу люди, затем уровни
-                  ниже. Пропущенные анкеты вернутся после всех уровней.
-                  Лайкнутые повторно не показываются.
+                  Если вы понравились друг другу, появится чат. Начни с простого
+                  «привет» или поговори о том, что вас объединяет.
                 </p>
               </LandingFaqItem>
             </div>

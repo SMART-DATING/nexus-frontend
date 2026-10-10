@@ -4,15 +4,18 @@ import { api, value, type Profile } from "./api";
 import { Dialog } from "./Dialog";
 import { ProfileCard } from "./ProfileCard";
 import { ProfileAvatar } from "./ProfileAvatar";
+import { activityLabel } from "./ChatMenu";
 
 export function ChatPartner({
   profile,
   onBlocked,
   onError,
+  lastActiveAt,
 }: {
   profile: Profile;
   onBlocked: () => void;
   onError: (error: unknown) => void;
+  lastActiveAt?: string | null;
 }) {
   const [view, setView] = useState(false);
   const [fresh, setFresh] = useState<Profile | null>(null);
@@ -65,19 +68,10 @@ export function ChatPartner({
         onClick={() => setView(true)}
       >
         <ProfileAvatar profile={profile} />
-        <strong>{name}</strong>
-      </button>
-      <button
-        type="button"
-        className="icon-button chat-block"
-        title="Заблокировать пользователя"
-        aria-label={`Заблокировать ${name}`}
-        onClick={() => {
-          setBlockError("");
-          setConfirm(true);
-        }}
-      >
-        <Ban size={19} />
+        <span className="chat-partner-copy">
+          <strong>{name}</strong>
+          <small>{activityLabel(lastActiveAt)}</small>
+        </span>
       </button>
       {view && (
         <Dialog
@@ -90,6 +84,22 @@ export function ChatPartner({
           ) : (
             <p role="status">{failure || "Загружаем анкету…"}</p>
           )}
+          <div className="partner-profile-actions">
+            <small>{activityLabel(lastActiveAt)}</small>
+            <button
+              type="button"
+              className="outline"
+              aria-label={`Заблокировать ${name}`}
+              onClick={() => {
+                setView(false);
+                setBlockError("");
+                setConfirm(true);
+              }}
+            >
+              <Ban size={18} />
+              Заблокировать
+            </button>
+          </div>
         </Dialog>
       )}
       {confirm && (

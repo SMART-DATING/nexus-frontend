@@ -1,0 +1,250 @@
+/* Each chapter occupies the viewport through its composition, not blank spacers. */
+.public-home .landing-screen {
+  --chapter-padding: clamp(24px, 4svh, 48px);
+  min-height: 100svh;
+  padding-block: var(--chapter-padding);
+  position: relative;
+}
+.public-home .landing-screen::before {
+  content: "";
+  position: absolute;
+  inset: 0 calc((100% - 100vw) / 2);
+  pointer-events: none;
+  z-index: -1;
+  background: radial-gradient(ellipse at 20% 45%, #5562a91a, transparent 70%);
+}
+.public-home .landing-screen:nth-of-type(even)::before {
+  background: radial-gradient(ellipse at 80% 50%, #8066ba1a, transparent 70%);
+}
+.public-home .landing-screen > section {
+  min-height: calc(100svh - 2 * var(--chapter-padding));
+  padding-block: 0;
+}
+.public-home .landing-screen h2 {
+  font-size: clamp(32px, min(4.3vw, 6.5svh), 68px);
+  text-wrap: balance;
+}
+.public-home .landing-how {
+  display: grid;
+  grid-template-columns: 1fr 1.1fr;
+  align-items: center;
+  gap: clamp(32px, 5vw, 72px);
+  border-top: none;
+}
+.public-home .landing-section-heading {
+  margin: 0;
+}
+.public-home .landing-steps {
+  grid-template-columns: 1fr;
+  grid-template-rows: repeat(3, 1fr);
+  align-self: stretch;
+  gap: 16px;
+}
+.public-home .landing-steps article {
+  display: grid;
+  grid-template-columns: 38px 1fr;
+  column-gap: 20px;
+  align-content: center;
+  padding: clamp(24px, 4svh, 44px);
+}
+.public-home .landing-steps article > svg {
+  grid-row: span 2;
+  width: 32px;
+  height: 32px;
+}
+.public-home .landing-steps h3 {
+  margin: 0 20px 12px 0;
+  font-size: clamp(20px, 2vw, 26px);
+}
+.public-home .landing-steps p {
+  font-size: clamp(14px, 1.2vw, 17px);
+  line-height: 1.65;
+}
+.public-home .landing-explore {
+  display: grid;
+  grid-template-columns: 0.85fr 1.15fr;
+  gap: clamp(28px, 5vw, 64px);
+  align-items: center;
+}
+.public-home .landing-explore .landing-section-heading h2 {
+  font-size: clamp(32px, min(3.7vw, 6svh), 60px);
+}
+.public-home .explore-interaction {
+  align-self: stretch;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+.public-home .explore-topics {
+  margin: 0 0 20px;
+  gap: 8px;
+}
+.public-home .explore-topics button {
+  padding: 10px 14px;
+  font-size: 14px;
+}
+.public-home .explore-demo {
+  flex: 1;
+  grid-template-columns: 1fr;
+  align-content: center;
+  gap: clamp(20px, 3svh, 36px);
+  padding: clamp(24px, 3vw, 40px);
+}
+.public-home .explore-demo aside {
+  border-left: 0;
+  border-top: 1px solid #a5a9d02a;
+  padding: 24px 0 0;
+}
+.public-home .meaning-orbit {
+  display: none;
+}
+.public-home .explore-demo h3 {
+  font-size: clamp(20px, 2vw, 26px);
+}
+.public-home .explore-demo p {
+  font-size: 14px;
+  line-height: 1.6;
+}
+.public-home .example-answer {
+  margin: 22px 0 0;
+  padding: 20px;
+}
+.public-home .landing-photo-rule {
+  gap: clamp(32px, 5vw, 72px);
+}
+.public-home .photo-rule-art {
+  align-self: stretch;
+  align-content: center;
+  gap: 16px;
+  padding: 0;
+}
+.public-home .photo-rule-art button {
+  height: clamp(130px, 29svh, 340px);
+  font-size: clamp(28px, 4vw, 48px);
+}
+.public-home .landing-trust {
+  align-items: center;
+  padding: clamp(28px, 4vw, 56px);
+}
+.public-home .trust-cards {
+  align-self: stretch;
+}
+.public-home .trust-cards article {
+  flex: 1;
+  align-items: center;
+  padding: clamp(22px, 3svh, 36px);
+}
+.public-home .trust-cards h3 {
+  font-size: clamp(18px, 1.6vw, 24px);
+}
+.public-home .trust-cards p {
+  font-size: 15px;
+}
+.public-home .landing-faq {
+  align-items: center;
+}
+.public-home .landing-faq > div:last-child {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 16px;
+  align-self: stretch;
+}
+.public-home .landing-faq-item {
+  margin: 0;
+}
+.public-home .landing-faq-item > button {
+  min-height: clamp(72px, 14svh, 150px);
+  font-size: clamp(16px, 1.4vw, 20px);
+}
+.public-home .landing-last {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px;
+}
+.app.is-matches .workspace > .empty,
+.app.is-matches .chat > .empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 20px;
+}
+.app.is-matches .empty > * {
+  flex-shrink: 0;
+  margin: 0;
+}
+.match-celebration {
+  outline: none;
+}
+.context-editor .context-form {
+  min-width: 0;
+  max-width: 100%;
+  grid-template-columns: minmax(0, 1fr);
+}
+.context-form-footer > div,
+.context-editor .composer-toolbar {
+  flex-wrap: wrap;
+  max-width: 100%;
+}
+.context-editor button {
+  max-width: 100%;
+  white-space: normal;
+}
+.context-editor .guided-start > span {
+  min-width: 0;
+}
+@media (max-width: 899px), (max-height: 599px) {
+  .public-home .landing-how,
+  .public-home .landing-explore {
+    grid-template-columns: 1fr;
+    gap: 28px;
+  }
+  .public-home .landing-screen > section {
+    min-height: calc(100svh - 48px);
+  }
+  .public-home .landing-screen {
+    --chapter-padding: 24px;
+  }
+  .public-home .landing-section-heading {
+    align-self: center;
+  }
+  .public-home .landing-steps {
+    grid-template-rows: auto;
+  }
+  .public-home .landing-steps article {
+    padding: 22px;
+    column-gap: 14px;
+  }
+  .public-home .landing-steps h3 {
+    font-size: 20px;
+  }
+  .public-home .landing-steps p {
+    font-size: 14px;
+  }
+  .public-home .landing-explore .landing-section-heading h2,
+  .public-home .landing-screen h2 {
+    font-size: clamp(28px, 5vw, 44px);
+  }
+  .public-home .explore-demo {
+    grid-template-columns: 1fr;
+  }
+  .public-home .landing-photo-rule {
+    gap: 28px;
+  }
+  .public-home .photo-rule-art {
+    align-self: center;
+  }
+  .public-home .photo-rule-art button {
+    height: clamp(100px, 18svh, 180px);
+  }
+  .public-home .landing-faq > div:last-child {
+    gap: 12px;
+  }
+  .public-home .landing-faq-item > button {
+    min-height: 72px;
+    font-size: 16px;
+  }
+}

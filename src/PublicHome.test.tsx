@@ -1,7 +1,15 @@
 import { afterEach, expect, it, vi } from "vitest";
-import { cleanup, render, screen, within } from "@testing-library/react";
+import {
+  cleanup,
+  render,
+  screen,
+  within,
+  waitFor,
+} from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { PublicHome } from "./PublicHome";
+import { installDialogMock } from "./testDialog";
+installDialogMock();
 afterEach(() => {
   cleanup();
   vi.restoreAllMocks();
@@ -24,36 +32,53 @@ it("explains interests and reciprocal photos without starting signup or saving e
   expect(auth).toHaveBeenCalledWith(true);
 });
 
-it("makes hero interest cards actionable and lets Nex guide and collapse", async () => {
+it("opens help only on request and jumps to the chosen example, not its section heading", async () => {
   const scroll = vi.fn();
   Object.defineProperty(HTMLElement.prototype, "scrollIntoView", {
     configurable: true,
     value: scroll,
   });
-  render(<PublicHome onAuth={vi.fn()} onPrivacy={vi.fn()} />);
+  const privacy = vi.fn();
+  render(<PublicHome onAuth={vi.fn()} onPrivacy={privacy} />);
+  expect(screen.queryByRole("dialog")).toBeNull();
   await userEvent.click(
     screen.getByRole("link", { name: "Попробовать разговор о музыке" }),
   );
   expect(
     screen.getByRole("heading", { name: "Что у тебя сейчас на повторе?" }),
   ).toBeTruthy();
-  const guide = within(
-    screen.getByRole("complementary", { name: "Некс — проводник по странице" }),
+  await waitFor(() =>
+    expect(scroll).toHaveBeenCalledWith(
+      expect.objectContaining({ block: "center" }),
+    ),
+  );
+  expect((scroll.mock.instances[0] as HTMLElement).id).toBe("explore-example");
+  await userEvent.click(
+    screen.getByRole("button", { name: "Открыть помощь Некса" }),
+  );
+  const help = within(
+    screen.getByRole("dialog", { name: "Некс поможет разобраться" }),
   );
   await userEvent.click(
-    guide.getByRole("button", { name: "Открыть подсказку Некса" }),
+    help.getByRole("button", { name: /Как открываются фотографии/ }),
   );
+  await waitFor(() =>
+    expect((scroll.mock.instances.at(-1) as HTMLElement).id).toBe("photos"),
+  );
+  expect(screen.queryByRole("dialog")).toBeNull();
+  await userEvent.click(screen.getByRole("button", { name: "Спросить Некса" }));
   await userEvent.click(
-    guide.getByRole("button", { name: "Как всё устроено" }),
+    screen.getByRole("button", { name: /Что увидят другие/ }),
   );
-  expect(scroll).toHaveBeenCalled();
-  expect(
-    guide.getByRole("button", { name: "Попробовать разговор" }),
-  ).toBeTruthy();
-  await userEvent.click(
-    guide.getByRole("button", { name: "Свернуть подсказку Некса" }),
-  );
-  expect(
-    guide.getByRole("button", { name: "Открыть подсказку Некса" }),
-  ).toBeTruthy();
+  expect(privacy).toHaveBeenCalledOnce();
+  expect(screen.queryByRole("dialog")).toBeNull();
+});
+
+it("returns focus to the help trigger after closing and never reopens automatically", async () => {
+  render(<PublicHome onAuth={vi.fn()} onPrivacy={vi.fn()} />);
+  const trigger = screen.getByRole("button", { name: "Открыть помощь Некса" });
+  await userEvent.click(trigger);
+  await userEvent.click(screen.getByRole("button", { name: "Закрыть окно" }));
+  expect(document.activeElement).toBe(trigger);
+  expect(screen.queryByRole("dialog")).toBeNull();
 });

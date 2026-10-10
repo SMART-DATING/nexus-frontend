@@ -153,100 +153,6 @@
   font-size: 13px;
   line-height: 1.6;
 }
-.landing-guide {
-  position: fixed;
-  right: 22px;
-  bottom: 22px;
-  z-index: 25;
-  max-width: calc(100vw - 32px);
-}
-.landing-guide.is-open {
-  width: 320px;
-  border: 1px solid #b9a3ff55;
-  border-radius: 24px;
-  background: #192238f5;
-  box-shadow: 0 12px 40px #0005;
-  padding: 22px 18px 14px;
-}
-.landing-guide .wave-guide.compact {
-  display: flex;
-  align-items: flex-start;
-  gap: 14px;
-  margin: 0;
-  padding: 0;
-  background: none;
-  border: 0;
-}
-.landing-guide .guide-character {
-  flex: 0 0 48px;
-  width: 48px;
-  height: 48px;
-  border-radius: 16px;
-  margin-top: 6px;
-}
-.landing-guide .guide-face {
-  inset: 14px 9px 10px;
-}
-.landing-guide .guide-face i {
-  width: 4px;
-  height: 6px;
-}
-.landing-guide .guide-face b {
-  width: 10px;
-  height: 5px;
-  bottom: 0;
-}
-.landing-guide .guide-speech {
-  min-width: 0;
-  padding: 0;
-  border: 0;
-  background: none;
-}
-.landing-guide .guide-name {
-  font-size: 14px;
-}
-.landing-guide .guide-name small {
-  display: none;
-}
-.landing-guide .guide-speech p {
-  margin: 8px 0 6px;
-  font-size: 13px;
-  line-height: 1.55;
-  color: #c9d1e7;
-}
-.landing-guide .guide-next {
-  min-height: 44px;
-  text-align: left;
-  font-size: 12px;
-  line-height: 1.4;
-  padding: 6px 0;
-  color: #c6b4ff;
-}
-.guide-close {
-  position: absolute;
-  top: 0;
-  right: 0;
-  width: 44px;
-  height: 44px;
-  padding: 0;
-  border: 0;
-  background: none;
-  color: #aebbd7;
-  display: grid;
-  place-items: center;
-}
-.guide-reopen {
-  min-height: 48px;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  border-radius: 18px;
-  padding: 6px 12px 6px 6px;
-  border: 1px solid #b9a3ff55;
-  background: #1b2440f5;
-  box-shadow: 0 5px 20px #0004;
-  color: #dad3ff;
-}
 .mini-nex {
   width: 36px;
   height: 36px;
@@ -311,13 +217,6 @@
   .public-home .landing-last p {
     font-size: 15px;
   }
-  .landing-guide {
-    right: 14px;
-    bottom: calc(12px + env(safe-area-inset-bottom));
-  }
-  .landing-guide.is-open {
-    width: min(320px, calc(100vw - 28px));
-  }
 }
 @media (max-width: 480px) {
   .public-home .public-header {
@@ -343,8 +242,10 @@
   }
 }
 @media (prefers-reduced-motion: reduce) {
-  .public-home *,
-  .landing-guide * {
+  html {
+    scroll-behavior: auto;
+  }
+  .public-home * {
     scroll-behavior: auto;
     animation: none !important;
     transition: none !important;

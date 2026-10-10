@@ -347,6 +347,14 @@ summary:focus:not(:focus-visible) {
   .app.is-discover:has(.long-bio) .deck-stack {
     min-height: 580px;
   }
+  .app.is-discover:has(.long-bio) .profile-card-content {
+    height: auto;
+    min-height: 578px;
+  }
+  .app.is-discover:has(.long-bio) .swipe-portrait {
+    height: auto;
+    align-self: stretch;
+  }
   .app.is-discover:has(.long-bio) .swipe-card {
     min-height: 580px;
     height: auto;
@@ -436,77 +444,6 @@ summary:focus:not(:focus-visible) {
   }
 }
 
-/* Nex changes position between sections; the character sits outside its speech bubble. */
-.landing-guide.is-open {
-  left: 0;
-  top: 0;
-  right: auto;
-  bottom: auto;
-  transform: translate3d(
-    var(--guide-x, calc(100vw - 350px)),
-    var(--guide-y, calc(100dvh - 310px)),
-    0
-  );
-  transition: transform 950ms cubic-bezier(0.22, 0.7, 0.25, 1);
-  width: 320px;
-  padding: 0;
-  border: 0;
-  background: none;
-  box-shadow: none;
-}
-.landing-guide .wave-guide.compact {
-  flex-direction: column;
-  gap: 10px;
-  align-items: flex-end;
-}
-.landing-guide .guide-character {
-  flex: 0 0 112px;
-  width: 112px;
-  height: 112px;
-  border-radius: 35px;
-  margin: 0 26px 0 0;
-  box-shadow:
-    0 18px 50px #0a0d3266,
-    0 0 60px #8b6de52a;
-}
-.landing-guide .guide-face {
-  inset: 32px 26px 24px;
-  gap: 20px;
-}
-.landing-guide .guide-face i {
-  width: 8px;
-  height: 14px;
-}
-.landing-guide .guide-face b {
-  width: 23px;
-  height: 12px;
-  bottom: 0;
-}
-.landing-guide .guide-speech {
-  width: 100%;
-  background: #151d31f2;
-  border: 1px solid #a99cea40;
-  border-radius: 20px;
-  padding: 16px 22px;
-  box-shadow: 0 12px 34px #06091545;
-}
-.landing-guide .guide-speech p {
-  font-size: 13px;
-  margin-top: 8px;
-}
-.landing-guide .guide-close {
-  top: 122px;
-  right: 2px;
-  z-index: 2;
-  border-radius: 50%;
-}
-.landing-guide .guide-name {
-  font-size: 14px;
-}
-.landing-guide .guide-next {
-  padding-bottom: 0;
-  min-height: 36px;
-}
 .public-home .scene-card-front {
   animation: float-front 8s ease-in-out infinite;
 }
@@ -525,12 +462,185 @@ summary:focus:not(:focus-visible) {
     translate: 4px -12px;
   }
 }
+body:has(.public-home) {
+  min-width: 0;
+}
+
+/* Full-width footer; the reading column stays aligned with the page. */
+.public-home {
+  max-width: none;
+  padding: 0;
+}
+.public-home > .public-header,
+.public-home > main,
+.public-footer-content {
+  width: 100%;
+  max-width: 1360px;
+  margin-inline: auto;
+  padding-inline: clamp(22px, 5vw, 76px);
+}
 .public-home .public-footer {
-  padding: 38px clamp(20px, 3vw, 40px);
-  border-radius: 24px;
-  border: 1px solid #b1b9d91a;
-  background: #0c1220e8;
+  display: block;
+  padding: 46px 0 32px;
+  border-radius: 0;
+  border: 0;
+  border-top: 1px solid #b1b9d91a;
+  background: #0c1220;
+}
+.public-footer-content {
+  display: grid;
+  grid-template-columns: 1.5fr 1fr 1fr;
   gap: 38px;
+}
+.public-footer-content > div {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+}
+.public-home .public-footer > .public-footer-content {
+  display: grid;
+  align-items: start;
+  grid-column: auto;
+  gap: 38px;
+}
+.public-home .landing-help-trigger {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: #bac5db;
+  background: none;
+  border: 0;
+  padding: 4px;
+  font-size: 13px;
+  margin-left: auto;
+}
+.landing-help-trigger .mini-nex {
+  width: 26px;
+  height: 26px;
+  font-size: 20px;
+  border-radius: 8px;
+}
+.public-home .public-auth-actions {
+  margin-left: 0;
+}
+.landing-help {
+  max-width: 540px;
+}
+.help-intro {
+  color: #b6c2d7;
+  font-size: 14px;
+  line-height: 1.6;
+  margin-top: 0;
+}
+.help-options {
+  display: grid;
+  gap: 10px;
+}
+.help-options button {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  text-align: left;
+  border: 1px solid #acb5da24;
+  border-radius: 16px;
+  padding: 16px;
+  background: #1b2437;
+  color: #c4b6f1;
+  transition:
+    background 180ms ease,
+    border-color 180ms ease;
+}
+.help-options button:hover {
+  background: #232d44;
+  border-color: #a79acf66;
+}
+.help-options button > span {
+  flex: 1;
+  min-width: 0;
+}
+.help-options strong,
+.help-options small {
+  display: block;
+}
+.help-options strong {
+  color: #edf0fb;
+  font-size: 14px;
+}
+.help-options small {
+  color: #abb9d1;
+  font-size: 12px;
+  margin-top: 6px;
+  line-height: 1.5;
+}
+.help-options svg {
+  flex-shrink: 0;
+}
+.explore-interaction {
+  scroll-margin-block: 24px;
+}
+.public-home main > .landing-arrived {
+  animation: landing-reveal 550ms ease-out;
+}
+@keyframes landing-reveal {
+  from {
+    opacity: 0.6;
+    translate: 0 14px;
+  }
+  to {
+    opacity: 1;
+    translate: 0 0;
+  }
+}
+/* The embedded guide belongs to the conversation, so it stays still. */
+.landing-explore .guide-character,
+.landing-explore .guide-spark {
+  animation: none;
+}
+@media (max-width: 760px) {
+  .public-home > .public-header,
+  .public-home > main,
+  .public-footer-content {
+    padding-inline: 22px;
+  }
+  .public-home .public-footer > .public-footer-content {
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+  }
+  .public-footer-content > div:first-child {
+    grid-column: 1 / -1;
+  }
+  .public-home .public-footer {
+    padding-block: 32px;
+  }
+}
+@media (max-width: 480px) {
+  .public-home > .public-header,
+  .public-home > main,
+  .public-footer-content {
+    padding-inline: 18px;
+  }
+  .public-home .public-header {
+    grid-template-columns: 1fr auto auto;
+    gap: 10px;
+  }
+  .public-header .landing-help-trigger {
+    grid-column: 2;
+    grid-row: 1;
+  }
+  .public-header .landing-help-trigger > span:last-child {
+    display: none;
+  }
+  .public-auth-actions .text-button {
+    grid-column: 3;
+  }
+  .public-home .public-header .public-about-link {
+    display: none;
+  }
+  .help-options button {
+    padding: 14px 12px;
+    gap: 10px;
+  }
 }
 .public-home .public-footer p {
   max-width: 300px;
@@ -566,43 +676,18 @@ summary:focus:not(:focus-visible) {
 .public-home .landing-faq details[open] summary::after {
   content: "−";
 }
-@media (max-width: 899px) {
-  .landing-guide.is-open {
-    width: min(290px, calc(100vw - 28px));
-  }
-  .landing-guide .guide-character {
-    flex-basis: 76px;
-    height: 76px;
-    width: 76px;
-    border-radius: 24px;
-    margin-right: 18px;
-  }
-  .landing-guide .guide-face {
-    inset: 22px 17px 16px;
-    gap: 14px;
-  }
-  .landing-guide .guide-face i {
-    height: 10px;
-    width: 5px;
-  }
-  .landing-guide .guide-face b {
-    width: 16px;
-    height: 8px;
-  }
-  .landing-guide .guide-close {
-    top: 86px;
-  }
-  .landing-guide .guide-speech {
-    padding: 14px 18px;
-  }
-  .public-home .public-footer {
-    gap: 22px;
-    padding: 24px 20px;
-  }
-}
 @media (max-width: 360px) {
-  .primary-navigation { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 2px; }
-  .primary-navigation button { min-width: 0; padding-inline: 2px; font-size: 9px; white-space: nowrap; }
+  .primary-navigation {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 2px;
+  }
+  .primary-navigation button {
+    min-width: 0;
+    padding-inline: 2px;
+    font-size: 9px;
+    white-space: nowrap;
+  }
   .profile-card-content .swipe-portrait {
     height: 230px;
   }
@@ -621,17 +706,39 @@ summary:focus:not(:focus-visible) {
   }
 }
 @media (min-width: 761px) and (max-height: 599px) {
-  body:has(.app.is-discover) { overflow-y: auto; }
-  .app.is-discover { height: auto; min-height: 100dvh; }
-  .app.is-discover .deck-stack, .app.is-discover .swipe-card { min-height: 400px; height: auto; }
-  .app.is-discover .swipe-story { padding: 20px; gap: 12px; }
-  .app.is-discover .profile-bio { font-size: 16px; }
+  body:has(.app.is-discover) {
+    overflow-y: auto;
+  }
+  .app.is-discover {
+    height: auto;
+    min-height: 100dvh;
+  }
+  .app.is-discover .deck-stack,
+  .app.is-discover .swipe-card {
+    min-height: 400px;
+    height: auto;
+  }
+  .app.is-discover .profile-card-content {
+    min-height: 398px;
+    height: auto;
+  }
+  .app.is-discover .profile-card-content .swipe-portrait {
+    height: auto;
+    align-self: stretch;
+  }
+  .app.is-discover .swipe-story {
+    padding: 20px;
+    gap: 12px;
+  }
+  .app.is-discover .profile-bio {
+    font-size: 16px;
+  }
 }
 @media (prefers-reduced-motion: reduce) {
   .swipe-experience .swipe-card,
   .app .workspace,
   .profile-sections [role="tabpanel"],
-  .landing-guide.is-open,
+  .public-home main > .landing-arrived,
   .public-home .scene-card,
   .scene-connection {
     animation: none !important;

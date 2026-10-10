@@ -1,17 +1,15 @@
 import { useEffect, useId, useState, type ReactNode } from "react";
-import { Camera, LockKeyhole, UserRound } from "lucide-react";
+import { Camera, UserRound } from "lucide-react";
 
 /** Keep draft editors mounted when a person switches sections. */
 export function ProfileTabs({
   about,
   photos,
-  story,
   initialTab = 0,
   onChange,
 }: {
   about: ReactNode;
   photos: ReactNode;
-  story: ReactNode;
   initialTab?: number;
   onChange?: (index: number) => void;
 }) {
@@ -25,7 +23,6 @@ export function ProfileTabs({
   const sections = [
     { title: "Анкета", icon: UserRound, content: about },
     { title: "Фото", icon: Camera, content: photos },
-    { title: "Для подбора", icon: LockKeyhole, content: story },
   ];
   return (
     <div className="profile-sections">

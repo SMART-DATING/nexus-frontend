@@ -69,13 +69,24 @@ export function AppNavigation({
         {[
           { id: "discover", label: "Знакомства", icon: Compass },
           { id: "matches", label: "Чаты", icon: MessageCircle },
+          { id: "story", label: "Для подбора", icon: Sparkles },
           { id: "profile", label: "Профиль", icon: UserRound },
         ].map((n) => (
           <button
             key={n.id}
-            className={tab === n.id && !storyActive ? "active" : ""}
-            aria-current={tab === n.id && !storyActive ? "page" : undefined}
-            onClick={() => onNavigate(n.id as Tab)}
+            className={
+              (n.id === "story" ? storyActive : tab === n.id && !storyActive)
+                ? "active"
+                : ""
+            }
+            aria-current={
+              (n.id === "story" ? storyActive : tab === n.id && !storyActive)
+                ? "page"
+                : undefined
+            }
+            onClick={() =>
+              n.id === "story" ? onStory() : onNavigate(n.id as Tab)
+            }
           >
             <n.icon size={19} />
             <span>{n.label}</span>
@@ -89,14 +100,6 @@ export function AppNavigation({
             )}
           </button>
         ))}
-        <button
-          className={storyActive ? "active" : ""}
-          aria-current={storyActive ? "page" : undefined}
-          onClick={onStory}
-        >
-          <Sparkles size={19} />
-          <span>Для подбора</span>
-        </button>
       </nav>
       <div className="navigation-actions">
         <button

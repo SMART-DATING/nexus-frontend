@@ -40,10 +40,12 @@ it("opens a fresh public profile and blocks only after a deliberate choice", asy
   );
   await screen.findByText("Свежая публичная подпись");
   expect(requests[0].path).toBe("/api/v1/profiles/2");
-  await ui.click(screen.getByRole("button", { name: "Закрыть окно" }));
   await ui.click(screen.getByRole("button", { name: "Заблокировать Саша" }));
   await ui.click(screen.getByRole("button", { name: "Отмена" }));
   expect(requests.some((r) => r.method === "POST")).toBe(false);
+  await ui.click(
+    screen.getByRole("button", { name: "Посмотреть анкету Саша" }),
+  );
   await ui.click(screen.getByRole("button", { name: "Заблокировать Саша" }));
   await ui.click(screen.getByRole("button", { name: "Заблокировать" }));
   await waitFor(() => expect(blocked).toHaveBeenCalledOnce());
@@ -64,6 +66,9 @@ it("keeps the chat on a failed block and allows retry", async () => {
     error = vi.fn(),
     ui = userEvent.setup();
   render(<ChatPartner profile={partner} onBlocked={blocked} onError={error} />);
+  await ui.click(
+    screen.getByRole("button", { name: "Посмотреть анкету Саша" }),
+  );
   await ui.click(screen.getByRole("button", { name: "Заблокировать Саша" }));
   await ui.click(screen.getByRole("button", { name: "Заблокировать" }));
   await waitFor(() => expect(error).toHaveBeenCalledOnce());

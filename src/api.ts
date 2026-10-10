@@ -27,6 +27,10 @@ export type Match = {
   user: Profile;
   createdAt: string;
   unreadCount?: number;
+  pinned?: boolean;
+  markedUnread?: boolean;
+  clearedThroughId?: number;
+  lastActiveAt?: string | null;
 };
 export type Message = {
   id: number;

@@ -120,7 +120,6 @@ describe("Nexus user flows", () => {
     await waitFor(() =>
       expect(requests.some((r) => r.path === "/profiles/2")).toBe(true),
     );
-    await ui.click(screen.getByRole("button", { name: "Закрыть окно" }));
     await ui.click(screen.getByRole("button", { name: "Заблокировать Саша" }));
     await ui.click(screen.getByRole("button", { name: "Заблокировать" }));
     await waitFor(() =>
@@ -145,6 +144,11 @@ describe("Nexus user flows", () => {
     await ui.click(await screen.findByRole("button", { name: "Для подбора" }));
     await screen.findByRole("heading", { name: "Для подбора" });
     expect(window.location.hash).toBe("#profile/story");
+    expect(screen.queryByRole("tab")).toBeNull();
+    expect(
+      screen.queryByRole("button", { name: "Посмотреть анкету" }),
+    ).toBeNull();
+    expect(screen.queryByRole("textbox", { name: "Как вас зовут" })).toBeNull();
     first.unmount();
     render(<App />);
     await screen.findByRole("heading", { name: "Для подбора" });
@@ -214,16 +218,16 @@ describe("Nexus user flows", () => {
     expect(
       screen.getByRole("tab", { name: "Фото" }).getAttribute("aria-selected"),
     ).toBe("true");
-    await ui.click(screen.getByRole("tab", { name: "Для подбора" }));
+    await ui.click(screen.getByRole("button", { name: "Для подбора" }));
     expect(window.location.hash).toBe("#profile/story");
     first.unmount();
     render(<App />);
     await screen.findByRole("region", { name: "Личные рассказы для подбора" });
     expect(
       screen
-        .getByRole("tab", { name: "Для подбора" })
-        .getAttribute("aria-selected"),
-    ).toBe("true");
+        .getByRole("button", { name: "Для подбора" })
+        .getAttribute("aria-current"),
+    ).toBe("page");
   });
   it("logs in using the API and opens recommendations", async () => {
     const ui = userEvent.setup();
@@ -248,7 +252,7 @@ describe("Nexus user flows", () => {
     await ui.clear(name);
     await ui.type(name, "Новое имя");
     expect(screen.queryByRole("button", { name: "Кино" })).toBeNull();
-    await ui.click(screen.getByRole("tab", { name: "Для подбора" }));
+    await ui.click(screen.getByRole("button", { name: "Для подбора" }));
     await ui.click(await screen.findByRole("button", { name: "Кино" }));
     await ui.click(screen.getByRole("button", { name: "Сохранить темы" }));
     await screen.findByText("Темы сохранены");
@@ -259,7 +263,7 @@ describe("Nexus user flows", () => {
     expect(
       topicSave.properties.find((p) => p.name === "display_name")?.value,
     ).toBe("Алекс");
-    await ui.click(screen.getByRole("tab", { name: "Анкета" }));
+    await ui.click(screen.getByRole("button", { name: "Профиль" }));
     await ui.click(screen.getByRole("button", { name: "Сохранить профиль" }));
     await screen.findByText("Профиль сохранён");
     const saved = requests

@@ -16,6 +16,7 @@ import {
   RotateCcw,
   ArrowLeft,
   LockKeyhole,
+  Pin,
 } from "lucide-react";
 import {
   api,
@@ -50,10 +51,13 @@ import "./wave.css";
 import "./discovery.css";
 import "./landing.css";
 import "./polish.css";
+import "./chapters.css";
+import "./chat-menu.css";
 import { AmbientBackdrop } from "./AmbientBackdrop";
 import { useStoryReminder } from "./useStoryReminder";
 import { WaveGuide } from "./WaveGuide";
 import { ChatPartner, BlockedUsers } from "./ChatControls";
+import { ChatMenu, type ChatAction } from "./ChatMenu";
 type Tab = "discover" | "matches" | "profile" | "notifications";
 function readRoute(): { tab: Tab; matchId: number | null } {
   const id = window.location.pathname.match(/^\/match\/(\d+)$/)?.[1];
@@ -142,6 +146,8 @@ export function App() {
   const storyReminder = useStoryReminder(user);
   const currentMatch = useRef<number | null>(null);
   const blockedMatchIds = useRef(new Set<number>());
+  const chatRevision = useRef(0);
+  const chatActionPending = useRef(false);
   const messagesViewport = useRef<HTMLDivElement>(null);
   const followMessages = useRef(true);
   const [profileSection, setProfileSection] = useState(readProfileSection);
@@ -319,13 +325,18 @@ export function App() {
     let alive = true;
     let inFlight = false;
     const poll = async () => {
-      if (inFlight) return;
+      if (inFlight || document.visibilityState !== "visible") return;
       inFlight = true;
+      const revision = chatRevision.current;
       try {
         const r = await api<{ items: Notice[] }>("/notifications");
         if (alive) setNotices(r.items);
         const m = await api<{ items: Match[] }>("/matches");
-        if (alive) {
+        if (
+          alive &&
+          revision === chatRevision.current &&
+          !chatActionPending.current
+        ) {
           setMatches(m.items.filter((m) => !blockedMatchIds.current.has(m.id)));
           const active = currentMatch.current;
           if (active !== null && !m.items.some((m) => m.id === active)) {
@@ -354,13 +365,24 @@ export function App() {
     let after = 0;
     let inFlight = false;
     async function poll() {
-      if (inFlight) return;
+      if (
+        inFlight ||
+        chatActionPending.current ||
+        document.visibilityState !== "visible"
+      )
+        return;
       inFlight = true;
+      const revision = chatRevision.current;
       try {
         const r = await api<{ items: Message[] }>(
           `/matches/${selected!.id}/messages?after=${after}`,
         );
-        if (!alive) return;
+        if (
+          !alive ||
+          revision !== chatRevision.current ||
+          chatActionPending.current
+        )
+          return;
         if (r.items.length) {
           after = r.items[r.items.length - 1].id;
           setMessages((old) =>
@@ -371,7 +393,7 @@ export function App() {
           );
         }
         if (
-          after > 0 &&
+          (after > 0 || selected!.markedUnread) &&
           selected!.unreadCount !== undefined &&
           document.visibilityState === "visible"
         ) {
@@ -384,7 +406,11 @@ export function App() {
             setMatches((old) =>
               old.map((m) =>
                 m.id === selected!.id
-                  ? { ...m, unreadCount: count.unreadCount }
+                  ? {
+                      ...m,
+                      unreadCount: count.unreadCount,
+                      markedUnread: false,
+                    }
                   : m,
               ),
             );
@@ -402,6 +428,46 @@ export function App() {
       clearInterval(t);
     };
   }, [selected?.id, user?.id, tab]);
+  async function manageChat(match: Match, action: ChatAction) {
+    chatActionPending.current = true;
+    chatRevision.current++;
+    try {
+      const updated = await api<Match>(
+        `/matches/${match.id}/settings`,
+        "PATCH",
+        { action },
+      );
+      if (
+        selected?.id === match.id &&
+        ["clear", "delete", "unread"].includes(action)
+      )
+        navigate("matches");
+      if (action === "clear") setMessages([]);
+      const rows = await api<{ items: Match[] }>("/matches");
+      setMatches(rows.items);
+      if (
+        selected?.id === match.id &&
+        !["clear", "delete", "unread"].includes(action)
+      )
+        setSelected(updated);
+      setToast(
+        action === "pin"
+          ? "Чат закреплён."
+          : action === "unpin"
+            ? "Чат откреплён."
+            : action === "clear"
+              ? "Переписка очищена у тебя."
+              : action === "delete"
+                ? "Чат удалён из твоего списка."
+                : action === "unread"
+                  ? "Чат отмечен непрочитанным."
+                  : "Чат отмечен прочитанным.",
+      );
+    } finally {
+      chatActionPending.current = false;
+      chatRevision.current++;
+    }
+  }
   useEffect(() => {
     const pane = messagesViewport.current;
     if (pane && followMessages.current) pane.scrollTop = pane.scrollHeight;
@@ -924,82 +990,86 @@ export function App() {
                     : "Фото, пара слов и то, что важно тебе."}
                 </p>
               </div>
-              <button
-                className="outline own-preview-button"
-                onClick={() => setPreviewOpen(true)}
-              >
-                <Avatar profile={user.profile} />
-                Посмотреть анкету
-              </button>
+              {profileSection !== 2 && (
+                <button
+                  className="outline own-preview-button"
+                  onClick={() => setPreviewOpen(true)}
+                >
+                  <Avatar profile={user.profile} />
+                  Посмотреть анкету
+                </button>
+              )}
             </div>
-            <ProfileTabs
-              initialTab={profileSection}
-              onChange={(i) => {
-                setProfileSection(i);
-                window.history.replaceState(
-                  null,
-                  "",
-                  i === 0
-                    ? "/#profile"
-                    : `/#profile/${i === 1 ? "photos" : "story"}`,
-                );
-              }}
-              about={
-                <ProfileEditor
-                  key={user.id}
-                  user={user}
-                  busy={busy}
-                  onSave={async (p) => {
-                    setBusy(true);
-                    setError("");
-                    try {
-                      await api("/profiles/me", "PUT", p);
-                      await refresh();
-                      setToast("Профиль сохранён");
-                    } catch (e) {
-                      report(e);
-                    } finally {
-                      setBusy(false);
-                    }
-                  }}
-                />
-              }
-              photos={
-                <PhotoUpload
-                  profile={user.profile}
-                  onSaved={(profile) =>
-                    setUser((old) => (old ? { ...old, profile } : old))
-                  }
-                />
-              }
-              story={
-                <>
-                  <PublicTopicsEditor
+            <div hidden={profileSection !== 2}>
+              <PublicTopicsEditor
+                user={user}
+                interests={interests}
+                onSaved={refresh}
+              />
+              <ContextEditor
+                interests={user.profile.interests}
+                onChanged={refresh}
+              />
+            </div>
+            <div hidden={profileSection === 2}>
+              <ProfileTabs
+                initialTab={profileSection === 2 ? 0 : profileSection}
+                onChange={(i) => {
+                  setProfileSection(i);
+                  window.history.replaceState(
+                    null,
+                    "",
+                    i === 0
+                      ? "/#profile"
+                      : `/#profile/${i === 1 ? "photos" : "story"}`,
+                  );
+                }}
+                about={
+                  <ProfileEditor
+                    key={user.id}
                     user={user}
-                    interests={interests}
-                    onSaved={refresh}
+                    busy={busy}
+                    onSave={async (p) => {
+                      setBusy(true);
+                      setError("");
+                      try {
+                        await api("/profiles/me", "PUT", p);
+                        await refresh();
+                        setToast("Профиль сохранён");
+                      } catch (e) {
+                        report(e);
+                      } finally {
+                        setBusy(false);
+                      }
+                    }}
                   />
-                  <ContextEditor
-                    interests={user.profile.interests}
-                    onChanged={refresh}
-                  />
-                </>
-              }
-            />
-            <button
-              className="text-button profile-logout"
-              onClick={async () => {
-                try {
-                  await api("/auth/logout", "POST");
-                  reset();
-                } catch (e) {
-                  report(e);
                 }
-              }}
-            >
-              <LogOut size={17} />
-              Выйти из аккаунта
-            </button>
+                photos={
+                  <PhotoUpload
+                    profile={user.profile}
+                    onSaved={(profile) =>
+                      setUser((old) => (old ? { ...old, profile } : old))
+                    }
+                  />
+                }
+              />
+            </div>
+            {profileSection !== 2 && (
+              <button
+                className="text-button profile-logout"
+                onClick={async () => {
+                  try {
+                    await api("/auth/logout", "POST");
+                    reset();
+                  } catch (e) {
+                    report(e);
+                  }
+                }}
+              >
+                <LogOut size={17} />
+                Выйти из аккаунта
+              </button>
+            )}
           </>
         )}
         {tab === "matches" && (
@@ -1038,26 +1108,34 @@ export function App() {
               >
                 <div className="match-list">
                   {matches.map((m) => (
-                    <button
-                      className={selected?.id === m.id ? "selected" : ""}
+                    <ChatMenu
                       key={m.id}
-                      onClick={() => navigate("matches", m)}
+                      match={m}
+                      onAction={(action) => manageChat(m, action)}
                     >
-                      <Avatar profile={m.user} />
-                      <div>
-                        <strong>{value(m.user, "display_name")}</strong>
-                        <small>Открыть чат</small>
-                      </div>
-                      {(m.unreadCount ?? 0) > 0 && (
-                        <span
-                          className="unread-badge"
-                          aria-label={`Непрочитанных в этом чате: ${m.unreadCount}`}
-                        >
-                          {m.unreadCount! > 99 ? "99+" : m.unreadCount}
-                        </span>
-                      )}
-                      <ArrowUpRight size={16} />
-                    </button>
+                      <button
+                        className={selected?.id === m.id ? "selected" : ""}
+                        key={m.id}
+                        onClick={() => navigate("matches", m)}
+                      >
+                        <Avatar profile={m.user} />
+                        <div>
+                          <strong>{value(m.user, "display_name")}</strong>
+                          <small>
+                            {m.pinned && <Pin size={12} />}Открыть чат
+                          </small>
+                        </div>
+                        {(m.unreadCount ?? 0) > 0 && (
+                          <span
+                            className="unread-badge"
+                            aria-label={`Непрочитанных в этом чате: ${m.unreadCount}`}
+                          >
+                            {m.unreadCount! > 99 ? "99+" : m.unreadCount}
+                          </span>
+                        )}
+                        <ArrowUpRight size={16} />
+                      </button>
+                    </ChatMenu>
                   ))}
                 </div>
                 <section className="chat">
@@ -1074,6 +1152,10 @@ export function App() {
                         <ChatPartner
                           key={selected.id}
                           profile={selected.user}
+                          lastActiveAt={
+                            matches.find((m) => m.id === selected.id)
+                              ?.lastActiveAt ?? selected.lastActiveAt
+                          }
                           onError={report}
                           onBlocked={() => {
                             const id = selected.id;
@@ -1087,6 +1169,13 @@ export function App() {
                           }}
                         />
                         <small>Совпадение · {date(selected.createdAt)}</small>
+                        <ChatMenu
+                          match={
+                            matches.find((m) => m.id === selected.id) ??
+                            selected
+                          }
+                          onAction={(action) => manageChat(selected, action)}
+                        />
                       </div>
                       <div
                         className="messages"
@@ -1285,7 +1374,7 @@ function MatchCelebration({
   useEffect(() => {
     const previous = document.activeElement as HTMLElement | null;
     const element = dialog.current;
-    element?.focus();
+    element?.querySelector<HTMLButtonElement>("button")?.focus();
     return () => {
       if (previous?.isConnected) previous.focus();
     };

@@ -117,10 +117,10 @@ export function ContextEditor({
         <WaveGuide
           mood={listening ? "listening" : content.trim() ? "thinking" : "idle"}
         >
-          <h2>Что сейчас на твоей волне?</h2>
+          <h2>Расскажи, что тебе близко</h2>
           <p>
-            Расскажи, что увлекает, радует или важно в общении. Можно одним
-            сообщением или голосом. Я помогу с вопросами, если захочешь.
+            Напиши пару предложений — что любишь и что важно в людях. Так мы
+            найдём тех, с кем у тебя больше общего.
           </p>
           <small>
             Этот рассказ видишь только ты. Его смысл помогает находить близких
@@ -128,14 +128,19 @@ export function ContextEditor({
           </small>
         </WaveGuide>
       )}
-      <div className="private-promise">
-        <LockKeyhole size={16} />
-        <p>
-          Рассказы не появляются в анкете, переписках и объяснениях подбора.
-          Модель обрабатывает их локально; внешним ИИ-сервисам они не
-          отправляются.
-        </p>
-      </div>
+      <details className="private-promise">
+        <summary>
+          <LockKeyhole size={14} /> Только для подбора · другие не увидят текст
+        </summary>
+        <div>
+          <LockKeyhole size={16} />
+          <p>
+            Рассказы не появляются в анкете, переписках и объяснениях подбора.
+            Модель обрабатывает их локально; внешним ИИ-сервисам они не
+            отправляются.
+          </p>
+        </div>
+      </details>
       {!available && ready && (
         <p role="alert">
           Подбор сейчас недоступен. Можно оставить текст здесь и попробовать
@@ -168,73 +173,6 @@ export function ContextEditor({
           ))}
         </div>
       )}
-      <details className="saved-stories">
-        <summary>
-          Твои сохранённые истории{items.length ? ` · ${items.length}` : ""}
-        </summary>
-        <div className="context-list">
-          {items.map((item) => (
-            <article className="context-note" key={item.id}>
-              <div>
-                <h3>
-                  <LockKeyhole size={15} />
-                  {item.title}
-                </h3>
-                <small>
-                  Только вам ·{" "}
-                  {new Date(item.updatedAt).toLocaleDateString("ru-RU")}
-                </small>
-              </div>
-              <p>{item.content}</p>
-              <div className="context-note-actions">
-                <button
-                  type="button"
-                  className="text-button"
-                  disabled={busy}
-                  onClick={() => edit(item)}
-                  aria-label={`Редактировать рассказ ${item.title}`}
-                >
-                  <PenLine size={15} />
-                  Дополнить
-                </button>
-                {confirm === item.id ? (
-                  <>
-                    <span>Удалить этот рассказ?</span>
-                    <button
-                      type="button"
-                      className="text-button danger"
-                      disabled={busy}
-                      onClick={() => void remove(item.id)}
-                    >
-                      Да, удалить
-                    </button>
-                    <button
-                      type="button"
-                      className="text-button"
-                      onClick={() => setConfirm(null)}
-                    >
-                      Оставить
-                    </button>
-                  </>
-                ) : (
-                  <button
-                    type="button"
-                    className="text-button"
-                    disabled={busy}
-                    onClick={() => setConfirm(item.id)}
-                    aria-label={`Удалить рассказ ${item.title}`}
-                  >
-                    <Trash2 size={15} />
-                  </button>
-                )}
-              </div>
-            </article>
-          ))}
-        </div>
-        {!items.length && (
-          <p>Здесь появятся твои рассказы. К ним всегда можно вернуться.</p>
-        )}
-      </details>
       {guided && (
         <GuidedInterview
           interests={interests}
@@ -332,6 +270,73 @@ export function ContextEditor({
           {items.length ? "Добавить ещё один рассказ" : "Написать о себе"}
         </button>
       )}
+      <details className="saved-stories">
+        <summary>
+          Твои сохранённые истории{items.length ? ` · ${items.length}` : ""}
+        </summary>
+        <div className="context-list">
+          {items.map((item) => (
+            <article className="context-note" key={item.id}>
+              <div>
+                <h3>
+                  <LockKeyhole size={15} />
+                  {item.title}
+                </h3>
+                <small>
+                  Только вам ·{" "}
+                  {new Date(item.updatedAt).toLocaleDateString("ru-RU")}
+                </small>
+              </div>
+              <p>{item.content}</p>
+              <div className="context-note-actions">
+                <button
+                  type="button"
+                  className="text-button"
+                  disabled={busy}
+                  onClick={() => edit(item)}
+                  aria-label={`Редактировать рассказ ${item.title}`}
+                >
+                  <PenLine size={15} />
+                  Дополнить
+                </button>
+                {confirm === item.id ? (
+                  <>
+                    <span>Удалить этот рассказ?</span>
+                    <button
+                      type="button"
+                      className="text-button danger"
+                      disabled={busy}
+                      onClick={() => void remove(item.id)}
+                    >
+                      Да, удалить
+                    </button>
+                    <button
+                      type="button"
+                      className="text-button"
+                      onClick={() => setConfirm(null)}
+                    >
+                      Оставить
+                    </button>
+                  </>
+                ) : (
+                  <button
+                    type="button"
+                    className="text-button"
+                    disabled={busy}
+                    onClick={() => setConfirm(item.id)}
+                    aria-label={`Удалить рассказ ${item.title}`}
+                  >
+                    <Trash2 size={15} />
+                  </button>
+                )}
+              </div>
+            </article>
+          ))}
+        </div>
+        {!items.length && (
+          <p>Здесь появятся твои рассказы. К ним всегда можно вернуться.</p>
+        )}
+      </details>
       {saved && (
         <p className="photo-success" role="status">
           Рассказ сохранён. Подбор будет учитывать обновление.

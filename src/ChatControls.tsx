@@ -79,11 +79,10 @@ export function ChatPartner({
           onClose={() => setView(false)}
           className="profile-preview partner-preview"
         >
-          {fresh ? (
-            <ProfileCard profile={fresh} />
-          ) : (
-            <p role="status">{failure || "Загружаем анкету…"}</p>
-          )}
+          <div className="partner-profile-body" aria-busy={!fresh && !failure}>
+            <ProfileCard profile={fresh || profile} />
+            {failure && <p role="status">{failure}</p>}
+          </div>
           <div className="partner-profile-actions">
             <small>{activityLabel(lastActiveAt)}</small>
             <button

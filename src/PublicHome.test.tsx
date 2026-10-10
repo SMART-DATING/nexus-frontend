@@ -15,6 +15,18 @@ afterEach(() => {
   vi.restoreAllMocks();
   history.replaceState(null, "", "/");
 });
+it("demonstrates visibility without changing an account or starting signup", async () => {
+  const auth = vi.fn();
+  render(<PublicHome onAuth={auth} onPrivacy={vi.fn()} />);
+  const toggle = screen.getByRole("switch", { name: "Показывать город" });
+  expect(toggle.getAttribute("aria-checked")).toBe("true");
+  await userEvent.click(toggle);
+  expect(screen.getByText("Город скрыт")).toBeTruthy();
+  expect(toggle.getAttribute("aria-checked")).toBe("false");
+  await userEvent.click(toggle);
+  expect(screen.getByText("Москва · видно в анкете")).toBeTruthy();
+  expect(auth).not.toHaveBeenCalled();
+});
 it("explains interests and reciprocal photos without starting signup or saving example answers", async () => {
   const auth = vi.fn();
   render(<PublicHome onAuth={auth} onPrivacy={vi.fn()} />);

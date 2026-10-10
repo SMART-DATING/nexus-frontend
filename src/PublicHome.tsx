@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { LandingGuide, scrollToLanding } from "./LandingGuide";
 import { LandingExplore } from "./LandingExplore";
+import { LandingFinale, PrivacyExample, QuestionScene } from "./LandingFinale";
 import { LandingFaqItem } from "./LandingFaqItem";
 import {
   ArrowRight,
@@ -23,24 +24,61 @@ export function PublicHome({
   const [sceneTopic, setSceneTopic] = useState(0);
   const [helpOpen, setHelpOpen] = useState(false);
   useEffect(() => {
-    if (!window.IntersectionObserver) return;
-    const observer = new IntersectionObserver(
-      (entries) => {
-        for (const entry of entries)
-          if (entry.isIntersecting) {
-            entry.target.classList.add("landing-arrived");
-            observer.unobserve(entry.target);
-          }
-      },
-      { threshold: 0.12 },
-    );
+    document.documentElement.classList.add("landing-scroll-mode");
+    const chapters = [
+      ...document.querySelectorAll<HTMLElement>(".landing-screen"),
+    ];
+    const reduced = window.matchMedia?.("(prefers-reduced-motion: reduce)");
+    let frame = 0;
+    const paint = () => {
+      frame = 0;
+      const height = window.innerHeight;
+      chapters.forEach((node) => {
+        const rect = node.getBoundingClientRect();
+        const distance = Math.max(0, rect.top, -rect.bottom + height) / height;
+        node.style.setProperty(
+          "--chapter-fade",
+          String(reduced?.matches ? 1 : 1 - Math.min(distance, 1) * 0.55),
+        );
+        node.style.setProperty(
+          "--chapter-shift",
+          `${reduced?.matches ? 0 : Math.min(distance, 1) * 26}px`,
+        );
+      });
+    };
+    const schedule = () => {
+      if (!frame) frame = requestAnimationFrame(paint);
+    };
+    window.addEventListener("scroll", schedule, { passive: true });
+    window.addEventListener("resize", schedule);
+    reduced?.addEventListener("change", schedule);
+    paint();
+    const observer = window.IntersectionObserver
+      ? new IntersectionObserver(
+          (entries) => {
+            for (const entry of entries)
+              if (entry.isIntersecting) {
+                entry.target.classList.add("landing-arrived");
+                observer?.unobserve(entry.target);
+              }
+          },
+          { threshold: 0.12 },
+        )
+      : null;
     document
       .querySelectorAll(".public-home main section[id]")
-      .forEach((node) => observer.observe(node));
+      .forEach((node) => observer?.observe(node));
     const initial = location.hash.slice(1);
     if (document.getElementById(initial)?.matches("section[id]"))
       requestAnimationFrame(() => scrollToLanding(initial));
-    return () => observer.disconnect();
+    return () => {
+      observer?.disconnect();
+      cancelAnimationFrame(frame);
+      window.removeEventListener("scroll", schedule);
+      window.removeEventListener("resize", schedule);
+      reduced?.removeEventListener("change", schedule);
+      document.documentElement.classList.remove("landing-scroll-mode");
+    };
   }, []);
   function explore(event: React.MouseEvent<HTMLAnchorElement>, topic: number) {
     if (event.ctrlKey || event.metaKey || event.shiftKey || event.altKey)
@@ -288,6 +326,7 @@ export function PublicHome({
                 Рассказывай столько, сколько хочется. Ты решаешь, что оставить в
                 анкете, а что — только для подбора.
               </p>
+              <PrivacyExample />
               <button className="outline" onClick={onPrivacy}>
                 Как работают мои данные
                 <ArrowRight size={16} />
@@ -339,6 +378,7 @@ export function PublicHome({
                 <br />
                 чем кажется.
               </h2>
+              <QuestionScene />
             </div>
             <div>
               <LandingFaqItem question="Мой личный рассказ увидят другие?">
@@ -375,24 +415,7 @@ export function PublicHome({
           </section>
         </div>
         <div className="landing-screen">
-          <section id="start" className="landing-last">
-            <span className="eyebrow">ОБЩЕЕ УЖЕ ГДЕ-ТО РЯДОМ</span>
-            <h2>
-              Возможно, вы уже
-              <br />
-              слушаете одну песню.
-            </h2>
-            <p>
-              Начни с пары слов о себе. Всё остальное можно дополнить по пути.
-            </p>
-            <button
-              className="primary landing-cta"
-              onClick={() => onAuth(true)}
-            >
-              Давайте познакомимся
-              <ArrowRight size={19} />
-            </button>
-          </section>
+          <LandingFinale onStart={() => onAuth(true)} />
         </div>
       </main>
       <footer className="public-footer">

@@ -1,4 +1,4 @@
-import { useEffect, useId, useState, type ReactNode } from "react";
+import { useLayoutEffect, useId, useState, type ReactNode } from "react";
 import { Camera, UserRound } from "lucide-react";
 
 /** Keep draft editors mounted when a person switches sections. */
@@ -15,7 +15,7 @@ export function ProfileTabs({
 }) {
   const id = useId();
   const [active, setActive] = useState(initialTab);
-  useEffect(() => setActive(initialTab), [initialTab]);
+  useLayoutEffect(() => setActive(initialTab), [initialTab]);
   function select(index: number) {
     setActive(index);
     onChange?.(index);

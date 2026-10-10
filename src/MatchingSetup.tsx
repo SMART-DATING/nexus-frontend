@@ -14,8 +14,12 @@ export function MatchingSetup({
   onSaved: () => Promise<unknown>;
 }) {
   const [chosen, setChosen] = useState(user.profile.interests);
-  const [started, setStarted] = useState(false);
-  const [choosing, setChoosing] = useState(true);
+  const resumeStory =
+    user.profile.properties.length === 4 &&
+    user.profile.interests.length > 0 &&
+    !(user.profile.contextCount ?? 0);
+  const [started, setStarted] = useState(resumeStory);
+  const [choosing, setChoosing] = useState(!resumeStory);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [savedTopics, setSavedTopics] = useState(user.profile.interests);

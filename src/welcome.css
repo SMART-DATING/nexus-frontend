@@ -1,0 +1,280 @@
+/* The next required step stays visible wherever the newcomer starts. */
+.workspace > .setup-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: safe center;
+  gap: 18px;
+  min-height: 460px;
+  padding: clamp(24px, 4vh, 48px);
+}
+.setup-empty > h2,
+.setup-empty > p {
+  margin: 0;
+}
+.setup-empty button {
+  margin: 0;
+}
+.setup-empty > * {
+  flex-shrink: 0;
+}
+.setup-empty > svg {
+  margin-bottom: 0;
+}
+.empty .invite-friends button {
+  margin: 0;
+}
+.empty .invite-friends p {
+  margin: 5px 0 0;
+}
+.setup-empty > p {
+  max-width: 610px;
+}
+.setup-empty > small {
+  max-width: 520px;
+  color: var(--muted, #9daac2);
+  line-height: 1.6;
+}
+.setup-checklist {
+  display: flex;
+  gap: 12px;
+  width: 100%;
+  margin: 0 0 22px;
+}
+.setup-checklist > button {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex: 1;
+  min-width: 0;
+  padding: 16px;
+  text-align: left;
+  border-radius: 18px;
+  border: 1px solid #8882cf40;
+  background: #1d253b9c;
+  transition:
+    background 180ms ease,
+    border-color 180ms ease;
+}
+.setup-checklist > button:hover {
+  background: #333151;
+  border-color: #9a8ce6;
+}
+.setup-checklist > button > svg {
+  flex-shrink: 0;
+  color: #ada1fa;
+}
+.setup-checklist > button.done > svg {
+  color: #87c6b8;
+}
+.setup-checklist span {
+  flex: 1;
+  min-width: 0;
+  display: grid;
+  gap: 5px;
+}
+.setup-checklist strong {
+  font-size: 14px;
+}
+.setup-checklist small {
+  font-size: 12px;
+  line-height: 1.5;
+  color: #a9b4ca;
+}
+.setup-empty .setup-checklist {
+  max-width: 660px;
+  flex-direction: column;
+  margin: 4px 0;
+}
+.setup-empty .setup-checklist > button {
+  padding: 12px 16px;
+}
+.invite-friends {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+  width: min(100%, 780px);
+  border-top: 1px solid #9b91d333;
+  padding-top: 22px;
+  margin-top: 16px;
+  text-align: left;
+}
+.invite-friends > svg {
+  flex-shrink: 0;
+  color: #afa0f9;
+}
+.invite-friends > div {
+  flex: 1;
+  min-width: 0;
+}
+.invite-friends strong {
+  font-size: 15px;
+}
+.invite-friends p {
+  margin: 5px 0 0;
+  font-size: 13px;
+  line-height: 1.6;
+}
+.invite-friends .outline {
+  white-space: nowrap;
+  padding: 12px 16px;
+  font-size: 13px;
+}
+.invite-friends input {
+  margin-top: 8px;
+  width: 100%;
+}
+.photo-confirm-dialog {
+  width: min(620px, calc(100vw - 32px));
+}
+.photo-confirm-dialog .dialog-content > div > p {
+  color: #b6c0d5;
+  line-height: 1.65;
+  margin: 0 0 18px;
+}
+.photo-confirm-preview {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
+  gap: 12px;
+  margin-bottom: 18px;
+}
+.photo-confirm-preview img {
+  width: 100%;
+  height: clamp(140px, 28dvh, 280px);
+  object-fit: contain;
+  background: #0b1220;
+  border-radius: 16px;
+}
+.photo-confirm-preview img:only-child {
+  height: clamp(180px, 34dvh, 340px);
+}
+.photo-confirm-actions {
+  display: flex;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+.photo-confirm-actions button {
+  padding: 13px 18px;
+}
+.photo-confirm-actions .danger {
+  background: #a74860;
+}
+.onboarding-screen .interest-picker button {
+  position: relative;
+  border-radius: 18px;
+  background: linear-gradient(145deg, #25304b, #171f33);
+  border: 1px solid #98a9d14a;
+  box-shadow: inset 0 1px #ffffff09;
+  transition:
+    transform 180ms ease,
+    background 180ms ease,
+    border-color 180ms ease,
+    box-shadow 180ms ease;
+}
+.onboarding-screen .interest-picker button:not(:disabled):hover {
+  transform: translateY(-2px);
+  border-color: #afa0ee;
+  box-shadow: 0 5px 18px #10142860;
+}
+.onboarding-screen .interest-picker button[aria-pressed="true"] {
+  background: linear-gradient(130deg, #405baa, #665095);
+  border-color: #b6a8ff;
+  box-shadow: 0 4px 16px #6855be24;
+}
+.onboarding-screen .interest-picker button:not(:disabled):active {
+  transform: scale(0.97);
+}
+.onboarding-screen .basics-grid select,
+.onboarding-screen .onboarding-basics input {
+  background-color: #111c30dd;
+  border-color: #778bc165;
+  border-radius: 18px;
+  transition:
+    border-color 180ms ease,
+    box-shadow 180ms ease,
+    background-color 180ms ease;
+}
+.onboarding-screen .basics-grid select:hover,
+.onboarding-screen .onboarding-basics input:hover {
+  border-color: #a297d9;
+  background-color: #1e2843;
+}
+.onboarding-screen .primary {
+  box-shadow: 0 6px 22px #5964cb30;
+  transition:
+    transform 180ms ease,
+    box-shadow 180ms ease;
+}
+.onboarding-screen .primary:not(:disabled):hover {
+  transform: translateY(-2px);
+  box-shadow: 0 9px 26px #7765d547;
+}
+.onboarding-screen .primary:not(:disabled):active {
+  transform: scale(0.98);
+}
+.onboarding-screen .primary svg {
+  transition: transform 180ms ease;
+}
+.onboarding-screen .primary:hover svg {
+  transform: translateX(3px);
+}
+@media (min-width: 900px) and (min-height: 600px) {
+  .public-home .public-header {
+    position: sticky;
+    top: 0;
+    height: 76px;
+    min-height: 76px;
+    z-index: 30;
+    isolation: isolate;
+    border-bottom: none;
+  }
+  .public-home .public-header::before {
+    content: "";
+    position: absolute;
+    inset: 0 calc((100% - 100vw) / 2);
+    z-index: -1;
+    background: #0e162bda;
+    backdrop-filter: blur(18px);
+    border-bottom: 1px solid #8b93c71c;
+  }
+  .public-home .public-header .primary {
+    padding: 12px 20px;
+  }
+  .public-home .landing-hero {
+    min-height: calc(100svh - 122px);
+  }
+  .public-home .landing-screen {
+    min-height: calc(100svh - 76px);
+  }
+  .public-home .landing-screen > section {
+    min-height: calc(100svh - 76px - 2 * var(--chapter-padding));
+  }
+}
+@media (max-width: 700px) {
+  .setup-checklist {
+    flex-direction: column;
+  }
+  .invite-friends {
+    flex-wrap: wrap;
+  }
+  .invite-friends .outline {
+    margin-left: 40px;
+  }
+  .workspace > .setup-empty {
+    min-height: 540px;
+    padding: 24px 18px;
+  }
+  .photo-confirm-actions button {
+    flex: 1;
+    justify-content: center;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .onboarding-screen .interest-picker button,
+  .onboarding-screen .primary,
+  .onboarding-screen .primary svg {
+    transition: none;
+    transform: none !important;
+  }
+}

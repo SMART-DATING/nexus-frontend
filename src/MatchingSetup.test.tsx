@@ -22,6 +22,36 @@ afterEach(() => {
   cleanup();
   vi.mocked(api).mockReset();
 });
+it("resumes questions using the interests already chosen during registration", async () => {
+  vi.mocked(api).mockResolvedValue({ items: [], modelAvailable: true });
+  render(
+    <MatchingSetup
+      user={{
+        ...user,
+        profile: {
+          ...user.profile,
+          properties: ["display_name", "bio", "birth_date", "city"].map(
+            (name) => ({ name, value: "x", visible: true }),
+          ),
+          contextCount: 0,
+        },
+      }}
+      interests={["Книги", "Музыка"]}
+      onSaved={vi.fn()}
+    />,
+  );
+  await screen.findByRole("heading", {
+    name: "Какая книга осталась с тобой надолго?",
+  });
+  expect(
+    screen.queryByRole("button", { name: "Дальше — три вопроса" }),
+  ).toBeNull();
+  expect(api).not.toHaveBeenCalledWith(
+    "/profiles/me",
+    expect.anything(),
+    expect.anything(),
+  );
+});
 it("saves interests first, asks related questions, preserves answers while changing topics", async () => {
   vi.mocked(api).mockImplementation(async (path) =>
     path === "/contexts/me" ? { items: [], modelAvailable: true } : {},

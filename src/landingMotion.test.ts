@@ -158,3 +158,28 @@ it("lets expanded tall scenes scroll internally before switching upward", () => 
   expect(wheel.defaultPrevented).toBe(false);
   expect(pending.size).toBe(0);
 });
+
+it("aligns chapters below the sticky header and returns to the complete first scene", () => {
+  const header = document.createElement("header");
+  header.className = "public-header";
+  header.style.position = "sticky";
+  document.body.prepend(header);
+  vi.spyOn(header, "getBoundingClientRect").mockReturnValue({
+    height: 76,
+  } as DOMRect);
+  showLandingFrame(frames[1]);
+  advance(0);
+  advance(480);
+  expect(scrollY).toBe(824);
+  // With the header occupying 76px, the next chapter fills the remaining 824px.
+  vi.spyOn(frames[1], "getBoundingClientRect").mockImplementation(
+    () => ({ top: 900 - scrollY, bottom: 1724 - scrollY }) as DOMRect,
+  );
+  now = 800;
+  document.body.dispatchEvent(
+    new WheelEvent("wheel", { deltaY: -80, bubbles: true, cancelable: true }),
+  );
+  advance(800);
+  advance(1280);
+  expect(scrollY).toBe(0);
+});

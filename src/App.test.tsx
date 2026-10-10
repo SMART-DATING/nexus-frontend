@@ -8,6 +8,7 @@ installDialogMock();
 const profile = {
   userId: 1,
   contextCount: 1,
+  photoCount: 1,
   properties: [
     { name: "display_name", value: "Алекс", visible: true },
     { name: "bio", value: "Музыка и кофе", visible: true },

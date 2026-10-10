@@ -1,4 +1,4 @@
-import { useId, useState, type ReactNode } from "react";
+import { useEffect, useId, useRef, useState, type ReactNode } from "react";
 import { Plus } from "lucide-react";
 
 export function LandingFaqItem({
@@ -6,17 +6,39 @@ export function LandingFaqItem({
   children,
   expanded,
   onToggle,
+  onClose,
 }: {
   question: string;
   children: ReactNode;
   expanded?: boolean;
   onToggle?: () => void;
+  onClose?: () => void;
 }) {
   const [localOpen, setOpen] = useState(false);
   const open = expanded ?? localOpen;
   const id = useId();
+  const item = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (!open || !item.current || !window.IntersectionObserver) return;
+    const header = document.querySelector<HTMLElement>(".public-header");
+    const inset =
+      header && getComputedStyle(header).position === "sticky"
+        ? header.getBoundingClientRect().height
+        : 0;
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (!entry.isIntersecting) {
+          if (onClose) onClose();
+          else setOpen(false);
+        }
+      },
+      { rootMargin: `-${inset}px 0px 0px 0px`, threshold: 0 },
+    );
+    observer.observe(item.current);
+    return () => observer.disconnect();
+  }, [open, onClose]);
   return (
-    <div className={`landing-faq-item ${open ? "is-expanded" : ""}`}>
+    <div ref={item} className={`landing-faq-item ${open ? "is-expanded" : ""}`}>
       <button
         type="button"
         id={`${id}-question`}

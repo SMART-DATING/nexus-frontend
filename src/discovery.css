@@ -1,0 +1,410 @@
+/* One layout for both public discovery and the owner's public preview. */
+.avatar .avatar-photo {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center 30%;
+  display: block;
+}
+.swipe-experience .swipe-card {
+  display: block;
+  height: auto;
+  animation: profile-arrive 220ms ease-out;
+  transform: translate3d(var(--swipe-x, 0px), 0, 0)
+    rotate(var(--swipe-rotation, 0deg));
+  transition:
+    transform 280ms cubic-bezier(0.2, 0.75, 0.25, 1),
+    opacity 240ms ease;
+  will-change: auto;
+}
+.swipe-experience .swipe-card.dragging {
+  transition: none;
+  will-change: transform;
+}
+.swipe-experience .swipe-card.leaving-like {
+  transform: translate3d(38%, 0, 0) rotate(5deg) !important;
+  opacity: 0;
+  animation: none;
+  will-change: transform, opacity;
+}
+.swipe-experience .swipe-card.leaving-skip {
+  transform: translate3d(-38%, 0, 0) rotate(-5deg) !important;
+  opacity: 0;
+  animation: none;
+  will-change: transform, opacity;
+}
+@keyframes profile-arrive {
+  from {
+    opacity: 0.65;
+  }
+  to {
+    opacity: 1;
+  }
+}
+.profile-card-content {
+  display: grid;
+  grid-template-columns: 48% 52%;
+  height: 100%;
+  min-height: 0;
+}
+.mobile-profile-heading {
+  display: none;
+}
+.profile-card-content .swipe-portrait {
+  height: 100%;
+  min-height: 0;
+  overflow: hidden;
+  background: #151d30;
+}
+.profile-card-content .swipe-portrait::after {
+  display: none;
+}
+.profile-card-content .profile-gallery {
+  display: grid;
+  grid-template-rows: 48px minmax(0, 1fr) 48px;
+  isolation: isolate;
+}
+.profile-card-content .profile-gallery > img {
+  position: relative;
+  grid-row: 2;
+  height: 100%;
+  width: 100%;
+  min-height: 0;
+  object-fit: contain;
+  object-position: center;
+  inset: auto;
+}
+.profile-card-content .profile-gallery::before {
+  opacity: 0.15;
+}
+.profile-card-content .gallery-dots {
+  top: 4px;
+  left: 16px;
+  right: 96px;
+  gap: 4px;
+  height: 44px;
+  align-items: center;
+}
+.profile-card-content .gallery-dots button {
+  height: 44px;
+  min-height: 44px;
+  background: transparent;
+  box-shadow: none;
+}
+.profile-card-content .gallery-dots button::before {
+  inset: 20px 0;
+}
+.profile-card-content .gallery-dots button::after {
+  content: none;
+}
+.profile-card-content .gallery-dots button.active {
+  background: transparent;
+  box-shadow: none;
+}
+.profile-card-content .gallery-count {
+  top: 9px;
+  left: auto;
+  right: 14px;
+  padding: 5px 8px;
+  font-size: 12px;
+}
+.profile-card-content .gallery-expand {
+  top: auto;
+  right: 10px;
+  bottom: 2px;
+  width: 44px;
+  height: 44px;
+  border-radius: 14px;
+}
+.profile-card-content .gallery-prev,
+.profile-card-content .gallery-next {
+  top: auto;
+  bottom: 2px;
+  translate: none;
+  width: 44px;
+  height: 44px;
+  margin: 0;
+  border-radius: 14px;
+}
+.profile-card-content .gallery-prev {
+  left: calc(50% - 48px);
+}
+.profile-card-content .gallery-next {
+  left: calc(50% + 4px);
+  right: auto;
+}
+.profile-card-content .locked-gallery {
+  grid-row: 1 / -1;
+  position: relative;
+  padding: 60px 24px;
+}
+.profile-card-content .swipe-story {
+  padding: clamp(20px, 2.6vw, 36px);
+  gap: 17px;
+  justify-content: flex-start;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+}
+.profile-card-content .story-label {
+  display: inline-flex;
+  width: fit-content;
+  background: #9784f21a;
+  border: 1px solid #aa92ff40;
+  border-radius: 20px;
+  padding: 7px 12px;
+  color: #d7caff;
+  font-size: 14px;
+}
+.profile-identity h2 {
+  color: #f0f2ff;
+  font-size: clamp(26px, 2.6vw, 38px);
+  line-height: 1.15;
+  margin: 0 0 10px;
+  letter-spacing: -0.7px;
+}
+.profile-identity > span {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 14px;
+  color: #b6c3dc;
+}
+.profile-card-content .swipe-story > p {
+  display: block;
+  -webkit-line-clamp: unset;
+  overflow: visible;
+  font-size: 17px;
+  line-height: 1.55;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.profile-card-content .tags {
+  flex-wrap: wrap;
+  gap: 7px;
+}
+.profile-card-content .tags span {
+  margin: 0;
+  font-size: 12px;
+  padding: 6px 10px;
+}
+.conversation-starter {
+  border-top: 1px solid #a4b1de20;
+  padding-top: 17px;
+}
+.conversation-starter h3 {
+  margin: 0 0 8px;
+  font-size: 14px;
+  color: #c4cce0;
+  font-weight: 500;
+}
+.conversation-starter .connection-interests {
+  flex-wrap: wrap;
+}
+.conversation-starter .connection-interests button {
+  min-height: 44px;
+  padding: 7px 12px;
+  font-size: 12px;
+}
+.conversation-starter .conversation-prompt {
+  margin: 10px 0 0;
+  font-size: 14px;
+  color: #d5caff;
+  line-height: 1.5;
+}
+.profile-card-content .matching-explanation {
+  display: block;
+  font-size: 11px;
+  color: #a3adc6;
+  line-height: 1.5;
+}
+.swipe-stamp.stamp-like {
+  opacity: var(--like-opacity, 0);
+}
+.swipe-stamp.stamp-skip {
+  opacity: var(--skip-opacity, 0);
+}
+.leaving-like .stamp-like,
+.leaving-skip .stamp-skip {
+  opacity: 1;
+}
+.profile-preview {
+  width: min(1040px, calc(100vw - 32px));
+  max-width: none;
+}
+.profile-preview .profile-card-content {
+  height: min(560px, 65dvh);
+  border: 1px solid #a3b2dc25;
+  border-radius: 22px;
+  overflow: hidden;
+  background: #171e30;
+}
+.profile-preview .preview-caption {
+  margin: 18px 0;
+  font-size: 13px;
+  line-height: 1.5;
+}
+.discovery-refine {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  text-align: left;
+  padding: 12px 16px;
+  margin-bottom: 12px;
+  border: 1px solid #aa9bf22a;
+  border-radius: 16px;
+  background: #8874da10;
+  color: #cfc6fa;
+  min-height: 44px;
+}
+.discovery-refine span {
+  flex: 1;
+}
+.discovery-refine strong {
+  display: block;
+  font-size: 13px;
+  font-weight: 600;
+}
+.discovery-refine small {
+  display: block;
+  font-size: 12px;
+  color: #aeb8ce;
+  margin-top: 3px;
+  line-height: 1.4;
+}
+.story-seeds {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin: 20px 0;
+}
+.story-seeds button {
+  min-height: 44px;
+  padding: 10px 14px;
+  border-radius: 14px;
+  border: 1px solid #c0afff30;
+  background: #8170c61a;
+  color: #d5cafa;
+}
+.media-retry {
+  padding: 8px 0;
+  color: #c7c0e8;
+}
+@media (min-width: 761px) and (min-height: 480px) {
+  .app.is-discover .swipe-experience {
+    width: min(100%, 1100px);
+    max-height: none;
+  }
+  .app.is-discover .swipe-card {
+    height: 100%;
+  }
+  .app.is-discover .swipe-story {
+    gap: 17px;
+    justify-content: flex-start;
+  }
+  .app.is-discover .discovery-refine {
+    max-width: 1100px;
+  }
+}
+@media (max-width: 760px), (max-height: 479px) {
+  .swipe-experience .swipe-card {
+    height: auto;
+    min-height: 0;
+  }
+  .profile-card-content {
+    display: flex;
+    flex-direction: column;
+    height: auto;
+  }
+  .profile-card-content .swipe-portrait {
+    flex: none;
+    height: clamp(250px, 38dvh, 380px);
+    min-height: 0;
+  }
+  .profile-card-content .swipe-story {
+    overflow: visible;
+    padding: 22px 20px;
+    gap: 15px;
+  }
+  .profile-card-content .swipe-story > p {
+    font-size: 16px;
+  }
+  .profile-card-content .story-label,
+  .profile-card-content .profile-identity {
+    display: none;
+  }
+  .profile-card-content .mobile-profile-heading {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    padding: 18px 20px 12px;
+  }
+  .mobile-profile-heading strong {
+    display: block;
+    margin: 0 0 6px;
+    font-size: 26px;
+    line-height: 1.1;
+  }
+  .mobile-profile-heading > div > span {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 12px;
+    color: #b9c5de;
+  }
+  .mobile-score {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    align-items: center;
+    justify-content: center;
+    width: 96px;
+    flex: 0 0 96px;
+    border: 1px solid #aa92ff40;
+    border-radius: 16px;
+    padding: 8px;
+    color: #d7caff;
+    background: #9784f21a;
+    font-size: 18px;
+    font-weight: 600;
+  }
+  .mobile-score small {
+    width: 100%;
+    text-align: center;
+    font-size: 10px;
+    font-weight: 400;
+  }
+  .profile-preview {
+    width: calc(100vw - 20px);
+    border-radius: 24px;
+  }
+  .profile-preview .profile-card-content {
+    height: auto;
+  }
+  .profile-preview .dialog-content {
+    padding: 0 14px 20px;
+  }
+  .discovery-refine {
+    padding: 10px 12px;
+  }
+  .discovery-refine small {
+    font-size: 11px;
+  }
+  .swipe-experience .swipe-controls {
+    bottom: calc(76px + env(safe-area-inset-bottom));
+    box-shadow: 0 -10px 22px #0b0f1b;
+  }
+  .swipe-experience .discovery-help {
+    margin-bottom: 16px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .swipe-experience .swipe-card,
+  .swipe-experience .swipe-card.leaving-like,
+  .swipe-experience .swipe-card.leaving-skip {
+    animation: none;
+    transition: none;
+    transform: none !important;
+  }
+}

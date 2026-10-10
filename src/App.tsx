@@ -42,10 +42,13 @@ import { AppNavigation } from "./AppNavigation";
 import { Dialog } from "./Dialog";
 import { PrivacyNotice } from "./PrivacyNotice";
 import { ProfilePreview } from "./ProfilePreview";
+import { ProfileAvatar as Avatar } from "./ProfileAvatar";
 import { DataControls } from "./DataControls";
 import "./experience.css";
 import "./viewport.css";
 import "./wave.css";
+import "./discovery.css";
+import "./landing.css";
 import { AmbientBackdrop } from "./AmbientBackdrop";
 import { WaveGuide } from "./WaveGuide";
 type Tab = "discover" | "matches" | "profile" | "notifications";
@@ -410,11 +413,13 @@ export function App() {
     setBusy(true);
     setError("");
     try {
+      const motion = new Promise((resolve) => setTimeout(resolve, 280));
       const r = await api<{ matched: boolean; matchId?: number }>(
         `/users/${p.userId}/${like ? "like" : "skip"}`,
         "POST",
       );
       reacted = true;
+      await motion;
       if (people.length > 1)
         setPeople((old) => old.filter((x) => x.userId !== p.userId));
       setReviewed((old) => old + 1);
@@ -815,10 +820,30 @@ export function App() {
                 </form>
               </Dialog>
             )}
+            <button
+              className="discovery-refine"
+              onClick={() => {
+                navigate("profile");
+                setProfileSection(2);
+                window.history.replaceState(null, "", "/#profile/story");
+              }}
+            >
+              <Sparkles size={16} />
+              <span>
+                <strong>Добавь новую сторону себя</strong>
+                <small>
+                  Любимый трек, планы на выходные — пара деталей для более
+                  близкого подбора. Только для тебя.
+                </small>
+              </span>
+              <ArrowRight size={18} />
+            </button>
             <div className="discover-bar">
               <span>
                 <span className="live-dot" />
-                Подбор по твоим интересам
+                {people[0]?.compatibilityScore !== undefined
+                  ? `Сходство от ${people[0].similarityFloor ?? Math.min(90, Math.floor(Math.max(0, people[0].compatibilityScore) * 10) * 10)}%`
+                  : "Подбор по твоей истории"}
               </span>
               <small>
                 {people.length} {people.length === 1 ? "профиль" : "профилей"} в
@@ -1167,29 +1192,7 @@ export function App() {
     </div>
   );
 }
-function Avatar({
-  profile,
-  large = false,
-}: {
-  profile: Profile;
-  large?: boolean;
-}) {
-  return (
-    <div className={"avatar" + (large ? " large" : "")}>
-      {value(profile, "display_name").slice(0, 1) || "Я"}
-      {profile.avatarUrl && (
-        <img
-          className="avatar-photo"
-          src={profile.avatarUrl}
-          alt=""
-          onError={(e) => {
-            e.currentTarget.style.display = "none";
-          }}
-        />
-      )}
-    </div>
-  );
-}
+
 function conversationStarters(me: Profile, other: Profile): string[] {
   const common = other.interests.filter((i) => me.interests.includes(i));
   const prompts: Record<string, string> = {

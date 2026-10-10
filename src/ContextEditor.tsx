@@ -142,6 +142,32 @@ export function ContextEditor({
           сохранить позже.
         </p>
       )}
+      {!guided && (
+        <div
+          className="story-seeds"
+          role="group"
+          aria-label="Идеи для нового рассказа"
+        >
+          {[
+            "Музыка на повторе",
+            "Мой идеальный выходной",
+            "Что ценю в людях",
+          ].map((topic) => (
+            <button
+              type="button"
+              key={topic}
+              disabled={busy || !ready || items.length >= 12 || !available}
+              onClick={() => {
+                edit();
+                setTitle(topic);
+                setContent(topic + ": ");
+              }}
+            >
+              {topic}
+            </button>
+          ))}
+        </div>
+      )}
       <details className="saved-stories">
         <summary>
           Твои сохранённые истории{items.length ? ` · ${items.length}` : ""}

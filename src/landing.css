@@ -1,0 +1,361 @@
+.public-home {
+  padding-bottom: 80px;
+  overflow-x: clip;
+}
+.public-home section[id] {
+  scroll-margin-top: 28px;
+}
+.public-home .scene-card {
+  text-decoration: none;
+  color: inherit;
+  animation: none;
+}
+.public-home .scene-card,
+.public-home .landing-steps article,
+.public-home .trust-cards article,
+.public-home .explore-topics button,
+.public-home .photo-rule-art button {
+  transition:
+    transform 220ms ease,
+    border-color 220ms ease,
+    box-shadow 220ms ease;
+}
+.public-home .landing-trust {
+  display: grid;
+  grid-template-columns: 1fr 1.1fr;
+  gap: clamp(32px, 6vw, 80px);
+  text-align: left;
+  padding: clamp(28px, 5vw, 64px);
+  margin: 32px 0 64px;
+  border-radius: 32px;
+  border: 1px solid #a69ce638;
+  background: linear-gradient(130deg, #23304a99, #2b244b88);
+}
+.landing-trust .eyebrow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.public-home .landing-trust h2 {
+  margin: 18px 0;
+  font-size: clamp(30px, 3.4vw, 46px);
+}
+.public-home .landing-trust p {
+  font-size: 16px;
+  line-height: 1.6;
+  margin: 0 0 24px;
+  max-width: 430px;
+}
+.trust-cards {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 14px;
+}
+.trust-cards article {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+  background: #111a2b80;
+  border: 1px solid #b3bae225;
+  border-radius: 18px;
+  padding: 22px;
+}
+.trust-icon {
+  display: grid;
+  place-items: center;
+  flex: 0 0 40px;
+  height: 40px;
+  border-radius: 13px;
+  color: #c6b8ff;
+  background: #9881f21a;
+}
+.trust-cards h3 {
+  font-size: 16px;
+  line-height: 1.4;
+  margin: 0 0 6px;
+  color: #edf0ff;
+}
+.public-home .trust-cards p {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.5;
+  color: #b9c5da;
+}
+.public-home .landing-faq {
+  padding: 24px 0 64px;
+  gap: 40px;
+}
+.public-home .landing-faq h2 {
+  font-size: clamp(30px, 3.2vw, 42px);
+}
+.public-home .landing-faq details {
+  background: #192237aa;
+  border: 1px solid #a7b2dd26;
+  border-radius: 16px;
+  margin-bottom: 12px;
+  padding: 0 20px;
+}
+.public-home .landing-faq summary {
+  min-height: 64px;
+  padding: 20px 0;
+  font-size: 16px;
+  line-height: 1.4;
+  color: #e0e5f5;
+  cursor: pointer;
+}
+.public-home .landing-faq details[open] {
+  border-color: #aa9bef60;
+  background: #262b46;
+}
+.public-home .landing-faq details p {
+  margin: 0;
+  padding: 0 0 22px;
+  font-size: 15px;
+  line-height: 1.65;
+}
+.public-home .landing-last {
+  position: relative;
+  overflow: hidden;
+  text-align: center;
+  padding: clamp(40px, 6vw, 72px) 28px;
+  margin: 0 0 56px;
+  border: 1px solid #a69ce644;
+  border-radius: 32px;
+  background:
+    radial-gradient(ellipse at 50% 0%, #6f55c54a, transparent 70%), #192035;
+}
+.public-home .landing-last h2 {
+  position: relative;
+  margin: 18px 0;
+  font-size: clamp(32px, 4vw, 52px);
+  line-height: 1.15;
+}
+.public-home .landing-last p {
+  font-size: 16px;
+  line-height: 1.5;
+  color: #bac4dc;
+  margin: 0 auto 28px;
+  max-width: 440px;
+}
+.public-home .public-footer {
+  padding-top: 32px;
+  padding-bottom: 20px;
+}
+.public-footer a,
+.public-footer button {
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  font-size: 14px;
+}
+.public-footer p,
+.public-footer span {
+  font-size: 13px;
+  line-height: 1.6;
+}
+.landing-guide {
+  position: fixed;
+  right: 22px;
+  bottom: 22px;
+  z-index: 25;
+  max-width: calc(100vw - 32px);
+}
+.landing-guide.is-open {
+  width: 320px;
+  border: 1px solid #b9a3ff55;
+  border-radius: 24px;
+  background: #192238f5;
+  box-shadow: 0 12px 40px #0005;
+  padding: 22px 18px 14px;
+}
+.landing-guide .wave-guide.compact {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  margin: 0;
+  padding: 0;
+  background: none;
+  border: 0;
+}
+.landing-guide .guide-character {
+  flex: 0 0 48px;
+  width: 48px;
+  height: 48px;
+  border-radius: 16px;
+  margin-top: 6px;
+}
+.landing-guide .guide-face {
+  inset: 14px 9px 10px;
+}
+.landing-guide .guide-face i {
+  width: 4px;
+  height: 6px;
+}
+.landing-guide .guide-face b {
+  width: 10px;
+  height: 5px;
+  bottom: 0;
+}
+.landing-guide .guide-speech {
+  min-width: 0;
+  padding: 0;
+  border: 0;
+  background: none;
+}
+.landing-guide .guide-name {
+  font-size: 14px;
+}
+.landing-guide .guide-name small {
+  display: none;
+}
+.landing-guide .guide-speech p {
+  margin: 8px 0 6px;
+  font-size: 13px;
+  line-height: 1.55;
+  color: #c9d1e7;
+}
+.landing-guide .guide-next {
+  min-height: 44px;
+  text-align: left;
+  font-size: 12px;
+  line-height: 1.4;
+  padding: 6px 0;
+  color: #c6b4ff;
+}
+.guide-close {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: #aebbd7;
+  display: grid;
+  place-items: center;
+}
+.guide-reopen {
+  min-height: 48px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  border-radius: 18px;
+  padding: 6px 12px 6px 6px;
+  border: 1px solid #b9a3ff55;
+  background: #1b2440f5;
+  box-shadow: 0 5px 20px #0004;
+  color: #dad3ff;
+}
+.mini-nex {
+  width: 36px;
+  height: 36px;
+  display: grid;
+  place-items: center;
+  background: linear-gradient(135deg, #7789ea, #9d74d6);
+  color: #111a38;
+  font-size: 25px;
+  border-radius: 11px;
+}
+@media (hover: hover) {
+  .public-home .landing-steps article:hover,
+  .public-home .trust-cards article:hover {
+    transform: translateY(-5px);
+    border-color: #b8a2ff70;
+    box-shadow: 0 12px 28px #090d2033;
+  }
+  .public-home .scene-card:hover {
+    translate: 0 -8px;
+    border-color: #c1acff80;
+    box-shadow: 0 20px 60px #21103966;
+  }
+  .public-home .explore-topics button:hover,
+  .public-home .photo-rule-art button:hover {
+    transform: translateY(-4px);
+  }
+  .public-footer a:hover,
+  .public-footer button:hover {
+    color: #d2baff;
+  }
+}
+@media (max-width: 760px) {
+  .public-home {
+    padding-bottom: 84px;
+  }
+  .public-home .landing-trust {
+    grid-template-columns: 1fr;
+    gap: 26px;
+    padding: 26px 20px;
+    margin: 12px 0 36px;
+    border-radius: 24px;
+  }
+  .trust-cards article {
+    padding: 16px;
+    gap: 12px;
+  }
+  .public-home .landing-faq {
+    padding-bottom: 28px;
+    gap: 22px;
+  }
+  .public-home .landing-faq details {
+    padding: 0 16px;
+  }
+  .public-home .landing-faq summary {
+    font-size: 15px;
+  }
+  .public-home .landing-last {
+    padding: 36px 22px;
+    border-radius: 24px;
+    margin-bottom: 32px;
+  }
+  .public-home .landing-last p {
+    font-size: 15px;
+  }
+  .landing-guide {
+    right: 14px;
+    bottom: calc(12px + env(safe-area-inset-bottom));
+  }
+  .landing-guide.is-open {
+    width: min(320px, calc(100vw - 28px));
+  }
+}
+@media (max-width: 480px) {
+  .public-home .public-header {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    height: auto;
+    padding: 16px 0;
+    gap: 12px;
+  }
+  .public-header .public-auth-actions {
+    display: contents;
+  }
+  .public-auth-actions .text-button {
+    grid-column: 2;
+    grid-row: 1;
+    min-height: 44px;
+  }
+  .public-auth-actions .primary {
+    grid-column: 1 / -1;
+    grid-row: 2;
+    width: 100%;
+    min-height: 44px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .public-home *,
+  .landing-guide * {
+    scroll-behavior: auto;
+    animation: none !important;
+    transition: none !important;
+  }
+  .public-home .scene-card:hover,
+  .public-home .landing-steps article:hover,
+  .public-home .trust-cards article:hover,
+  .public-home .explore-topics button:hover,
+  .public-home .photo-rule-art button:hover {
+    transform: none;
+    translate: none;
+  }
+}

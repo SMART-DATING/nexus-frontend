@@ -6,16 +6,25 @@ export function PhotoViewer({
   photos,
   initialIndex,
   onClose,
+  onError,
+  onRetry,
+  loading = false,
 }: {
   photos: NonNullable<Profile["photos"]>;
   initialIndex: number;
   onClose: () => void;
+  onError?: (url: string) => void;
+  onRetry?: () => void;
+  loading?: boolean;
 }) {
   const [index, setIndex] = useState(Math.min(initialIndex, photos.length - 1));
   const gesture = useRef<{ id: number; x: number; y: number } | null>(null);
   const [broken, setBroken] = useState(false);
-  const currentIndex = Math.min(index, photos.length - 1);
+  const currentIndex = Math.max(0, Math.min(index, photos.length - 1));
   useEffect(() => setBroken(false), [currentIndex, photos[currentIndex]?.url]);
+  useEffect(() => {
+    if (!loading) setBroken(false);
+  }, [loading]);
   const move = (step: number) =>
     setIndex((i) => (i + step + photos.length) % photos.length);
   return (
@@ -53,20 +62,28 @@ export function PhotoViewer({
             move(dx < 0 ? 1 : -1);
         }}
       >
-        {!broken ? (
+        {!broken && photos[currentIndex] ? (
           <img
             key={photos[currentIndex].id}
             src={photos[currentIndex].url}
             alt={`Фото ${currentIndex + 1} из ${photos.length}`}
             draggable={false}
-            onError={() => setBroken(true)}
+            onError={() => {
+              setBroken(true);
+              onError?.(photos[currentIndex].url);
+            }}
           />
         ) : (
-          <p className="viewer-error" role="status">
-            Фото сейчас недоступно.
-            <br />
-            Закрой просмотр и обнови анкету.
-          </p>
+          <div className="viewer-error">
+            <p role="status">
+              {loading ? "Обновляем фото…" : "Фото сейчас недоступно."}
+            </p>
+            {onRetry && (
+              <button className="outline" disabled={loading} onClick={onRetry}>
+                Попробовать снова
+              </button>
+            )}
+          </div>
         )}
         {photos.length > 1 && (
           <>

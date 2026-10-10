@@ -11,6 +11,7 @@ import {
   LockKeyhole,
 } from "lucide-react";
 import { api, type Profile } from "./api";
+import { useProfileMedia } from "./useProfileMedia";
 export function PhotoUpload({
   profile,
   onSaved,
@@ -18,8 +19,9 @@ export function PhotoUpload({
   profile: Profile;
   onSaved: (p: Profile) => void;
 }) {
-  const photos = profile.photos ?? [],
-    count = profile.photoCount ?? photos.length;
+  const media = useProfileMedia(profile);
+  const photos = media.profile.photos ?? [],
+    count = media.profile.photoCount ?? photos.length;
   const [files, setFiles] = useState<File[]>([]),
     [previews, setPreviews] = useState<string[]>([]),
     [replacing, setReplacing] = useState<number | null>(null),
@@ -133,6 +135,23 @@ export function PhotoUpload({
           шести фото в каждой анкете.
         </p>
       </div>
+      {!!media.failed.length && (
+        <div className="media-retry">
+          <p role="status">
+            {media.loading
+              ? "Обновляем фотографии…"
+              : "Некоторые фото не загрузились."}
+          </p>
+          <button
+            type="button"
+            className="outline"
+            disabled={media.loading}
+            onClick={() => void media.refresh()}
+          >
+            Загрузить фотографии снова
+          </button>
+        </div>
+      )}
       <div className="six-photo-grid">
         {Array.from({ length: 6 }, (_, i) => {
           const photo = photos[i];
@@ -143,11 +162,14 @@ export function PhotoUpload({
             >
               {photo ? (
                 <>
-                  <img
-                    key={photo.url}
-                    src={photo.url}
-                    alt={`Ваше фото ${i + 1}`}
-                  />
+                  {!media.failed.includes(photo.url) && (
+                    <img
+                      key={photo.url}
+                      src={photo.url}
+                      alt={`Ваше фото ${i + 1}`}
+                      onError={() => media.onError(photo.url)}
+                    />
+                  )}
                   <span className="slot-number">
                     {i === 0 ? "Главное" : i + 1}
                   </span>

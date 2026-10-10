@@ -249,24 +249,34 @@ const firstPage = await request(
   a.accessToken,
 );
 assert.equal(firstPage.cycleRestarted, false);
-for (const candidate of remaining.items)
-  await request(
-    `/users/${candidate.userId}/skip`,
+let circle = firstPage;
+let rounds = 0;
+while (circle.items.length && !circle.cycleRestarted) {
+  assert.ok(++rounds <= 100, "queue did not finish all similarity bands");
+  assert.equal(new Set(circle.items.map((p) => p.similarityFloor)).size, 1);
+  for (const candidate of circle.items)
+    await request(
+      `/users/${candidate.userId}/skip`,
+      "POST",
+      undefined,
+      a.accessToken,
+    );
+  circle = await request(
+    "/recommendations/next?limit=50",
     "POST",
     undefined,
     a.accessToken,
   );
-const circle = await request(
-  "/recommendations/next?limit=50",
-  "POST",
-  undefined,
-  a.accessToken,
-);
+}
 assert.equal(circle.cycleRestarted, remaining.items.length > 0);
 assert.ok(
   !circle.items.some((x) => x.userId === b.user.id || x.userId === a.user.id),
 );
-assert.equal(circle.items.length, remaining.items.length);
+assert.deepEqual(
+  circle.items.map((p) => p.userId),
+  remaining.items.map((p) => p.userId),
+);
+
 assert.equal(
   (
     await request(

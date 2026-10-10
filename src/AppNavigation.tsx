@@ -11,6 +11,7 @@ import {
   Sparkles,
 } from "lucide-react";
 import { value, type User } from "./api";
+import { ProfileAvatar } from "./ProfileAvatar";
 type Tab = "discover" | "matches" | "profile" | "notifications";
 export function AppNavigation({
   user,
@@ -115,13 +116,7 @@ export function AppNavigation({
             aria-controls="account-options"
             onClick={() => setOpen(!open)}
           >
-            <span className="avatar">
-              {user.profile.avatarUrl ? (
-                <img src={user.profile.avatarUrl} alt="" />
-              ) : (
-                name[0]?.toUpperCase()
-              )}
-            </span>
+            <ProfileAvatar profile={user.profile} />
             <span className="account-name">{name}</span>
             <ChevronDown size={15} />
           </button>

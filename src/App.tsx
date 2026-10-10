@@ -1013,6 +1013,7 @@ export function App() {
               <BlockedUsers
                 onError={report}
                 onUnblocked={() => {
+                  setToast("Блокировка снята.");
                   api<{ items: Match[] }>("/matches")
                     .then((r) => {
                       blockedMatchIds.current.clear();

@@ -1,0 +1,644 @@
+/* Keep the profile itself as the focus, with a full-height photograph. */
+.swipe-experience .swipe-card {
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-tap-highlight-color: transparent;
+  animation: card-enter 300ms ease-out;
+  transition:
+    transform 360ms cubic-bezier(0.22, 0.7, 0.25, 1),
+    opacity 300ms ease;
+}
+.swipe-card * {
+  user-select: none;
+  -webkit-user-select: none;
+}
+.swipe-experience .swipe-card.dragging {
+  animation: none;
+  transition: none;
+}
+.swipe-experience .swipe-card.leaving-like,
+.swipe-experience .swipe-card.leaving-skip {
+  transform: translate3d(var(--exit-x, 120px), 0, 0)
+    rotate(var(--swipe-rotation, 0deg)) !important;
+  opacity: 0;
+  animation: none;
+}
+@keyframes card-enter {
+  from {
+    opacity: 0.45;
+  }
+  to {
+    opacity: 1;
+  }
+}
+.swipe-experience .swipe-card:focus-visible {
+  outline: none;
+  border-color: #a99ee4;
+}
+button:focus:not(:focus-visible),
+a:focus:not(:focus-visible),
+summary:focus:not(:focus-visible) {
+  outline: none;
+}
+.icon-button:focus-visible,
+.guide-close:focus-visible {
+  outline: none;
+  box-shadow: inset 0 0 0 2px #afa5e4;
+}
+.profile-card-content {
+  grid-template-columns: 46% 54%;
+}
+.profile-card-content .profile-gallery {
+  display: block;
+  position: absolute;
+  inset: 0;
+  height: 100%;
+}
+.profile-card-content .profile-gallery > img {
+  position: absolute;
+  inset: 0;
+  height: 100%;
+  width: 100%;
+  object-fit: contain;
+  animation: none;
+}
+.profile-card-content .profile-gallery::before {
+  opacity: 0.3;
+}
+.profile-card-content .gallery-dots {
+  top: 4px;
+  left: 14px;
+  right: 120px;
+}
+.profile-card-content .gallery-count {
+  top: 12px;
+  right: 12px;
+  backdrop-filter: blur(12px);
+}
+.profile-card-content .gallery-expand {
+  bottom: 12px;
+  right: 12px;
+  background: #11192ca6;
+  backdrop-filter: blur(12px);
+}
+.profile-card-content .gallery-prev,
+.profile-card-content .gallery-next {
+  top: 50%;
+  bottom: auto;
+  translate: 0 -50%;
+  border-radius: 50%;
+  background: #11192ca6;
+  backdrop-filter: blur(12px);
+}
+.profile-card-content .gallery-prev {
+  left: 12px;
+}
+.profile-card-content .gallery-next {
+  left: auto;
+  right: 12px;
+}
+.profile-card-content .swipe-story {
+  overflow: visible;
+  justify-content: center;
+  gap: 20px;
+  padding: clamp(22px, 3vw, 42px);
+}
+.profile-card-content .swipe-story > p {
+  margin: 0;
+  font-size: clamp(16px, 1.5vw, 22px);
+  line-height: 1.5;
+}
+.profile-card-content .tags {
+  margin: 0;
+}
+.profile-card-content .tags span {
+  font-size: 12px;
+  padding: 7px 10px;
+}
+.profile-card-content.long-bio .swipe-story {
+  gap: 12px;
+  padding: 22px;
+}
+.profile-card-content.long-bio .profile-bio {
+  font-size: 14px;
+  line-height: 1.4;
+}
+.profile-card-content.long-bio .profile-identity h2 {
+  font-size: 28px;
+}
+.profile-preview .profile-card-content.long-bio {
+  height: auto;
+  min-height: 650px;
+}
+.deck-updating {
+  top: auto;
+  bottom: 12px;
+  font-size: 11px;
+}
+.app .workspace {
+  animation: section-enter 240ms ease-out;
+}
+.profile-sections [role="tabpanel"]:not([hidden]) {
+  animation: section-enter 240ms ease-out;
+}
+@keyframes section-enter {
+  from {
+    transform: translateY(5px);
+  }
+  to {
+    transform: translateY(0);
+  }
+}
+.app.is-profile .workspace {
+  max-width: 1080px;
+  padding-inline: 28px;
+  margin: 0 auto;
+}
+.app.is-profile .page-heading {
+  padding-block: 22px 16px;
+}
+.app.is-profile .page-heading h1 {
+  font-size: 32px;
+}
+.app.is-profile .page-heading p {
+  font-size: 14px;
+}
+.profile-form {
+  max-width: 840px !important;
+  margin: 20px auto 0;
+  padding: 24px !important;
+}
+.profile-form .form-intro {
+  padding-bottom: 16px;
+  margin-bottom: 18px;
+  gap: 14px;
+}
+.profile-form .form-intro .avatar {
+  width: 46px;
+  height: 46px;
+}
+.profile-form .form-intro h2 {
+  font-size: 20px;
+  margin-bottom: 4px;
+}
+.profile-form .form-intro p {
+  font-size: 12px;
+  line-height: 1.5;
+}
+.profile-form .fields {
+  gap: 16px;
+}
+.profile-form .fields input,
+.profile-form .fields textarea {
+  padding: 10px 12px;
+  margin-top: 6px;
+  font-size: 16px;
+}
+.profile-form .fields textarea {
+  min-height: 82px;
+}
+.profile-form .fields label {
+  font-size: 13px;
+}
+.profile-form .privacy-settings {
+  margin: 16px 0;
+  padding: 12px 14px;
+}
+.profile-form > .primary {
+  min-height: 44px;
+  padding: 10px 16px;
+  font-size: 13px;
+}
+.public-topics-editor {
+  max-width: 840px;
+  margin: 20px auto;
+  padding: 22px 24px;
+  border: 1px solid #b8b2e222;
+  border-radius: 20px;
+  background: #161e30;
+}
+.public-topics-editor h2 {
+  font-size: 19px;
+  margin: 0 0 8px;
+}
+.public-topics-editor h2 small {
+  font-size: 12px;
+  margin-left: 8px;
+  color: #b9a7ee;
+}
+.public-topics-editor p {
+  font-size: 13px;
+  line-height: 1.6;
+  color: #b2bfd4;
+}
+.public-topics-editor .interest-picker {
+  margin: 16px 0;
+  gap: 8px;
+}
+.public-topics-editor .interest-picker button {
+  min-height: 40px;
+  padding: 8px 12px;
+  font-size: 12px;
+}
+.public-topics-editor > small {
+  margin-left: 12px;
+}
+.app.is-profile .context-editor {
+  max-width: 840px;
+  margin: 20px auto;
+  padding: 24px;
+}
+.story-reminder-notice {
+  display: flex;
+  align-items: center;
+  border: 1px solid #9583d733;
+  border-radius: 18px;
+  background: #191f34;
+  margin-bottom: 16px;
+}
+.reminder-open {
+  flex: 1;
+  text-align: left;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 18px;
+  min-width: 0;
+}
+.reminder-open span {
+  flex: 1;
+}
+.reminder-open strong,
+.reminder-open small {
+  display: block;
+}
+.reminder-open small {
+  margin-top: 6px;
+  line-height: 1.5;
+}
+.story-reminder-notice .icon-button {
+  margin-right: 8px;
+  flex: 0 0 44px;
+}
+
+@media (min-width: 761px) and (min-height: 480px) {
+  .app.is-discover .workspace > .page-heading,
+  .app.is-discover .discover-bar {
+    max-width: 1280px;
+  }
+  .app.is-discover .page-heading {
+    padding: 18px 0 12px;
+  }
+  .app.is-discover .page-heading h1 {
+    font-size: 32px;
+    line-height: 1.15;
+    margin-bottom: 7px;
+  }
+  .app.is-discover .page-heading p {
+    font-size: 14px;
+  }
+  .app.is-discover .swipe-experience {
+    display: block;
+    width: 100%;
+    max-width: 1280px;
+    max-height: none;
+    padding: 0;
+  }
+  .app.is-discover .swipe-story {
+    overflow: visible;
+    justify-content: center;
+    gap: 20px;
+  }
+  .app.is-discover .swipe-controls {
+    width: min(100%, 540px);
+    gap: 12px;
+  }
+  .app.is-discover .swipe-choice {
+    min-height: 52px;
+    height: 52px;
+    padding: 12px 20px;
+    font-size: 15px;
+  }
+  .app.is-discover .swipe-choice svg {
+    width: 23px;
+    height: 23px;
+  }
+  .app.is-discover .deck-column {
+    gap: 10px;
+  }
+  .app.is-discover .discovery-help summary {
+    font-size: 11px;
+    min-height: 28px;
+  }
+  .app.is-discover .long-bio .swipe-story {
+    gap: 10px;
+  }
+  .app.is-discover .long-bio .profile-bio {
+    font-size: 14px;
+  }
+  /* Very long descriptions use the page's scroll, never a scrollbar inside the card. */
+  body:has(.app.is-discover .long-bio) {
+    overflow-y: auto;
+  }
+  .app.is-discover:has(.long-bio) {
+    height: auto;
+    min-height: 100dvh;
+  }
+  .app.is-discover:has(.long-bio) .deck-stack {
+    min-height: 580px;
+  }
+  .app.is-discover:has(.long-bio) .swipe-card {
+    min-height: 580px;
+    height: auto;
+  }
+}
+@media (max-width: 760px), (max-height: 479px) {
+  .app.is-discover .page-heading {
+    padding: 12px 0 8px;
+  }
+  .app.is-discover .page-heading h1 {
+    font-size: 24px;
+    margin: 0;
+  }
+  .app.is-discover .page-heading p {
+    display: none;
+  }
+  .app.is-discover .discover-bar {
+    display: flex;
+    padding: 0 0 8px;
+    font-size: 10px;
+  }
+  .app.is-discover .discover-bar small {
+    font-size: 10px;
+  }
+  .profile-card-content {
+    display: flex;
+  }
+  .profile-card-content .swipe-portrait {
+    height: clamp(240px, calc(100dvh - 540px), 460px);
+  }
+  .profile-card-content .swipe-story {
+    padding: 14px 16px;
+    gap: 10px;
+  }
+  .profile-card-content .swipe-story > p {
+    font-size: 14px;
+  }
+  .profile-card-content .mobile-profile-heading {
+    padding: 12px 16px 10px;
+  }
+  .profile-card-content .mobile-profile-heading strong {
+    font-size: 22px;
+  }
+  .swipe-experience .swipe-controls {
+    position: static;
+    margin-top: 12px;
+    box-shadow: none;
+    padding: 0;
+  }
+  .swipe-experience .swipe-choice {
+    min-height: 50px;
+    font-size: 14px;
+    padding: 10px;
+  }
+  .swipe-experience .swipe-choice svg {
+    width: 22px;
+    height: 22px;
+  }
+  .app.is-profile .workspace {
+    padding-inline: 14px;
+  }
+  .profile-form,
+  .public-topics-editor {
+    padding: 18px !important;
+  }
+  .profile-form .form-intro .avatar {
+    display: none;
+  }
+  .profile-form .fields {
+    gap: 12px;
+  }
+  .profile-form .form-intro p {
+    max-width: 270px;
+  }
+  .app.is-profile .page-heading h1 {
+    font-size: 26px;
+  }
+  .app.is-profile .page-heading p {
+    font-size: 12px;
+  }
+  .profile-preview .profile-card-content .swipe-portrait {
+    height: 42dvh;
+  }
+  .reminder-open {
+    padding: 14px;
+    gap: 10px;
+  }
+}
+
+/* Nex changes position between sections; the character sits outside its speech bubble. */
+.landing-guide.is-open {
+  left: 0;
+  top: 0;
+  right: auto;
+  bottom: auto;
+  transform: translate3d(
+    var(--guide-x, calc(100vw - 350px)),
+    var(--guide-y, calc(100dvh - 310px)),
+    0
+  );
+  transition: transform 950ms cubic-bezier(0.22, 0.7, 0.25, 1);
+  width: 320px;
+  padding: 0;
+  border: 0;
+  background: none;
+  box-shadow: none;
+}
+.landing-guide .wave-guide.compact {
+  flex-direction: column;
+  gap: 10px;
+  align-items: flex-end;
+}
+.landing-guide .guide-character {
+  flex: 0 0 112px;
+  width: 112px;
+  height: 112px;
+  border-radius: 35px;
+  margin: 0 26px 0 0;
+  box-shadow:
+    0 18px 50px #0a0d3266,
+    0 0 60px #8b6de52a;
+}
+.landing-guide .guide-face {
+  inset: 32px 26px 24px;
+  gap: 20px;
+}
+.landing-guide .guide-face i {
+  width: 8px;
+  height: 14px;
+}
+.landing-guide .guide-face b {
+  width: 23px;
+  height: 12px;
+  bottom: 0;
+}
+.landing-guide .guide-speech {
+  width: 100%;
+  background: #151d31f2;
+  border: 1px solid #a99cea40;
+  border-radius: 20px;
+  padding: 16px 22px;
+  box-shadow: 0 12px 34px #06091545;
+}
+.landing-guide .guide-speech p {
+  font-size: 13px;
+  margin-top: 8px;
+}
+.landing-guide .guide-close {
+  top: 122px;
+  right: 2px;
+  z-index: 2;
+  border-radius: 50%;
+}
+.landing-guide .guide-name {
+  font-size: 14px;
+}
+.landing-guide .guide-next {
+  padding-bottom: 0;
+  min-height: 36px;
+}
+.public-home .scene-card-front {
+  animation: float-front 8s ease-in-out infinite;
+}
+.public-home .scene-card-back {
+  animation: float-back 9s ease-in-out infinite;
+}
+.public-home .scene-card:hover,
+.public-home .scene-card:focus-visible {
+  animation-play-state: paused;
+}
+.scene-connection {
+  animation: nex-orbit 7s ease-in-out infinite;
+}
+@keyframes nex-orbit {
+  50% {
+    translate: 4px -12px;
+  }
+}
+.public-home .public-footer {
+  padding: 38px clamp(20px, 3vw, 40px);
+  border-radius: 24px;
+  border: 1px solid #b1b9d91a;
+  background: #0c1220e8;
+  gap: 38px;
+}
+.public-home .public-footer p {
+  max-width: 300px;
+  font-size: 13px;
+  line-height: 1.7;
+}
+.public-home .public-footer strong {
+  font-size: 14px;
+  color: #e5e8f3;
+}
+.public-home .public-footer a:not(.brand),
+.public-home .public-footer button {
+  font-size: 13px;
+  color: #aebad1;
+  min-height: 36px;
+}
+.public-home .landing-faq summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  list-style: none;
+}
+.public-home .landing-faq summary::-webkit-details-marker {
+  display: none;
+}
+.public-home .landing-faq summary::after {
+  content: "+";
+  color: #a898d7;
+  font-size: 23px;
+  font-weight: 400;
+  margin-left: 18px;
+}
+.public-home .landing-faq details[open] summary::after {
+  content: "−";
+}
+@media (max-width: 899px) {
+  .landing-guide.is-open {
+    width: min(290px, calc(100vw - 28px));
+  }
+  .landing-guide .guide-character {
+    flex-basis: 76px;
+    height: 76px;
+    width: 76px;
+    border-radius: 24px;
+    margin-right: 18px;
+  }
+  .landing-guide .guide-face {
+    inset: 22px 17px 16px;
+    gap: 14px;
+  }
+  .landing-guide .guide-face i {
+    height: 10px;
+    width: 5px;
+  }
+  .landing-guide .guide-face b {
+    width: 16px;
+    height: 8px;
+  }
+  .landing-guide .guide-close {
+    top: 86px;
+  }
+  .landing-guide .guide-speech {
+    padding: 14px 18px;
+  }
+  .public-home .public-footer {
+    gap: 22px;
+    padding: 24px 20px;
+  }
+}
+@media (max-width: 360px) {
+  .primary-navigation { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 2px; }
+  .primary-navigation button { min-width: 0; padding-inline: 2px; font-size: 9px; white-space: nowrap; }
+  .profile-card-content .swipe-portrait {
+    height: 230px;
+  }
+  .profile-card-content .mobile-profile-heading {
+    padding-block: 10px 8px;
+  }
+  .profile-card-content .swipe-story {
+    padding: 12px 16px;
+  }
+  .profile-card-content .tags span {
+    padding: 5px 8px;
+    font-size: 11px;
+  }
+  .app.is-discover .page-heading h1 {
+    font-size: 22px;
+  }
+}
+@media (min-width: 761px) and (max-height: 599px) {
+  body:has(.app.is-discover) { overflow-y: auto; }
+  .app.is-discover { height: auto; min-height: 100dvh; }
+  .app.is-discover .deck-stack, .app.is-discover .swipe-card { min-height: 400px; height: auto; }
+  .app.is-discover .swipe-story { padding: 20px; gap: 12px; }
+  .app.is-discover .profile-bio { font-size: 16px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .swipe-experience .swipe-card,
+  .app .workspace,
+  .profile-sections [role="tabpanel"],
+  .landing-guide.is-open,
+  .public-home .scene-card,
+  .scene-connection {
+    animation: none !important;
+    transition: none !important;
+  }
+  .swipe-experience .swipe-card.leaving-like,
+  .swipe-experience .swipe-card.leaving-skip {
+    transform: none !important;
+  }
+}

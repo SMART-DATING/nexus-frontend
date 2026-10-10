@@ -11,6 +11,8 @@ export type Profile = {
   photoCount?: number;
   photoAllowance?: number;
   contextCount?: number;
+  contextCharacterCount?: number;
+  remainingCount?: number;
   matchingBasis?: "semantic";
 };
 export type User = {

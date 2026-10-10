@@ -330,22 +330,22 @@ export function PublicHome({
             nexus ✦
           </a>
           <p>
-            Твои люди. Твоя история.
+            Знакомства по общим интересам.
             <br />
-            Знакомства, которые начинаются с общего.
+            Личные истории помогают найти близких по духу людей.
           </p>
         </div>
         <div>
-          <strong>Знакомство</strong>
+          <strong>Начать знакомство</strong>
           <a href="#how-it-works">Как это работает</a>
           <a href="#explore-title">Попробовать разговор</a>
           <button onClick={() => onAuth(true)}>Найти свою волну</button>
         </div>
         <div>
-          <strong>Твои границы</strong>
+          <strong>Данные и поддержка</strong>
           <a href="#questions">Частые вопросы</a>
           <button onClick={onPrivacy}>О данных и приватности</button>
-          <span>Локальный прототип · 18+</span>
+          <span>Nexus · 2026 · 18+</span>
         </div>
       </footer>
       <LandingGuide onStart={() => onAuth(true)} />

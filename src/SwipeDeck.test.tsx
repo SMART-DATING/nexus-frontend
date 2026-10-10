@@ -81,7 +81,7 @@ it.each([0, 0.684, 1])(
     expect(
       screen.getByText(`${Math.round(score * 100)}% совпадения`),
     ).toBeTruthy();
-    expect(screen.getByText("С чего начать разговор")).toBeTruthy();
+    expect(screen.queryByText("С чего начать разговор")).toBeNull();
   },
 );
 it("ignores small drags and vertical scrolls, submits one horizontal swipe", async () => {
@@ -107,11 +107,11 @@ it("supports keyboard likes and restores controls after a rejected request", asy
     ).toBe(false),
   );
 });
-it("reveals interest-specific conversation ideas without recording a reaction", async () => {
+it("keeps public interests visible without extra conversation controls", async () => {
   const { react } = setup();
   expect(screen.queryByRole("button", { name: "Узнать поближе" })).toBeNull();
-  await userEvent.click(screen.getByRole("button", { name: "Музыка" }));
-  expect(screen.getByText("Какой трек у тебя сейчас на повторе?")).toBeTruthy();
+  expect(screen.getByText("Музыка")).toBeTruthy();
+  expect(screen.queryByRole("button", { name: "Музыка" })).toBeNull();
   expect(react).not.toHaveBeenCalled();
 });
 

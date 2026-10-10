@@ -109,6 +109,47 @@ afterEach(() => {
   vi.unstubAllGlobals();
 });
 describe("Nexus user flows", () => {
+  it("requires matching passwords at signup and sends the login only after correction", async () => {
+    const ui = userEvent.setup();
+    render(<App />);
+    await ui.click(
+      await screen.findByRole("button", {
+        name: "Зарегистрироваться",
+      }),
+    );
+    await ui.type(screen.getByLabelText("Логин"), "nexus_friend");
+    await ui.type(screen.getByLabelText("Email"), "friend@test.local");
+    await ui.type(screen.getByLabelText("Пароль"), "Password123!");
+    await ui.type(screen.getByLabelText("Повтори пароль"), "Password456!");
+    await ui.click(screen.getByRole("button", { name: "Создать аккаунт" }));
+    expect(screen.getByRole("alert").textContent).toBe(
+      "Пароли должны совпадать",
+    );
+    expect(requests.some((r) => r.path === "/auth/register")).toBe(false);
+    await ui.clear(screen.getByLabelText("Повтори пароль"));
+    await ui.type(screen.getByLabelText("Повтори пароль"), "Password123!");
+    await ui.click(screen.getByRole("button", { name: "Создать аккаунт" }));
+    await screen.findByRole("heading", { name: /На одной волне/ });
+    expect(requests.find((r) => r.path === "/auth/register")?.body).toEqual({
+      email: "friend@test.local",
+      login: "nexus_friend",
+      password: "Password123!",
+      passwordConfirmation: "Password123!",
+    });
+  });
+  it("signs in with a login as well as with an email", async () => {
+    const ui = userEvent.setup();
+    render(<App />);
+    await ui.click(await screen.findByRole("button", { name: "Войти" }));
+    await ui.type(screen.getByLabelText("Email или логин"), "nexus_friend");
+    await ui.type(screen.getByLabelText("Пароль"), "Password123!");
+    await ui.click(screen.getByRole("button", { name: "Войти" }));
+    await screen.findByRole("heading", { name: /На одной волне/ });
+    expect(requests.find((r) => r.path === "/auth/login")?.body).toEqual({
+      login: "nexus_friend",
+      password: "Password123!",
+    });
+  });
   it("opens the partner profile from chat and removes a blocked chat immediately", async () => {
     sessionStorage.setItem("nexus-token", "test-token");
     const ui = userEvent.setup();
@@ -235,7 +276,10 @@ describe("Nexus user flows", () => {
     const ui = userEvent.setup();
     render(<App />);
     await ui.click(await screen.findByRole("button", { name: "Войти" }));
-    await ui.type(await screen.findByLabelText("Email"), "demo@nexus.local");
+    await ui.type(
+      await screen.findByLabelText("Email или логин"),
+      "demo@nexus.local",
+    );
     await ui.type(screen.getByLabelText("Пароль"), "NexusDemo2026!");
     await ui.click(screen.getByRole("button", { name: "Войти" }));
     await screen.findByRole("heading", { name: /На одной волне/ });

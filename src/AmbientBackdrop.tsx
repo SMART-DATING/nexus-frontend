@@ -12,8 +12,8 @@ export type AmbientFeedback = { swipe: (progress: number) => void };
 // A small local colour sample; no photo or derived data leaves the browser.
 export const AmbientBackdrop = forwardRef<
   AmbientFeedback,
-  { photoUrl?: string }
->(function AmbientBackdrop({ photoUrl }, ref) {
+  { photoUrl?: string; publicPage?: boolean }
+>(function AmbientBackdrop({ photoUrl, publicPage = false }, ref) {
   const backdrop = useRef<HTMLDivElement>(null);
   useImperativeHandle(
     ref,
@@ -79,7 +79,7 @@ export const AmbientBackdrop = forwardRef<
     <div
       ref={backdrop}
       aria-hidden="true"
-      className="ambient-backdrop"
+      className={`ambient-backdrop${publicPage ? " public-ambient" : ""}`}
       style={{ "--ambient-tone": tone } as CSSProperties}
     >
       <i />

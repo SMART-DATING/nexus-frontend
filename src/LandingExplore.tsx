@@ -102,10 +102,6 @@ export function LandingExplore({ topicIndex = 0 }: { topicIndex?: number }) {
             </span>
             <h3>Общее — глубже галочек</h3>
             <p>{topic.detail}</p>
-            <p>
-              Закрытые рассказы сравниваются по смыслу. Это ориентир для
-              знакомства, а не обещание идеальной пары.
-            </p>
           </aside>
         </div>
       </div>

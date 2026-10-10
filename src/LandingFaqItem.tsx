@@ -4,11 +4,16 @@ import { Plus } from "lucide-react";
 export function LandingFaqItem({
   question,
   children,
+  expanded,
+  onToggle,
 }: {
   question: string;
   children: ReactNode;
+  expanded?: boolean;
+  onToggle?: () => void;
 }) {
-  const [open, setOpen] = useState(false);
+  const [localOpen, setOpen] = useState(false);
+  const open = expanded ?? localOpen;
   const id = useId();
   return (
     <div className={`landing-faq-item ${open ? "is-expanded" : ""}`}>
@@ -17,7 +22,13 @@ export function LandingFaqItem({
         id={`${id}-question`}
         aria-expanded={open}
         aria-controls={`${id}-answer`}
-        onClick={() => setOpen((value) => !value)}
+        onPointerDown={(e) => {
+          e.currentTarget.dataset.pointerFocus = "true";
+        }}
+        onKeyDown={(e) => {
+          delete e.currentTarget.dataset.pointerFocus;
+        }}
+        onClick={() => (onToggle ? onToggle() : setOpen((value) => !value))}
       >
         <span>{question}</span>
         <Plus size={20} aria-hidden="true" />

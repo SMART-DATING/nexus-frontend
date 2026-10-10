@@ -1,0 +1,276 @@
+/* Toasts live outside workspace layout and never inherit its full-width sizing. */
+.nexus-toast {
+  position: fixed;
+  z-index: 80;
+  top: 88px;
+  left: 50%;
+  width: max-content;
+  max-width: min(420px, calc(100vw - 32px));
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  border: 1px solid #a699ea57;
+  border-radius: 18px;
+  color: #f0efff;
+  background: linear-gradient(120deg, #233455f2, #352b51f2);
+  backdrop-filter: blur(20px);
+  box-shadow:
+    0 12px 35px #070b204d,
+    inset 0 1px #ffffff0d;
+  font-size: 14px;
+  line-height: 1.45;
+  opacity: 0;
+  transform: translate(-50%, -10px) scale(0.97);
+  transition:
+    opacity 260ms ease,
+    transform 260ms cubic-bezier(0.2, 0.7, 0.3, 1);
+}
+.nexus-toast.is-visible {
+  opacity: 1;
+  transform: translate(-50%, 0) scale(1);
+}
+.toast-check {
+  display: grid;
+  place-items: center;
+  flex: 0 0 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: #a59af025;
+  color: #beb6ff;
+}
+.nexus-toast > span:nth-child(2) {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.nexus-toast button {
+  display: grid;
+  place-items: center;
+  flex: 0 0 28px;
+  height: 28px;
+  padding: 0;
+  border-radius: 50%;
+  color: #b8b3d0;
+  background: transparent;
+}
+.nexus-toast button:hover {
+  background: #ffffff10;
+}
+.auth-dialog label small {
+  font-size: 12px;
+  line-height: 1.5;
+  color: #aeb9d2;
+  font-weight: 400;
+}
+.auth-dialog small.password-match {
+  color: #99d3c0;
+}
+.auth-dialog small.password-mismatch {
+  color: #df9cb9;
+}
+.auth-dialog input[aria-invalid="true"] {
+  border-color: #d391ac;
+}
+.public-home .landing-faq-item > button[data-pointer-focus="true"]:focus {
+  outline: none;
+  box-shadow: none;
+}
+.public-home .landing-faq-item {
+  padding: 0 22px;
+  min-height: 0;
+}
+
+/* Large soft lights exchange intensity and position in the existing palette. */
+.public-ambient i {
+  background:
+    radial-gradient(ellipse at 25% 30%, #496bda80, transparent 58%),
+    radial-gradient(ellipse at 78% 72%, #8252c575, transparent 58%);
+  animation: public-blue-flow 14s ease-in-out infinite alternate;
+}
+.public-ambient b {
+  background:
+    radial-gradient(ellipse at 70% 25%, #785bd4b0, transparent 54%),
+    radial-gradient(ellipse at 20% 80%, #386acd80, transparent 55%);
+  mask-image: none;
+  opacity: 0.4;
+  animation: public-purple-flow 18s ease-in-out infinite alternate;
+}
+@keyframes public-blue-flow {
+  from {
+    transform: translate(-7%, -4%) scale(1);
+    opacity: 0.7;
+  }
+  to {
+    transform: translate(9%, 7%) scale(1.13);
+    opacity: 1;
+  }
+}
+@keyframes public-purple-flow {
+  from {
+    transform: translate(7%, -6%) scale(1.05);
+    opacity: 0.3;
+  }
+  to {
+    transform: translate(-8%, 8%) scale(1.15);
+    opacity: 0.65;
+  }
+}
+
+.app.is-profile .profile-editor-view,
+.app.is-profile .matching-editor {
+  width: 100%;
+  min-width: 0;
+}
+.app.is-profile .profile-sections {
+  width: 100%;
+  max-width: none;
+}
+.app.is-profile .profile-form {
+  width: 100%;
+  max-width: none !important;
+  margin: 0;
+}
+.app.is-profile .profile-tabs {
+  margin-bottom: 20px;
+}
+.app.is-profile .setup-checklist > button {
+  padding: 12px 14px;
+}
+
+@media (min-width: 761px) and (min-height: 480px) {
+  .app.is-discover .workspace > .setup-empty {
+    overflow: visible;
+    gap: clamp(10px, 2vh, 18px);
+    padding: clamp(18px, 3vh, 30px);
+  }
+  .setup-empty .setup-checklist {
+    flex-direction: row;
+    max-width: 880px;
+    gap: 10px;
+  }
+  .setup-empty .setup-checklist > button {
+    align-items: flex-start;
+    padding: 14px;
+  }
+  .setup-empty .setup-checklist > button > svg:last-child:not(:first-child) {
+    display: none;
+  }
+  .setup-empty .setup-checklist strong {
+    font-size: 13px;
+  }
+  .setup-empty .setup-checklist small {
+    font-size: 12px;
+  }
+  .setup-empty > p {
+    max-width: 670px;
+    font-size: 14px;
+    line-height: 1.6;
+  }
+  .setup-empty > h2 {
+    font-size: clamp(22px, 2.3vw, 28px);
+  }
+  .setup-empty > .primary {
+    padding: 13px 20px;
+  }
+}
+@media (min-width: 900px) and (min-height: 600px) {
+  .public-home .landing-screen > .landing-explore {
+    min-height: 0;
+    height: calc(100svh - 76px - 2 * var(--chapter-padding));
+    padding-block: 0;
+  }
+  .public-home .explore-interaction {
+    min-height: 0;
+    align-self: center;
+  }
+  .public-home .explore-demo {
+    flex: 0 1 auto;
+    padding: clamp(18px, 2.5svh, 30px);
+    gap: clamp(14px, 2svh, 24px);
+  }
+  .public-home .explore-demo .demo-caption {
+    margin-bottom: 16px;
+  }
+  .public-home .explore-demo .wave-guide {
+    gap: 18px;
+    margin: 0;
+    padding: 0;
+  }
+  .public-home .explore-demo .guide-character {
+    width: 70px;
+    height: 70px;
+    flex-basis: 70px;
+    border-radius: 24px;
+  }
+  .public-home .explore-demo .guide-speech {
+    min-width: 0;
+  }
+  .public-home .explore-demo .guide-face {
+    gap: 14px;
+  }
+  .public-home .explore-demo .guide-face i {
+    width: 6px;
+    height: 11px;
+  }
+  .public-home .explore-demo .guide-face b {
+    bottom: 14px;
+    width: 16px;
+    height: 8px;
+  }
+  .public-home .explore-demo h3 {
+    font-size: clamp(20px, 2.1svh, 26px);
+    margin: 0 0 10px;
+  }
+  .public-home .explore-demo p {
+    margin: 0;
+    font-size: clamp(13px, 1.6svh, 15px);
+    line-height: 1.6;
+  }
+  .public-home .explore-demo .example-answer {
+    margin: 18px 0 0;
+    padding: 16px 18px;
+  }
+  .public-home .example-answer p {
+    margin-top: 6px;
+  }
+  .public-home .explore-demo aside {
+    padding-top: 16px;
+  }
+  .public-home .explore-topics {
+    margin-bottom: 14px;
+  }
+}
+@media (max-width: 760px) {
+  .nexus-toast {
+    top: 82px;
+    font-size: 13px;
+    padding: 10px 12px;
+    gap: 9px;
+  }
+}
+@media (min-width: 761px) and (min-height: 480px) and (max-height: 650px) {
+  .app.is-discover .workspace > .setup-empty {
+    gap: 10px;
+    padding: 16px;
+  }
+  .setup-empty > svg {
+    width: 28px;
+    height: 28px;
+  }
+  .setup-empty > p {
+    font-size: 13px;
+    line-height: 1.5;
+  }
+  .setup-empty > .primary {
+    padding-block: 11px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .public-ambient i,
+  .public-ambient b {
+    animation: none;
+  }
+  .nexus-toast {
+    transition: none;
+  }
+}

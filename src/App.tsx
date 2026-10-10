@@ -61,6 +61,8 @@ import "./ambient.css";
 import "./welcome.css";
 import { SetupChecklist, DiscoverySetup, InviteFriends } from "./WelcomeSetup";
 import { AmbientBackdrop, type AmbientFeedback } from "./AmbientBackdrop";
+import { Toast } from "./Toast";
+import "./refinements.css";
 import { useStoryReminder } from "./useStoryReminder";
 import { WaveGuide } from "./WaveGuide";
 import { ChatPartner, BlockedUsers } from "./ChatControls";
@@ -130,7 +132,9 @@ export function App() {
       () => window.location.hash === "#register",
     ),
     [email, setEmail] = useState(""),
-    [password, setPassword] = useState("");
+    [password, setPassword] = useState(""),
+    [accountLogin, setAccountLogin] = useState(""),
+    [passwordConfirmation, setPasswordConfirmation] = useState("");
   const [onboardingDismissed, setOnboardingDismissed] = useState<number | null>(
     () => Number(sessionStorage.getItem("nexus-onboarding-dismissed")) || null,
   );
@@ -143,12 +147,15 @@ export function App() {
     setRegister(signup);
     setAuthOpen(true);
     setError("");
+    setPassword("");
+    setPasswordConfirmation("");
     window.history.pushState(null, "", signup ? "/#register" : "/#login");
   }
   function closeAuth() {
     setAuthOpen(false);
     setError("");
     setPassword("");
+    setPasswordConfirmation("");
     window.history.pushState(null, "", "/");
   }
   const storyReminder = useStoryReminder(user);
@@ -501,17 +508,31 @@ export function App() {
   }, [messages]);
   async function login(e: FormEvent) {
     e.preventDefault();
+    if (register && password !== passwordConfirmation) {
+      setError("Пароли должны совпадать");
+      return;
+    }
     setBusy(true);
     setError("");
     try {
       const r = await api<{ accessToken: string; user: User }>(
         "/auth/" + (register ? "register" : "login"),
         "POST",
-        { email, password },
+        register
+          ? {
+              email: email.trim(),
+              login: accountLogin.trim(),
+              password,
+              passwordConfirmation,
+            }
+          : email.includes("@")
+            ? { email: email.trim(), password }
+            : { login: email.trim(), password },
       );
       sessionStorage.setItem("nexus-token", r.accessToken);
       setUser(r.user);
       setPassword("");
+      setPasswordConfirmation("");
       if (!readRoute().matchId) navigate("discover");
     } catch (e) {
       report(e);
@@ -626,7 +647,7 @@ export function App() {
   if (!user)
     return (
       <>
-        <AmbientBackdrop />
+        <AmbientBackdrop publicPage />
         <div
           aria-hidden={authOpen || privacyOpen ? true : undefined}
           inert={authOpen || privacyOpen}
@@ -656,11 +677,31 @@ export function App() {
               </WaveGuide>
             )}
             <form onSubmit={login}>
+              {register && (
+                <label>
+                  Логин
+                  <input
+                    autoComplete="username"
+                    aria-label="Логин"
+                    required
+                    minLength={3}
+                    maxLength={32}
+                    pattern="[\p{L}\p{N}_.\-]{3,32}"
+                    value={accountLogin}
+                    onChange={(e) => setAccountLogin(e.target.value)}
+                    aria-describedby="login-hint"
+                  />
+                  <small id="login-hint">
+                    3–32 символа: буквы, цифры, точка, дефис или подчёркивание.
+                    Для входа в аккаунт.
+                  </small>
+                </label>
+              )}
               <label>
-                Email
+                {register ? "Email" : "Email или логин"}
                 <input
-                  type="email"
-                  autoComplete="email"
+                  type={register ? "email" : "text"}
+                  autoComplete={register ? "email" : "username"}
                   required
                   maxLength={254}
                   value={email}
@@ -679,6 +720,42 @@ export function App() {
                   onChange={(e) => setPassword(e.target.value)}
                 />
               </label>
+              {register && (
+                <label>
+                  Повтори пароль
+                  <input
+                    type="password"
+                    autoComplete="new-password"
+                    aria-label="Повтори пароль"
+                    required
+                    minLength={8}
+                    maxLength={72}
+                    value={passwordConfirmation}
+                    onChange={(e) => setPasswordConfirmation(e.target.value)}
+                    aria-invalid={
+                      passwordConfirmation.length > 0 &&
+                      password !== passwordConfirmation
+                    }
+                    aria-describedby={
+                      passwordConfirmation ? "password-match" : undefined
+                    }
+                  />
+                  {passwordConfirmation && (
+                    <small
+                      id="password-match"
+                      className={
+                        password === passwordConfirmation
+                          ? "password-match"
+                          : "password-mismatch"
+                      }
+                    >
+                      {password === passwordConfirmation
+                        ? "Пароли совпадают"
+                        : "Пароли пока не совпадают"}
+                    </small>
+                  )}
+                </label>
+              )}
               {register && (
                 <p className="prototype-note">
                   Локальный прототип · только для 18+. Используй тестовые
@@ -736,7 +813,7 @@ export function App() {
             ) {
               navigate("discover");
               setToast(
-                "Всё готово! Анкеты идут от большего сходства к меньшему.",
+                "Всё готово! Можно знакомиться.",
               );
             } else {
               openSetup(1);
@@ -832,12 +909,7 @@ export function App() {
             </button>
           </div>
         )}
-        {toast && (
-          <div role="status" className="toast">
-            <Check size={18} />
-            {toast}
-          </div>
-        )}
+        <Toast message={toast} onDismiss={() => setToast("")} />
         {celebration && (
           <MatchCelebration
             match={celebration}
@@ -966,10 +1038,8 @@ export function App() {
                 <Sparkles size={40} />
                 <h2>Новые лица ещё появятся</h2>
                 <p>
-                  Сейчас нет новых анкет с учётом возраста и взаимных
-                  предпочтений. Низкий процент сходства не скрывает людей.
-                  Пропущенные анкеты возвращаются в следующем круге; те, кому ты
-                  уже поставил симпатию, ждут ответа.
+                  Пока больше никого нет. Попробуй изменить предпочтения или
+                  позови друзей — так появится больше поводов познакомиться.
                 </p>
                 <div className="empty-actions">
                   {
@@ -1083,7 +1153,9 @@ export function App() {
                 photos={
                   <PhotoUpload
                     profile={user.profile}
-                    onDiscover={complete ? () => navigate("discover") : undefined}
+                    onDiscover={
+                      complete ? () => navigate("discover") : undefined
+                    }
                     onSaved={(profile) =>
                       setUser((old) => (old ? { ...old, profile } : old))
                     }

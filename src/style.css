@@ -994,6 +994,8 @@ footer small:last-child {
 }
 .notices {
   display: grid;
+  align-content: start;
+  grid-auto-rows: max-content;
   gap: 12px;
   max-width: 880px;
 }
@@ -1658,7 +1660,7 @@ footer small:last-child {
     width: 100%;
   }
   .notices > button {
-    padding: 18px 15px;
+    padding: 14px 12px;
     gap: 12px;
   }
   .notices strong {

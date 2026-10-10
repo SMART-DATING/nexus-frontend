@@ -1,18 +1,38 @@
-/** One short scene change instead of the browser's distance-dependent smooth scroll. */
+let motion: { frame: HTMLElement; request: number } | null = null;
+
+function stopMotion() {
+  if (motion) cancelAnimationFrame(motion.request);
+  motion = null;
+}
+
+/** A bounded, eased journey between scenes, in either direction. */
 export function showLandingFrame(frame: HTMLElement) {
-  const top = frame.getBoundingClientRect().top + window.scrollY;
-  window.scrollTo({ top: Math.max(0, top), behavior: "instant" });
-  if (!window.matchMedia?.("(prefers-reduced-motion: reduce)").matches) {
-    const content = frame.querySelector("section") ?? frame;
-    content.getAnimations?.().forEach((animation) => animation.cancel());
-    content.animate?.(
-      [
-        { opacity: 0.65, translate: "0 10px" },
-        { opacity: 1, translate: "0 0" },
-      ],
-      { duration: 170, easing: "ease-out" },
-    );
+  stopMotion();
+  const start = window.scrollY;
+  const top = Math.max(0, frame.getBoundingClientRect().top + start);
+  if (
+    Math.abs(top - start) < 1 ||
+    window.matchMedia?.("(prefers-reduced-motion: reduce)").matches
+  ) {
+    window.scrollTo({ top, behavior: "instant" });
+    return;
   }
+  let began: number | undefined;
+  const transition = { frame, request: 0 };
+  motion = transition;
+  function tick(now: number) {
+    if (motion !== transition) return;
+    began ??= now;
+    const progress = Math.min(1, Math.max(0, (now - began) / 480));
+    const eased = progress * progress * (3 - 2 * progress);
+    window.scrollTo({
+      top: start + (top - start) * eased,
+      behavior: "instant",
+    });
+    if (progress < 1) transition.request = requestAnimationFrame(tick);
+    else motion = null;
+  }
+  transition.request = requestAnimationFrame(tick);
 }
 
 export function installLandingNavigation() {
@@ -29,6 +49,9 @@ export function installLandingNavigation() {
     !window.matchMedia?.("(prefers-reduced-motion: reduce)").matches &&
     !document.querySelector("dialog[open]");
   function target(step: number) {
+    if (motion) {
+      return frames[frames.indexOf(motion.frame) + step] ?? null;
+    }
     const containing = frames.findIndex((frame) => {
       const rect = frame.getBoundingClientRect();
       return rect.top <= 12 && rect.bottom > 12;
@@ -74,13 +97,13 @@ export function installLandingNavigation() {
       return;
     const step = Math.sign(event.deltaY);
     if (scrollable(event.target as HTMLElement, step)) return;
-    const now = performance.now();
-    if (now - lastWheel > 160) {
+    const now = window.performance.now();
+    if (now - lastWheel > 160 || direction !== step) {
       switched = false;
       distance = 0;
     }
     lastWheel = now;
-    if (switched) {
+    if (switched || (motion && direction === step)) {
       event.preventDefault();
       return;
     } // Trackpad momentum belongs to the same gesture.
@@ -127,8 +150,13 @@ export function installLandingNavigation() {
   }
   window.addEventListener("wheel", wheel, { passive: false });
   window.addEventListener("keydown", key);
+  window.addEventListener("pointerdown", stopMotion);
+  window.addEventListener("resize", stopMotion);
   return () => {
+    stopMotion();
     window.removeEventListener("wheel", wheel);
     window.removeEventListener("keydown", key);
+    window.removeEventListener("pointerdown", stopMotion);
+    window.removeEventListener("resize", stopMotion);
   };
 }

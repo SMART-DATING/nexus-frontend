@@ -1,5 +1,8 @@
 export type Property = { name: string; value: string; visible: boolean };
+export type Gender = "male" | "female" | "other" | "unspecified";
+export type InterestedIn = "all" | Exclude<Gender, "unspecified">;
 export type Profile = {
+  gender?: Gender;
   userId: number;
   avatarUrl?: string;
   properties: Property[];
@@ -20,7 +23,7 @@ export type User = {
   email: string;
   discoveryHidden?: boolean;
   profile: Profile;
-  preferences: { minAge: number; maxAge: number };
+  preferences: { minAge: number; maxAge: number; interestedIn?: InterestedIn };
 };
 export type Match = {
   id: number;

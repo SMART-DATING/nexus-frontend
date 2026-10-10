@@ -21,11 +21,13 @@ type Context = {
 export function ContextEditor({
   onChanged,
   interests = [],
+  initialGuided = false,
 }: {
   onChanged: () => Promise<unknown>;
   interests?: string[];
+  initialGuided?: boolean;
 }) {
-  const [guided, setGuided] = useState(false);
+  const [guided, setGuided] = useState(initialGuided);
   const guidedStory = useRef<number | null>(null);
   const [items, setItems] = useState<Context[]>([]),
     [ready, setReady] = useState(false),

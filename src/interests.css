@@ -1,0 +1,232 @@
+html.landing-scroll-mode {
+  scroll-snap-type: none;
+  scroll-behavior: auto;
+}
+.public-home .landing-screen > section {
+  opacity: 1;
+  transform: none;
+  will-change: auto;
+}
+select {
+  font: inherit;
+  width: 100%;
+  color: #e5e8f6;
+  background: #101728;
+  border: 1px solid #46536e;
+  border-radius: 14px;
+  padding: 15px;
+  margin-top: 9px;
+  min-height: 48px;
+}
+select:focus-visible {
+  outline: 2px solid #aba1ed;
+  outline-offset: 3px;
+}
+select option {
+  background: #101728;
+}
+.gender-fields {
+  margin-block: 22px;
+}
+.gender-fields small {
+  display: block;
+  font-size: 12px;
+  color: #9ba9c5;
+  font-weight: 400;
+  margin-top: 9px;
+  line-height: 1.5;
+}
+.preferences-dialog .filter-panel {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  align-items: end;
+}
+.preferences-dialog .filter-panel > label:first-child,
+.preferences-dialog .filter-panel > .primary,
+.preference-hint {
+  grid-column: 1 / -1;
+}
+.preferences-dialog .filter-panel input {
+  max-width: none;
+}
+.preference-hint {
+  font-size: 12px;
+  color: #98a8c6;
+  margin: 0;
+  line-height: 1.6;
+}
+.matching-setup {
+  max-width: 1008px;
+  margin-inline: auto;
+}
+.matching-steps {
+  display: flex;
+  gap: 24px;
+  flex-wrap: wrap;
+  margin: 8px 0 24px;
+  color: #8d9bb6;
+  font-size: 14px;
+}
+.matching-steps span {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+}
+.matching-steps b {
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: #1e273c;
+  font-size: 12px;
+}
+.matching-steps .active {
+  color: #e7e6ff;
+}
+.matching-steps .active b,
+.matching-steps .done b {
+  background: #8171d64a;
+  color: #cdbbff;
+}
+.matching-topics {
+  border: 1px solid #a7add023;
+  background: #161e2c;
+  border-radius: 24px;
+  padding: clamp(20px, 3vw, 32px);
+  margin-bottom: 20px;
+}
+.matching-topics h2 {
+  margin: 0 0 12px;
+  font-size: clamp(22px, 2.6vw, 30px);
+}
+.matching-topics p {
+  color: #aebbd3;
+  font-size: 15px;
+  line-height: 1.7;
+  margin: 0 0 24px;
+  max-width: 670px;
+}
+.matching-topics .interest-picker {
+  margin: 0;
+  gap: 10px;
+}
+.matching-topics .interest-picker button {
+  padding: 12px 16px;
+}
+.matching-topics .interest-picker button[aria-pressed="true"] {
+  background: #8470cc40;
+  border-color: #a88ed2;
+}
+.matching-topic-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  margin-top: 28px;
+}
+.matching-topic-actions small {
+  color: #98a8c5;
+  font-size: 12px;
+  line-height: 1.6;
+}
+.matching-topic-actions .primary {
+  flex-shrink: 0;
+}
+.matching-topic-summary {
+  display: flex;
+  gap: 20px;
+  align-items: center;
+  justify-content: space-between;
+}
+.matching-topic-summary > div {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  min-width: 0;
+}
+.matching-topic-summary svg {
+  flex-shrink: 0;
+  color: #b6a7ef;
+}
+.matching-topic-summary small {
+  display: block;
+  color: #9faecc;
+  margin-top: 8px;
+  line-height: 1.6;
+  font-size: 13px;
+}
+.matching-editor .guided-interview {
+  padding: 0;
+  border: 0;
+  background: none;
+  box-shadow: none;
+}
+.matching-editor .context-editor {
+  margin: 0;
+}
+.matching-topics:has(.matching-topic-summary) {
+  padding-block: 18px;
+}
+.app.is-profile .matching-editor .context-editor {
+  max-width: none;
+  width: 100%;
+  margin: 0;
+}
+.matching-editor .guided-interview {
+  max-width: none;
+}
+.matching-editor .guided-interview .question-message {
+  min-height: 0;
+  margin-block: 20px;
+}
+.matching-editor .guided-interview .voice-composer {
+  margin-top: 0;
+}
+.matching-editor .guided-interview .wave-guide {
+  margin-bottom: 0;
+}
+.matching-editor .guided-interview .voice-composer textarea {
+  min-height: 100px;
+}
+@media (min-width: 900px) and (min-height: 600px) {
+  .matching-topics:has(.matching-topic-summary) {
+    padding-block: 12px;
+  }
+  .matching-topic-summary small {
+    margin-top: 4px;
+  }
+  .matching-editor .interview-progress {
+    margin: 14px 0;
+  }
+  .matching-editor .guided-interview .question-message {
+    margin-block: 12px;
+  }
+  .matching-editor .guided-interview .voice-composer textarea {
+    height: 100px;
+  }
+}
+.app.is-discover .deck-column {
+  grid-template-rows: minmax(0, 1fr) auto;
+}
+@media (max-width: 600px) {
+  .matching-topic-actions {
+    align-items: stretch;
+    flex-direction: column;
+  }
+  .matching-topic-actions .primary {
+    justify-content: center;
+  }
+  .matching-steps {
+    gap: 16px;
+    font-size: 12px;
+  }
+  .matching-topic-summary {
+    align-items: flex-start;
+    gap: 8px;
+  }
+  .matching-topic-summary .text-button {
+    padding-inline: 0;
+    flex-shrink: 0;
+  }
+}

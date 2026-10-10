@@ -1,19 +1,14 @@
 import { ArrowRight, BookOpen, Camera, LockKeyhole } from "lucide-react";
 import { Dialog } from "./Dialog";
+import { showLandingFrame } from "./landingMotion";
 
 export function scrollToLanding(id: string) {
   const target = document.getElementById(id);
   const section = target?.closest<HTMLElement>("section[id]");
   if (!section) return;
   const frame = section.closest<HTMLElement>(".landing-screen") ?? section;
-  const top = frame.getBoundingClientRect().top + window.scrollY;
   history.replaceState(history.state, "", `#${section.id}`);
-  window.scrollTo({
-    top: Math.max(0, top),
-    behavior: window.matchMedia?.("(prefers-reduced-motion: reduce)").matches
-      ? "instant"
-      : "smooth",
-  });
+  showLandingFrame(frame);
 }
 
 export function LandingGuide({

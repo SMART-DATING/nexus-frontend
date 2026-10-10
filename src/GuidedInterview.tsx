@@ -10,6 +10,12 @@ import { VoiceInput } from "./VoiceInput";
 import { WaveGuide } from "./WaveGuide";
 export type Prompt = { id: string; topic: string; text: string; hint: string };
 const prompts: Record<string, Prompt> = {
+  Кофе: {
+    id: "coffee",
+    topic: "Кофе",
+    text: "Где любишь задержаться за чашкой кофе?",
+    hint: "Любимая кофейня, домашний ритуал или разговор, который не хочется заканчивать.",
+  },
   Книги: {
     id: "books",
     topic: "Книги",
@@ -122,9 +128,9 @@ export function GuidedInterview({
   onSave: (content: string) => Promise<void>;
   onLater?: () => void;
 }) {
-  const [questions] = useState(() => interviewPrompts(interests));
+  const questions = interviewPrompts(interests);
   const [index, setIndex] = useState(0),
-    [answers, setAnswers] = useState<string[]>(["", "", ""]),
+    [answers, setAnswers] = useState<Record<string, string>>({}),
     [review, setReview] = useState(false),
     [draft, setDraft] = useState(""),
     [busy, setBusy] = useState(false),
@@ -135,8 +141,11 @@ export function GuidedInterview({
     if (index < questions.length - 1) setIndex((i) => i + 1);
     else {
       setDraft(
-        answers
-          .map((a, i) => (a.trim() ? `${questions[i].topic}: ${a.trim()}` : ""))
+        questions
+          .map((question) => {
+            const answer = answers[question.id]?.trim();
+            return answer ? `${question.topic}: ${answer}` : "";
+          })
           .filter(Boolean)
           .join("\n\n"),
       );
@@ -185,7 +194,7 @@ export function GuidedInterview({
           mood={
             listening
               ? "listening"
-              : (review ? draft : answers[index]).trim()
+              : (review ? draft : (answers[q.id] ?? "")).trim()
                 ? "thinking"
                 : "idle"
           }
@@ -205,11 +214,9 @@ export function GuidedInterview({
         key={`answer-${review ? "review" : q.id}`}
         maxLength={review ? 6000 : 1800}
         label={review ? "Твой личный рассказ" : "Твой ответ"}
-        value={review ? draft : answers[index]}
+        value={review ? draft : (answers[q.id] ?? "")}
         onChange={(s) =>
-          review
-            ? setDraft(s)
-            : setAnswers((a) => a.map((v, i) => (i === index ? s : v)))
+          review ? setDraft(s) : setAnswers((a) => ({ ...a, [q.id]: s }))
         }
         disabled={busy}
         onListeningChange={setListening}
@@ -245,7 +252,7 @@ export function GuidedInterview({
             </button>
           ) : (
             <button type="button" className="primary" onClick={next}>
-              {answers[index].trim() ? "Дальше" : "Пропустить вопрос"}
+              {(answers[q.id] ?? "").trim() ? "Дальше" : "Пропустить вопрос"}
               <ArrowRight size={17} />
             </button>
           )}

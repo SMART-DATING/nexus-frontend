@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, type PointerEvent } from "react";
-import { Heart, RotateCcw, X } from "lucide-react";
+import { Heart, X } from "lucide-react";
 import { value, type Profile } from "./api";
 import { ProfileCard } from "./ProfileCard";
 
@@ -214,17 +214,6 @@ export function SwipeDeck({
             <span>Нравится</span>
           </button>
         </div>
-        <details className="discovery-help">
-          <summary>
-            <RotateCcw size={14} /> Как работает подбор
-          </summary>
-          <p>
-            Сначала показываем самый близкий уровень сходства, затем следующий —
-            с шагом 10%. Пропущенные вернутся после всех уровней, лайкнутые не
-            повторяются. Процент — сходство рассказов. Можно свайпать или
-            нажимать кнопки и ← / →.
-          </p>
-        </details>
       </div>
     </div>
   );

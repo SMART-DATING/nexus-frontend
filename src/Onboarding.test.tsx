@@ -42,6 +42,11 @@ it("persists basic data before asking tailored questions and does not duplicate 
   fireEvent.change(screen.getByLabelText("Город"), {
     target: { value: "Москва" },
   });
+  await userEvent.selectOptions(screen.getByLabelText("Твой пол"), "female");
+  await userEvent.selectOptions(
+    screen.getByLabelText("Кого хочешь встретить"),
+    "male",
+  );
   await userEvent.click(
     screen.getByRole("button", { name: "Давай познакомимся" }),
   );
@@ -50,12 +55,18 @@ it("persists basic data before asking tailored questions and does not duplicate 
     "/profiles/me",
     "PUT",
     expect.objectContaining({
+      gender: "female",
       interests: ["Книги"],
       properties: expect.arrayContaining([
         { name: "birth_date", value: "2002-03-12", visible: false },
       ]),
     }),
   );
+  expect(api).toHaveBeenCalledWith("/preferences/me", "PUT", {
+    minAge: 18,
+    maxAge: 60,
+    interestedIn: "male",
+  });
   fireEvent.change(screen.getByLabelText("Твой ответ"), {
     target: { value: "Люблю фантастику, добрых героев и открытый финал." },
   });

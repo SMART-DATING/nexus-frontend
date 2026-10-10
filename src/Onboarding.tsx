@@ -1,6 +1,14 @@
 import { useState, useRef } from "react";
 import { ArrowRight, ArrowLeft, Check, Sparkles } from "lucide-react";
-import { api, value, type User, type Property } from "./api";
+import {
+  api,
+  value,
+  type User,
+  type Property,
+  type Gender,
+  type InterestedIn,
+} from "./api";
+import { GenderField, InterestedInField } from "./GenderFields";
 import { GuidedInterview } from "./GuidedInterview";
 import { WaveGuide } from "./WaveGuide";
 import { AmbientBackdrop } from "./AmbientBackdrop";
@@ -23,10 +31,12 @@ export function InterestPicker({
   items,
   selected,
   onChange,
+  disabled = false,
 }: {
   items: string[];
   selected: string[];
   onChange: (s: string[]) => void;
+  disabled?: boolean;
 }) {
   return (
     <div className="interest-picker" aria-label="Выбор интересов">
@@ -35,7 +45,9 @@ export function InterestPicker({
           type="button"
           key={i}
           aria-pressed={selected.includes(i)}
-          disabled={!selected.includes(i) && selected.length >= 10}
+          disabled={
+            disabled || (!selected.includes(i) && selected.length >= 10)
+          }
           onClick={() =>
             onChange(
               selected.includes(i)
@@ -64,6 +76,12 @@ export function Onboarding({
   onLater: () => void;
 }) {
   const createdStory = useRef<number | null>(null);
+  const [gender, setGender] = useState<Gender>(
+    user.profile.gender ?? "unspecified",
+  );
+  const [interestedIn, setInterestedIn] = useState<InterestedIn>(
+    user.preferences.interestedIn ?? "all",
+  );
   const [step, setStep] = useState(
       user.profile.properties.length === 4 ? 2 : 0,
     ),
@@ -98,7 +116,15 @@ export function Onboarding({
           visible: existing.find((p) => p.name === "bio")?.visible ?? true,
         },
       ];
-      await api("/profiles/me", "PUT", { properties, interests: selected });
+      await api("/profiles/me", "PUT", {
+        properties,
+        interests: selected,
+        gender,
+      });
+      await api("/preferences/me", "PUT", {
+        ...user.preferences,
+        interestedIn,
+      });
       setStep(2);
     } catch (e) {
       setError(
@@ -225,6 +251,13 @@ export function Onboarding({
               <small>
                 Только для совершеннолетних. Дата рождения скрыта по умолчанию.
               </small>
+              <div className="basics-grid gender-fields">
+                <GenderField value={gender} onChange={setGender} />
+                <InterestedInField
+                  value={interestedIn}
+                  onChange={setInterestedIn}
+                />
+              </div>
               {error && (
                 <p role="alert" className="photo-error">
                   {error}

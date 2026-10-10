@@ -64,7 +64,7 @@ it("opens help only on request and keeps the destination chapter heading in view
   ).toBeTruthy();
   await waitFor(() =>
     expect(scroll).toHaveBeenCalledWith(
-      expect.objectContaining({ top: 500, behavior: "smooth" }),
+      expect.objectContaining({ top: 500, behavior: "instant" }),
     ),
   );
   expect(location.hash).toBe("#explore");

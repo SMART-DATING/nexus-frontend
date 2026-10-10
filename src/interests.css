@@ -189,6 +189,23 @@ select option {
 .matching-editor .guided-interview .voice-composer textarea {
   min-height: 100px;
 }
+@media (min-width: 900px) and (min-height: 600px) {
+  .matching-topics:has(.matching-topic-summary) {
+    padding-block: 12px;
+  }
+  .matching-topic-summary small {
+    margin-top: 4px;
+  }
+  .matching-editor .interview-progress {
+    margin: 14px 0;
+  }
+  .matching-editor .guided-interview .question-message {
+    margin-block: 12px;
+  }
+  .matching-editor .guided-interview .voice-composer textarea {
+    height: 100px;
+  }
+}
 .app.is-discover .deck-column {
   grid-template-rows: minmax(0, 1fr) auto;
 }

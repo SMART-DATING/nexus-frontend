@@ -77,10 +77,14 @@ export function SwipeDeck({
       card.current?.style.getPropertyValue("--swipe-x") || "0",
     );
     const distance = Math.max(120, (card.current?.clientWidth ?? 600) * 0.18);
+    const targetX = currentX + (like ? distance : -distance);
+    card.current?.style.setProperty("--exit-x", `${targetX}px`);
     card.current?.style.setProperty(
-      "--exit-x",
-      `${currentX + (like ? distance : -distance)}px`,
+      "--exit-rotation",
+      `${Math.max(-5, Math.min(5, targetX / 110))}deg`,
     );
+    card.current?.style.setProperty("--like-opacity", like ? "1" : "0");
+    card.current?.style.setProperty("--skip-opacity", like ? "0" : "1");
     setDragging(false);
     setLeaving(like ? "like" : "skip");
     try {

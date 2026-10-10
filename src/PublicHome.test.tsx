@@ -13,6 +13,7 @@ installDialogMock();
 afterEach(() => {
   cleanup();
   vi.restoreAllMocks();
+  history.replaceState(null, "", "/");
 });
 it("explains interests and reciprocal photos without starting signup or saving example answers", async () => {
   const auth = vi.fn();
@@ -32,15 +33,17 @@ it("explains interests and reciprocal photos without starting signup or saving e
   expect(auth).toHaveBeenCalledWith(true);
 });
 
-it("opens help only on request and jumps to the chosen example, not its section heading", async () => {
-  const scroll = vi.fn();
-  Object.defineProperty(HTMLElement.prototype, "scrollIntoView", {
-    configurable: true,
-    value: scroll,
-  });
+it("opens help only on request and keeps the destination chapter heading in view", async () => {
+  const scroll = vi.spyOn(window, "scrollTo").mockImplementation(() => {});
   const privacy = vi.fn();
   render(<PublicHome onAuth={vi.fn()} onPrivacy={privacy} />);
   expect(screen.queryByRole("dialog")).toBeNull();
+  const chapter = document
+    .getElementById("explore")!
+    .closest(".landing-screen")!;
+  vi.spyOn(chapter, "getBoundingClientRect").mockReturnValue({
+    top: 500,
+  } as DOMRect);
   await userEvent.click(
     screen.getByRole("link", { name: "Попробовать разговор о музыке" }),
   );
@@ -49,10 +52,10 @@ it("opens help only on request and jumps to the chosen example, not its section 
   ).toBeTruthy();
   await waitFor(() =>
     expect(scroll).toHaveBeenCalledWith(
-      expect.objectContaining({ block: "center" }),
+      expect.objectContaining({ top: 500, behavior: "smooth" }),
     ),
   );
-  expect((scroll.mock.instances[0] as HTMLElement).id).toBe("explore-example");
+  expect(location.hash).toBe("#explore");
   await userEvent.click(
     screen.getByRole("button", { name: "Открыть помощь Некса" }),
   );
@@ -62,9 +65,7 @@ it("opens help only on request and jumps to the chosen example, not its section 
   await userEvent.click(
     help.getByRole("button", { name: /Как открываются фотографии/ }),
   );
-  await waitFor(() =>
-    expect((scroll.mock.instances.at(-1) as HTMLElement).id).toBe("photos"),
-  );
+  await waitFor(() => expect(location.hash).toBe("#photos"));
   expect(screen.queryByRole("dialog")).toBeNull();
   await userEvent.click(screen.getByRole("button", { name: "Спросить Некса" }));
   await userEvent.click(
@@ -81,4 +82,29 @@ it("returns focus to the help trigger after closing and never reopens automatica
   await userEvent.click(screen.getByRole("button", { name: "Закрыть окно" }));
   expect(document.activeElement).toBe(trigger);
   expect(screen.queryByRole("dialog")).toBeNull();
+});
+
+it("animates FAQ state while keeping closed answers out of keyboard and accessible navigation", async () => {
+  render(<PublicHome onAuth={vi.fn()} onPrivacy={vi.fn()} />);
+  const button = screen.getByRole("button", {
+    name: "Мой личный рассказ увидят другие?",
+  });
+  const answer = document.getElementById(
+    button.getAttribute("aria-controls")!,
+  )!;
+  expect(button.getAttribute("aria-expanded")).toBe("false");
+  expect(answer.hasAttribute("inert")).toBe(true);
+  expect(
+    screen.queryByRole("region", { name: "Мой личный рассказ увидят другие?" }),
+  ).toBeNull();
+  button.focus();
+  await userEvent.keyboard("{Enter}");
+  expect(
+    screen.getByRole("region", { name: "Мой личный рассказ увидят другие?" }),
+  ).toBe(answer);
+  expect(button.getAttribute("aria-expanded")).toBe("true");
+  expect(answer.hasAttribute("inert")).toBe(false);
+  await userEvent.keyboard(" ");
+  expect(button.getAttribute("aria-expanded")).toBe("false");
+  expect(answer.hasAttribute("inert")).toBe(true);
 });

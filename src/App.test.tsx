@@ -207,7 +207,7 @@ describe("Nexus user flows", () => {
       password: "NexusDemo2026!",
     });
   });
-  it("saves edited profile properties and interests together", async () => {
+  it("keeps profile editing compact and moves public topics to the last tab without losing the draft", async () => {
     sessionStorage.setItem("nexus-token", "test-token");
     const ui = userEvent.setup();
     render(<App />);
@@ -215,19 +215,31 @@ describe("Nexus user flows", () => {
     const name = await screen.findByLabelText("Как вас зовут");
     await ui.clear(name);
     await ui.type(name, "Новое имя");
+    expect(screen.queryByRole("button", { name: "Кино" })).toBeNull();
+    await ui.click(screen.getByRole("tab", { name: "Для подбора" }));
     await ui.click(await screen.findByRole("button", { name: "Кино" }));
-    await ui.click(screen.getByRole("button", { name: "Сохранить профиль" }));
-    await screen.findByText("Профиль сохранён");
-    const saved = requests.find(
+    await ui.click(screen.getByRole("button", { name: "Сохранить темы" }));
+    await screen.findByText("Темы сохранены");
+    const topicSave = requests.find(
       (r) => r.path === "/profiles/me" && r.method === "PUT",
     )!.body as typeof profile;
+    expect(topicSave.interests).toContain("Кино");
+    expect(
+      topicSave.properties.find((p) => p.name === "display_name")?.value,
+    ).toBe("Алекс");
+    await ui.click(screen.getByRole("tab", { name: "Анкета" }));
+    await ui.click(screen.getByRole("button", { name: "Сохранить профиль" }));
+    await screen.findByText("Профиль сохранён");
+    const saved = requests
+      .filter((r) => r.path === "/profiles/me" && r.method === "PUT")
+      .at(-1)!.body as typeof profile;
     expect(saved.properties.find((p) => p.name === "display_name")?.value).toBe(
       "Новое имя",
     );
     expect(saved.properties.find((p) => p.name === "birth_date")?.visible).toBe(
       false,
     );
-    expect(saved.interests).toContain("Кино");
+    expect(saved.interests).toEqual(user.profile.interests);
   });
   it("opens a match and sends plain text to its API", async () => {
     sessionStorage.setItem("nexus-token", "test-token");

@@ -49,7 +49,9 @@ import "./viewport.css";
 import "./wave.css";
 import "./discovery.css";
 import "./landing.css";
+import "./polish.css";
 import { AmbientBackdrop } from "./AmbientBackdrop";
+import { useStoryReminder } from "./useStoryReminder";
 import { WaveGuide } from "./WaveGuide";
 type Tab = "discover" | "matches" | "profile" | "notifications";
 function readRoute(): { tab: Tab; matchId: number | null } {
@@ -136,6 +138,7 @@ export function App() {
     setPassword("");
     window.history.pushState(null, "", "/");
   }
+  const storyReminder = useStoryReminder(user);
   const currentMatch = useRef<number | null>(null);
   const messagesViewport = useRef<HTMLDivElement>(null);
   const followMessages = useRef(true);
@@ -413,7 +416,7 @@ export function App() {
     setBusy(true);
     setError("");
     try {
-      const motion = new Promise((resolve) => setTimeout(resolve, 280));
+      const motion = new Promise((resolve) => setTimeout(resolve, 360));
       const r = await api<{ matched: boolean; matchId?: number }>(
         `/users/${p.userId}/${like ? "like" : "skip"}`,
         "POST",
@@ -653,13 +656,11 @@ export function App() {
     );
   return (
     <div className={`app is-${tab} ${selected ? "has-chat" : ""}`}>
-      <AmbientBackdrop
-        photoUrl={tab === "discover" ? ambientPhoto : undefined}
-      />
+      <AmbientBackdrop photoUrl={ambientPhoto} />
       <AppNavigation
         user={user}
         tab={tab}
-        unread={notices.some((n) => !n.seen)}
+        unread={storyReminder.pending || notices.some((n) => !n.seen)}
         unreadMessages={matches.reduce(
           (sum, m) => sum + (m.unreadCount ?? 0),
           0,
@@ -697,7 +698,7 @@ export function App() {
           />
         </Dialog>
       )}
-      <main className="workspace">
+      <main className="workspace" key={tab}>
         {error && (
           <div role="alert" className="error">
             {error}
@@ -820,24 +821,6 @@ export function App() {
                 </form>
               </Dialog>
             )}
-            <button
-              className="discovery-refine"
-              onClick={() => {
-                navigate("profile");
-                setProfileSection(2);
-                window.history.replaceState(null, "", "/#profile/story");
-              }}
-            >
-              <Sparkles size={16} />
-              <span>
-                <strong>Добавь новую сторону себя</strong>
-                <small>
-                  Любимый трек, планы на выходные — пара деталей для более
-                  близкого подбора. Только для тебя.
-                </small>
-              </span>
-              <ArrowRight size={18} />
-            </button>
             <div className="discover-bar">
               <span>
                 <span className="live-dot" />
@@ -846,8 +829,7 @@ export function App() {
                   : "Подбор по твоей истории"}
               </span>
               <small>
-                {people.length} {people.length === 1 ? "профиль" : "профилей"} в
-                подборке
+                Анкет впереди: {people[0]?.remainingCount ?? people.length}
               </small>
             </div>
             {!complete ? (
@@ -950,7 +932,6 @@ export function App() {
                 <ProfileEditor
                   key={user.id}
                   user={user}
-                  interests={interests}
                   busy={busy}
                   onSave={async (p) => {
                     setBusy(true);
@@ -976,10 +957,17 @@ export function App() {
                 />
               }
               story={
-                <ContextEditor
-                  interests={user.profile.interests}
-                  onChanged={refresh}
-                />
+                <>
+                  <PublicTopicsEditor
+                    user={user}
+                    interests={interests}
+                    onSaved={refresh}
+                  />
+                  <ContextEditor
+                    interests={user.profile.interests}
+                    onChanged={refresh}
+                  />
+                </>
               }
             />
             <button
@@ -1007,7 +995,7 @@ export function App() {
                 <p>Здесь начинается ваш разговор.</p>
               </div>
             </div>
-            {loading ? (
+            {loading && !matches.length && !selected ? (
               <div className="boot">Загружаем совпадения…</div>
             ) : matches.length === 0 ? (
               <Empty
@@ -1143,7 +1131,36 @@ export function App() {
                 <h1>Уведомления</h1>
               </div>
             </div>
-            {notices.length === 0 ? (
+            {storyReminder.pending && (
+              <div className="story-reminder-notice">
+                <button
+                  className="reminder-open"
+                  onClick={() => {
+                    storyReminder.dismiss();
+                    navigate("profile");
+                    setProfileSection(2);
+                    window.history.replaceState(null, "", "/#profile/story");
+                  }}
+                >
+                  <Sparkles size={22} />
+                  <span>
+                    <strong>Добавь новую сторону себя</strong>
+                    <small>
+                      Пара деталей поможет найти больше общего. Когда захочется.
+                    </small>
+                  </span>
+                  <ArrowRight size={18} />
+                </button>
+                <button
+                  className="icon-button"
+                  aria-label="Убрать напоминание"
+                  onClick={storyReminder.dismiss}
+                >
+                  <X size={16} />
+                </button>
+              </div>
+            )}
+            {notices.length === 0 && !storyReminder.pending ? (
               <Empty
                 title="Пока всё спокойно"
                 text="Здесь появятся новые совпадения и сообщения."
@@ -1315,26 +1332,23 @@ function Empty({
 }
 function ProfileEditor({
   user,
-  interests,
   busy,
   onSave,
 }: {
   user: User;
-  interests: string[];
   busy: boolean;
   onSave: (p: { properties: Property[]; interests: string[] }) => void;
 }) {
   const [props, setProps] = useState<Property[]>(
-      ["display_name", "bio", "birth_date", "city"].map(
-        (name) =>
-          user.profile.properties.find((p) => p.name === name) || {
-            name,
-            value: "",
-            visible: name !== "birth_date",
-          },
-      ),
+    ["display_name", "bio", "birth_date", "city"].map(
+      (name) =>
+        user.profile.properties.find((p) => p.name === name) || {
+          name,
+          value: "",
+          visible: name !== "birth_date",
+        },
     ),
-    [chosen, setChosen] = useState(user.profile.interests);
+  );
   const labels: Record<string, string> = {
     display_name: "Как вас зовут",
     bio: "Короткая подпись (необязательно)",
@@ -1351,7 +1365,7 @@ function ProfileEditor({
       className="profile-form"
       onSubmit={(e) => {
         e.preventDefault();
-        onSave({ properties: props, interests: chosen });
+        onSave({ properties: props, interests: user.profile.interests });
       }}
     >
       <div className="form-intro">
@@ -1371,7 +1385,7 @@ function ProfileEditor({
               {labels[p.name]}
               {p.name === "bio" ? (
                 <textarea
-                  rows={4}
+                  rows={2}
                   maxLength={1000}
                   value={p.value}
                   onChange={(e) => update(p.name, { value: e.target.value })}
@@ -1411,12 +1425,57 @@ function ProfileEditor({
             </label>
           ))}
       </details>
-      <h3>
+      <button className="primary" disabled={busy}>
+        {busy ? "Сохраняем…" : "Сохранить профиль"}
+        <Check size={17} />
+      </button>
+    </form>
+  );
+}
+
+function PublicTopicsEditor({
+  user,
+  interests,
+  onSaved,
+}: {
+  user: User;
+  interests: string[];
+  onSaved: () => Promise<unknown>;
+}) {
+  const [chosen, setChosen] = useState(user.profile.interests);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState("");
+  const [saved, setSaved] = useState(false);
+  return (
+    <form
+      className="public-topics-editor"
+      onSubmit={async (e) => {
+        e.preventDefault();
+        setSaving(true);
+        setError("");
+        setSaved(false);
+        try {
+          await api("/profiles/me", "PUT", {
+            properties: user.profile.properties,
+            interests: chosen,
+          });
+          await onSaved();
+          setSaved(true);
+        } catch (e) {
+          setError(
+            e instanceof Error ? e.message : "Не удалось сохранить темы",
+          );
+        } finally {
+          setSaving(false);
+        }
+      }}
+    >
+      <h2>
         Публичные темы <small>{chosen.length}/10</small>
-      </h3>
+      </h2>
       <p>
-        До 10 тем, которые можно показать собеседнику. Подбор работает по вашим
-        личным рассказам.
+        Видны в анкете и помогают начать разговор. Личные рассказы ниже остаются
+        скрытыми.
       </p>
       <div className="interest-picker">
         {interests.map((i) => (
@@ -1425,21 +1484,23 @@ function ProfileEditor({
             key={i}
             className={chosen.includes(i) ? "chosen" : ""}
             aria-pressed={chosen.includes(i)}
-            disabled={!chosen.includes(i) && chosen.length >= 10}
-            onClick={() =>
+            disabled={saving || (!chosen.includes(i) && chosen.length >= 10)}
+            onClick={() => {
+              setSaved(false);
               setChosen((old) =>
                 old.includes(i) ? old.filter((x) => x !== i) : [...old, i],
-              )
-            }
+              );
+            }}
           >
             {chosen.includes(i) && <Check size={14} />} {i}
           </button>
         ))}
       </div>
-      <button className="primary" disabled={busy}>
-        {busy ? "Сохраняем…" : "Сохранить профиль"}
-        <Check size={17} />
+      <button className="outline" disabled={saving}>
+        {saving ? "Сохраняем…" : "Сохранить темы"}
       </button>
+      {saved && <small role="status">Темы сохранены</small>}
+      {error && <p role="alert">{error}</p>}
     </form>
   );
 }

@@ -1,16 +1,7 @@
-import { useState, type ReactNode } from "react";
+import { type ReactNode } from "react";
 import { Heart, MapPin, Sparkles } from "lucide-react";
 import { value, type Profile } from "./api";
 import { PhotoGallery } from "./PhotoGallery";
-
-const ideas: Record<string, string> = {
-  Музыка: "Какой трек у тебя сейчас на повторе?",
-  Кофе: "Кофе на прогулке или уютная кофейня?",
-  Кино: "Какой фильм хочется пересмотреть вместе?",
-  Путешествия: "Куда отправимся на маленькие выходные?",
-  Книги: "Какая книга тебя недавно зацепила?",
-  Игры: "Настолки или видеоигры — что выбираешь?",
-};
 
 export function ProfileCard({
   profile: p,
@@ -23,11 +14,12 @@ export function ProfileCard({
   onPhotoChange?: (url?: string) => void;
   children?: ReactNode;
 }) {
-  const [idea, setIdea] = useState("");
   const common = p.commonInterests ?? [];
   const name = value(p, "display_name") || "Имя скрыто";
   return (
-    <div className="profile-card-content">
+    <div
+      className={`profile-card-content ${value(p, "bio").length > 280 ? "long-bio" : ""}`}
+    >
       <div className="mobile-profile-heading">
         <div>
           <strong>{name}</strong>
@@ -83,41 +75,6 @@ export function ProfileCard({
             </span>
           ))}
         </div>
-        {!!p.interests.length && (
-          <div className="conversation-starter">
-            <h3>С чего начать разговор</h3>
-            <div className="connection-interests">
-              {(common.length ? common : p.interests.slice(0, 3)).map((i) => (
-                <button
-                  type="button"
-                  key={i}
-                  aria-pressed={
-                    idea ===
-                    (ideas[i] ||
-                      `Что тебе больше всего нравится в теме «${i}»?`)
-                  }
-                  onClick={() =>
-                    setIdea(
-                      ideas[i] ||
-                        `Что тебе больше всего нравится в теме «${i}»?`,
-                    )
-                  }
-                >
-                  {i}
-                </button>
-              ))}
-            </div>
-            <p className="conversation-prompt">
-              {idea || "Как выглядит твой идеальный выходной?"}
-            </p>
-          </div>
-        )}
-        {!own && typeof p.compatibilityScore === "number" && (
-          <small className="matching-explanation">
-            Сходство ваших личных рассказов, а не прогноз отношений. Сами
-            рассказы остаются скрытыми.
-          </small>
-        )}
       </div>
     </div>
   );

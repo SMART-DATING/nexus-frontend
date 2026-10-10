@@ -34,7 +34,7 @@ export function SwipeDeck({
     alive = useRef(false);
   function paint(dx: number) {
     card.current?.style.setProperty("--swipe-x", `${dx}px`);
-    card.current?.style.setProperty("--swipe-rotation", `${dx / 36}deg`);
+    card.current?.style.setProperty("--swipe-rotation", `${dx / 110}deg`);
     card.current?.style.setProperty(
       "--like-opacity",
       `${Math.max(0, Math.min(1, dx / 120))}`,
@@ -73,12 +73,20 @@ export function SwipeDeck({
     if (busy || choosing.current) return;
     choosing.current = true;
     stopFrame();
+    const currentX = parseFloat(
+      card.current?.style.getPropertyValue("--swipe-x") || "0",
+    );
+    const distance = Math.max(120, (card.current?.clientWidth ?? 600) * 0.18);
+    card.current?.style.setProperty(
+      "--exit-x",
+      `${currentX + (like ? distance : -distance)}px`,
+    );
     setDragging(false);
     setLeaving(like ? "like" : "skip");
     try {
       await Promise.all([
         onReact(p, like),
-        new Promise((resolve) => setTimeout(resolve, 280)),
+        new Promise((resolve) => setTimeout(resolve, 360)),
       ]);
     } finally {
       choosing.current = false;
@@ -104,6 +112,7 @@ export function SwipeDeck({
     )
       return;
     gesture.current = { id: e.pointerId, x: e.clientX, y: e.clientY, dx: 0 };
+    if (e.pointerType === "mouse") e.preventDefault();
     e.currentTarget.setPointerCapture?.(e.pointerId);
   }
   function move(e: PointerEvent<HTMLElement>) {
@@ -115,7 +124,7 @@ export function SwipeDeck({
       cancel();
       return;
     }
-    g.dx = Math.max(-260, Math.min(260, dx));
+    g.dx = dx * 0.75;
     if (Math.abs(dx) < 8) return;
     setDragging(true);
     if (frame.current === null)
@@ -129,6 +138,7 @@ export function SwipeDeck({
     if (!g || g.id !== e.pointerId) return;
     gesture.current = null;
     stopFrame();
+    paint(g.dx);
     setDragging(false);
     if (Math.abs(g.dx) >= 90) void choose(g.dx > 0);
     else paint(0);
@@ -147,6 +157,7 @@ export function SwipeDeck({
             onPointerMove={move}
             onPointerUp={up}
             onPointerCancel={cancel}
+            onDragStart={(e) => e.preventDefault()}
             onLostPointerCapture={() => {
               if (gesture.current) cancel();
             }}

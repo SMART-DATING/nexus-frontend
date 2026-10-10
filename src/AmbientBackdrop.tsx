@@ -6,7 +6,6 @@ export function AmbientBackdrop({ photoUrl }: { photoUrl?: string }) {
   useEffect(() => {
     let active = true;
     if (!photoUrl) {
-      setTone("108, 91, 216");
       return;
     }
     const photo = new Image();

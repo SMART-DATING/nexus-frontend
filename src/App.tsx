@@ -604,6 +604,7 @@ export function App() {
         {privacyOpen && (
           <Dialog
             title="О данных и приватности"
+            className="privacy-info-dialog"
             onClose={() => setPrivacyOpen(false)}
           >
             <PrivacyNotice />

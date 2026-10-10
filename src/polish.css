@@ -19,7 +19,7 @@
 .swipe-experience .swipe-card.leaving-like,
 .swipe-experience .swipe-card.leaving-skip {
   transform: translate3d(var(--exit-x, 120px), 0, 0)
-    rotate(var(--swipe-rotation, 0deg)) !important;
+    rotate(var(--exit-rotation, 0deg)) !important;
   opacity: 0;
   animation: none;
 }
@@ -450,9 +450,33 @@ summary:focus:not(:focus-visible) {
 .public-home .scene-card-back {
   animation: float-back 9s ease-in-out infinite;
 }
+.public-home .scene-card {
+  transition:
+    scale 350ms ease,
+    border-color 350ms ease,
+    box-shadow 350ms ease;
+}
 .public-home .scene-card:hover,
 .public-home .scene-card:focus-visible {
-  animation-play-state: paused;
+  scale: 1.015;
+}
+@keyframes float-front {
+  0%,
+  100% {
+    translate: 0 0;
+  }
+  50% {
+    translate: 0 -10px;
+  }
+}
+@keyframes float-back {
+  0%,
+  100% {
+    translate: 0 0;
+  }
+  50% {
+    translate: 0 8px;
+  }
 }
 .scene-connection {
   animation: nex-orbit 7s ease-in-out infinite;
@@ -579,7 +603,7 @@ body:has(.public-home) {
 .explore-interaction {
   scroll-margin-block: 24px;
 }
-.public-home main > .landing-arrived {
+.public-home main .landing-arrived > * {
   animation: landing-reveal 550ms ease-out;
 }
 @keyframes landing-reveal {
@@ -657,25 +681,6 @@ body:has(.public-home) {
   color: #aebad1;
   min-height: 36px;
 }
-.public-home .landing-faq summary {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  list-style: none;
-}
-.public-home .landing-faq summary::-webkit-details-marker {
-  display: none;
-}
-.public-home .landing-faq summary::after {
-  content: "+";
-  color: #a898d7;
-  font-size: 23px;
-  font-weight: 400;
-  margin-left: 18px;
-}
-.public-home .landing-faq details[open] summary::after {
-  content: "−";
-}
 @media (max-width: 360px) {
   .primary-navigation {
     display: grid;
@@ -738,7 +743,7 @@ body:has(.public-home) {
   .swipe-experience .swipe-card,
   .app .workspace,
   .profile-sections [role="tabpanel"],
-  .public-home main > .landing-arrived,
+  .public-home main .landing-arrived > *,
   .public-home .scene-card,
   .scene-connection {
     animation: none !important;
@@ -747,5 +752,129 @@ body:has(.public-home) {
   .swipe-experience .swipe-card.leaving-like,
   .swipe-experience .swipe-card.leaving-skip {
     transform: none !important;
+  }
+}
+
+/* Chapter spacing stays independent of the height of its card or illustration. */
+.public-home .landing-screen {
+  padding-block: clamp(32px, 5svh, 64px);
+  display: flex;
+  align-items: center;
+}
+.public-home .landing-screen > section {
+  width: 100%;
+  margin: 0;
+}
+.public-home .landing-screen > .landing-how,
+.public-home .landing-screen > .landing-explore,
+.public-home .landing-screen > .landing-photo-rule,
+.public-home .landing-screen > .landing-faq {
+  padding-block: 24px;
+}
+.public-home .landing-faq {
+  align-items: start;
+}
+@media (min-width: 900px) and (min-height: 700px) {
+  .public-home .landing-hero {
+    min-height: calc(100svh - 156px);
+    padding-block: 48px;
+  }
+  .public-home .landing-screen {
+    min-height: 100svh;
+  }
+}
+.privacy-info-dialog {
+  width: min(760px, calc(100% - 32px));
+}
+.landing-faq-item {
+  background: #192237aa;
+  border: 1px solid #a7b2dd26;
+  border-radius: 18px;
+  margin-bottom: 12px;
+  padding-inline: 22px;
+  transition:
+    background 300ms ease,
+    border-color 300ms ease;
+}
+.landing-faq-item.is-expanded {
+  border-color: #aa9bef60;
+  background: #222a41;
+}
+.landing-faq-item > button {
+  display: flex;
+  justify-content: space-between;
+  width: 100%;
+  min-height: 70px;
+  padding: 20px 0;
+  gap: 20px;
+  color: #e0e5f5;
+  text-align: left;
+  font-size: 16px;
+  line-height: 1.4;
+}
+.landing-faq-item > button svg {
+  color: #a898d7;
+  flex-shrink: 0;
+  transition: rotate 380ms cubic-bezier(0.22, 0.7, 0.25, 1);
+}
+.landing-faq-item.is-expanded > button svg {
+  rotate: 45deg;
+}
+.faq-answer {
+  display: grid;
+  grid-template-rows: 0fr;
+  opacity: 0;
+  transition:
+    grid-template-rows 380ms cubic-bezier(0.22, 0.7, 0.25, 1),
+    opacity 260ms ease;
+}
+.landing-faq-item.is-expanded .faq-answer {
+  grid-template-rows: 1fr;
+  opacity: 1;
+}
+.faq-answer > div {
+  min-height: 0;
+  overflow: hidden;
+}
+.public-home .faq-answer p {
+  margin: 0;
+  padding: 0 0 22px;
+  font-size: 15px;
+  line-height: 1.65;
+  color: #b3c0d8;
+  animation: none;
+}
+.swipe-stamp {
+  transition: opacity 180ms ease;
+}
+@media (max-width: 760px) {
+  .public-home .landing-screen {
+    padding-block: 28px;
+  }
+  .public-home .landing-screen > .landing-trust {
+    padding: 24px 20px;
+  }
+  .public-home .landing-screen > .landing-last {
+    padding: 32px 20px;
+  }
+  .landing-faq-item {
+    padding-inline: 16px;
+  }
+  .landing-faq-item > button {
+    font-size: 15px;
+    min-height: 64px;
+    gap: 12px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .public-home main .landing-arrived > *,
+  .faq-answer,
+  .landing-faq-item > button svg {
+    animation: none !important;
+    transition: none !important;
+  }
+  .public-home .scene-card:hover,
+  .public-home .scene-card:focus-visible {
+    scale: 1;
   }
 }

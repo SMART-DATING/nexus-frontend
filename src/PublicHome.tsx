@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { LandingGuide, scrollToLanding } from "./LandingGuide";
 import { LandingExplore } from "./LandingExplore";
+import { LandingFaqItem } from "./LandingFaqItem";
 import {
   ArrowRight,
   ArrowDown,
@@ -34,8 +35,11 @@ export function PublicHome({
       { threshold: 0.12 },
     );
     document
-      .querySelectorAll(".public-home main > section")
+      .querySelectorAll(".public-home main section[id]")
       .forEach((node) => observer.observe(node));
+    const initial = location.hash.slice(1);
+    if (document.getElementById(initial)?.matches("section[id]"))
+      requestAnimationFrame(() => scrollToLanding(initial));
     return () => observer.disconnect();
   }, []);
   function explore(event: React.MouseEvent<HTMLAnchorElement>, topic: number) {
@@ -43,10 +47,30 @@ export function PublicHome({
       return;
     event.preventDefault();
     setSceneTopic(topic);
-    requestAnimationFrame(() => scrollToLanding("explore-example", "center"));
+    requestAnimationFrame(() => scrollToLanding("explore-example"));
   }
   return (
-    <div className="public-home">
+    <div
+      className="public-home"
+      onClick={(event) => {
+        if (
+          event.defaultPrevented ||
+          event.ctrlKey ||
+          event.metaKey ||
+          event.shiftKey ||
+          event.altKey
+        )
+          return;
+        const anchor = (event.target as HTMLElement).closest<HTMLAnchorElement>(
+          'a[href^="#"]',
+        );
+        const id = anchor?.getAttribute("href")?.slice(1);
+        if (id && document.getElementById(id)?.closest("section[id]")) {
+          event.preventDefault();
+          scrollToLanding(id);
+        }
+      }}
+    >
       <header className="public-header">
         <a href="/" className="brand" aria-label="Nexus — на главную">
           <img src="/nexus-mark.svg" alt="" />
@@ -162,203 +186,214 @@ export function PublicHome({
           Знакомство начинается здесь
           <ArrowDown size={17} />
         </a>
-        <section
-          className="landing-how"
-          id="how-it-works"
-          aria-labelledby="how-title"
-        >
-          <div className="landing-section-heading">
-            <span className="eyebrow">НИЧЕГО ЛИШНЕГО</span>
-            <h2 id="how-title">
-              Меньше случайностей.
-              <br />
-              Больше общего.
-            </h2>
-          </div>
-          <div className="landing-steps">
-            <article>
-              <span className="step-number">01</span>
-              <Sparkles />
-              <h3>Расскажи о своём</h3>
-              <p>
-                Выбери интересы и ответь на пару вопросов. Можно написать или
-                рассказать голосом — в своём темпе.
-              </p>
-            </article>
-            <article>
-              <span className="step-number">02</span>
-              <Heart />
-              <h3>Узнай свою волну</h3>
-              <p>
-                Личный рассказ помогает подобрать людей с близкими интересами.
-                Он остаётся скрыт от других участников.
-              </p>
-            </article>
-            <article>
-              <span className="step-number">03</span>
-              <MessageCircle />
-              <h3>Начни с «привет»</h3>
-              <p>
-                Лайкни того, кто заинтересовал. Если симпатия взаимна, появится
-                чат — и повод познакомиться ближе.
-              </p>
-            </article>
-          </div>
-        </section>
-        <LandingExplore topicIndex={sceneTopic} />
-        <section id="photos" className="landing-photo-rule">
-          <div
-            className="photo-rule-art"
-            aria-label="Попробуй правило взаимных фотографий"
+        <div className="landing-screen">
+          <section
+            className="landing-how"
+            id="how-it-works"
+            aria-labelledby="how-title"
           >
-            {Array.from({ length: 6 }, (_, i) => (
-              <button
-                type="button"
-                aria-label={`Пример: ${i + 1} своих фото`}
-                aria-pressed={photoCount === i + 1}
-                className={i < photoCount ? "photo-unlocked" : ""}
-                onClick={() => setPhotoCount(i + 1)}
-                key={i}
-                style={{ "--photo-index": i } as React.CSSProperties}
-              >
-                {i + 1}
-              </button>
-            ))}
-          </div>
-          <div>
-            <span className="eyebrow">НА РАВНЫХ</span>
-            <h2>
-              Одна фотография?
-              <br />
-              Значит, одна у каждого.
-            </h2>
-            <p>
-              Загрузи до шести фото. Сколько добавишь сам, столько сможешь
-              увидеть у других. Пара слов и общие интересы помогут разглядеть
-              больше.
-            </p>
-            <p className="photo-rule-result" aria-live="polite">
-              В примере: {photoCount} своих — до {photoCount} чужих. Нажми на
-              карточку слева, чтобы попробовать.
-            </p>
-          </div>
-        </section>
-        <section id="privacy" className="landing-trust">
-          <div className="trust-copy">
-            <span className="eyebrow">
-              <LockKeyhole size={16} /> ПОД ТВОИМ КОНТРОЛЕМ
-            </span>
-            <h2>
-              Твоя история.
-              <br />
-              Твои границы.
-            </h2>
-            <p>
-              Рассказывай столько, сколько хочется. Ты решаешь, что оставить в
-              анкете, а что — только для подбора.
-            </p>
-            <button className="outline" onClick={onPrivacy}>
-              Как работают мои данные
-              <ArrowRight size={16} />
-            </button>
-          </div>
-          <div className="trust-cards">
-            <article>
-              <span className="trust-icon">
-                <Heart size={20} />
-              </span>
-              <div>
-                <h3>В анкете — то, что выберешь</h3>
-                <p>Город и описание можно скрыть в настройках видимости.</p>
-              </div>
-            </article>
-            <article>
-              <span className="trust-icon">
-                <LockKeyhole size={20} />
-              </span>
-              <div>
-                <h3>Рассказы — только для тебя</h3>
+            <div className="landing-section-heading">
+              <span className="eyebrow">НИЧЕГО ЛИШНЕГО</span>
+              <h2 id="how-title">
+                Меньше случайностей.
+                <br />
+                Больше общего.
+              </h2>
+            </div>
+            <div className="landing-steps">
+              <article>
+                <span className="step-number">01</span>
+                <Sparkles />
+                <h3>Расскажи о своём</h3>
                 <p>
-                  Их смысл помогает подбору. Другие участники не увидят текст.
+                  Выбери интересы и ответь на пару вопросов. Можно написать или
+                  рассказать голосом — в своём темпе.
                 </p>
-              </div>
-            </article>
-            <article>
-              <span className="trust-icon">
-                <MessageCircle size={20} />
+              </article>
+              <article>
+                <span className="step-number">02</span>
+                <Heart />
+                <h3>Узнай свою волну</h3>
+                <p>
+                  Личный рассказ помогает подобрать людей с близкими интересами.
+                  Он остаётся скрыт от других участников.
+                </p>
+              </article>
+              <article>
+                <span className="step-number">03</span>
+                <MessageCircle />
+                <h3>Начни с «привет»</h3>
+                <p>
+                  Лайкни того, кто заинтересовал. Если симпатия взаимна,
+                  появится чат — и повод познакомиться ближе.
+                </p>
+              </article>
+            </div>
+          </section>
+        </div>
+        <div className="landing-screen">
+          <LandingExplore topicIndex={sceneTopic} />
+        </div>
+        <div className="landing-screen">
+          <section id="photos" className="landing-photo-rule">
+            <div
+              className="photo-rule-art"
+              aria-label="Попробуй правило взаимных фотографий"
+            >
+              {Array.from({ length: 6 }, (_, i) => (
+                <button
+                  type="button"
+                  aria-label={`Пример: ${i + 1} своих фото`}
+                  aria-pressed={photoCount === i + 1}
+                  className={i < photoCount ? "photo-unlocked" : ""}
+                  onClick={() => setPhotoCount(i + 1)}
+                  key={i}
+                  style={{ "--photo-index": i } as React.CSSProperties}
+                >
+                  {i + 1}
+                </button>
+              ))}
+            </div>
+            <div>
+              <span className="eyebrow">НА РАВНЫХ</span>
+              <h2>
+                Одна фотография?
+                <br />
+                Значит, одна у каждого.
+              </h2>
+              <p>
+                Загрузи до шести фото. Сколько добавишь сам, столько сможешь
+                увидеть у других. Пара слов и общие интересы помогут разглядеть
+                больше.
+              </p>
+              <p className="photo-rule-result" aria-live="polite">
+                В примере: {photoCount} своих — до {photoCount} чужих. Нажми на
+                карточку слева, чтобы попробовать.
+              </p>
+            </div>
+          </section>
+        </div>
+        <div className="landing-screen">
+          <section id="privacy" className="landing-trust">
+            <div className="trust-copy">
+              <span className="eyebrow">
+                <LockKeyhole size={16} /> ПОД ТВОИМ КОНТРОЛЕМ
               </span>
-              <div>
-                <h3>Разговор — по взаимной симпатии</h3>
-                <p>Чат появится, когда вы оба захотите познакомиться.</p>
-              </div>
-            </article>
-          </div>
-        </section>
-        <section
-          className="landing-faq"
-          id="questions"
-          aria-labelledby="faq-title"
-        >
-          <div className="landing-section-heading">
-            <span className="eyebrow">ПЕРЕД ПЕРВЫМ «ПРИВЕТ»</span>
-            <h2 id="faq-title">
-              Всё чуть проще,
+              <h2>
+                Твоя история.
+                <br />
+                Твои границы.
+              </h2>
+              <p>
+                Рассказывай столько, сколько хочется. Ты решаешь, что оставить в
+                анкете, а что — только для подбора.
+              </p>
+              <button className="outline" onClick={onPrivacy}>
+                Как работают мои данные
+                <ArrowRight size={16} />
+              </button>
+            </div>
+            <div className="trust-cards">
+              <article>
+                <span className="trust-icon">
+                  <Heart size={20} />
+                </span>
+                <div>
+                  <h3>В анкете — то, что выберешь</h3>
+                  <p>Город и описание можно скрыть в настройках видимости.</p>
+                </div>
+              </article>
+              <article>
+                <span className="trust-icon">
+                  <LockKeyhole size={20} />
+                </span>
+                <div>
+                  <h3>Рассказы — только для тебя</h3>
+                  <p>
+                    Их смысл помогает подбору. Другие участники не увидят текст.
+                  </p>
+                </div>
+              </article>
+              <article>
+                <span className="trust-icon">
+                  <MessageCircle size={20} />
+                </span>
+                <div>
+                  <h3>Разговор — по взаимной симпатии</h3>
+                  <p>Чат появится, когда вы оба захотите познакомиться.</p>
+                </div>
+              </article>
+            </div>
+          </section>
+        </div>
+        <div className="landing-screen">
+          <section
+            className="landing-faq"
+            id="questions"
+            aria-labelledby="faq-title"
+          >
+            <div className="landing-section-heading">
+              <span className="eyebrow">ПЕРЕД ПЕРВЫМ «ПРИВЕТ»</span>
+              <h2 id="faq-title">
+                Всё чуть проще,
+                <br />
+                чем кажется.
+              </h2>
+            </div>
+            <div>
+              <LandingFaqItem question="Мой личный рассказ увидят другие?">
+                <p>
+                  Нет. В анкете видны выбранные тобой публичные поля, интересы и
+                  разрешённые фото. Подробные истории остаются в «Для подбора»:
+                  их смысл помогает составлять рекомендации.
+                </p>
+              </LandingFaqItem>
+              <LandingFaqItem question="Нужно отвечать на все вопросы?">
+                <p>
+                  Нет. Некс задаёт три коротких вопроса по выбранным интересам.
+                  Любой можно пропустить или отложить всё знакомство. Позже
+                  можно написать один свободный рассказ и дополнять его.
+                </p>
+              </LandingFaqItem>
+              <LandingFaqItem question="Можно рассказать голосом?">
+                <p>
+                  Да, если браузер поддерживает распознавание. Микрофон
+                  включается только по твоему действию после пояснения. Браузер
+                  может передать звук своему сервису; Nexus сохраняет только
+                  подтверждённый текст. Печатать можно всегда.
+                </p>
+              </LandingFaqItem>
+              <LandingFaqItem question="Что происходит после лайка?">
+                <p>
+                  Если другой человек тоже выразит симпатию, появится чат.
+                  Сначала идут самые близкие по рассказу люди, затем уровни
+                  ниже. Пропущенные анкеты вернутся после всех уровней.
+                  Лайкнутые повторно не показываются.
+                </p>
+              </LandingFaqItem>
+            </div>
+          </section>
+        </div>
+        <div className="landing-screen">
+          <section id="start" className="landing-last">
+            <span className="eyebrow">ОБЩЕЕ УЖЕ ГДЕ-ТО РЯДОМ</span>
+            <h2>
+              Возможно, вы уже
               <br />
-              чем кажется.
+              слушаете одну песню.
             </h2>
-          </div>
-          <div>
-            <details>
-              <summary>Мой личный рассказ увидят другие?</summary>
-              <p>
-                Нет. В анкете видны выбранные тобой публичные поля, интересы и
-                разрешённые фото. Подробные истории остаются в «Для подбора»: их
-                смысл помогает составлять рекомендации.
-              </p>
-            </details>
-            <details>
-              <summary>Нужно отвечать на все вопросы?</summary>
-              <p>
-                Нет. Некс задаёт три коротких вопроса по выбранным интересам.
-                Любой можно пропустить или отложить всё знакомство. Позже можно
-                написать один свободный рассказ и дополнять его.
-              </p>
-            </details>
-            <details>
-              <summary>Можно рассказать голосом?</summary>
-              <p>
-                Да, если браузер поддерживает распознавание. Микрофон включается
-                только по твоему действию после пояснения. Браузер может
-                передать звук своему сервису; Nexus сохраняет только
-                подтверждённый текст. Печатать можно всегда.
-              </p>
-            </details>
-            <details>
-              <summary>Что происходит после лайка?</summary>
-              <p>
-                Если другой человек тоже выразит симпатию, появится чат. Сначала
-                идут самые близкие по рассказу люди, затем уровни ниже.
-                Пропущенные анкеты вернутся после всех уровней. Лайкнутые
-                повторно не показываются.
-              </p>
-            </details>
-          </div>
-        </section>
-        <section id="start" className="landing-last">
-          <span className="eyebrow">ОБЩЕЕ УЖЕ ГДЕ-ТО РЯДОМ</span>
-          <h2>
-            Возможно, вы уже
-            <br />
-            слушаете одну песню.
-          </h2>
-          <p>
-            Начни с пары слов о себе. Всё остальное можно дополнить по пути.
-          </p>
-          <button className="primary landing-cta" onClick={() => onAuth(true)}>
-            Давайте познакомимся
-            <ArrowRight size={19} />
-          </button>
-        </section>
+            <p>
+              Начни с пары слов о себе. Всё остальное можно дополнить по пути.
+            </p>
+            <button
+              className="primary landing-cta"
+              onClick={() => onAuth(true)}
+            >
+              Давайте познакомимся
+              <ArrowRight size={19} />
+            </button>
+          </section>
+        </div>
       </main>
       <footer className="public-footer">
         <div className="public-footer-content">

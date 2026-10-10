@@ -150,3 +150,29 @@ it("swipes photos inside the viewer without moving or reacting to the dating car
   expect(card.style.getPropertyValue("--swipe-x")).toBe("0px");
   expect(react).not.toHaveBeenCalled();
 });
+
+it.each([true, false])(
+  "button reaction %s tilts in the same direction as a gesture and recovers on refusal",
+  async (like) => {
+    const { card, react } = setup();
+    await userEvent.click(
+      screen.getByRole("button", {
+        name: like ? "Нравится Саша" : "Пропустить Саша",
+      }),
+    );
+    expect(react).toHaveBeenCalledWith(person, like);
+    const rotation = parseFloat(card.style.getPropertyValue("--exit-rotation"));
+    expect(like ? rotation > 0 : rotation < 0).toBe(true);
+    expect(
+      card.style.getPropertyValue(like ? "--like-opacity" : "--skip-opacity"),
+    ).toBe("1");
+    expect(card.className).toContain(like ? "leaving-like" : "leaving-skip");
+    await waitFor(() => expect(card.className).not.toContain("leaving-"));
+    expect(card.style.getPropertyValue("--swipe-x")).toBe("0px");
+    expect(
+      screen
+        .getByRole("button", { name: "Пропустить Саша" })
+        .hasAttribute("disabled"),
+    ).toBe(false);
+  },
+);

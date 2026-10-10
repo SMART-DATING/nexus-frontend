@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { LandingGuide } from "./LandingGuide";
+import { useEffect, useState } from "react";
+import { LandingGuide, scrollToLanding } from "./LandingGuide";
 import { LandingExplore } from "./LandingExplore";
 import {
   ArrowRight,
@@ -20,6 +20,31 @@ export function PublicHome({
 }) {
   const [photoCount, setPhotoCount] = useState(2);
   const [sceneTopic, setSceneTopic] = useState(0);
+  const [helpOpen, setHelpOpen] = useState(false);
+  useEffect(() => {
+    if (!window.IntersectionObserver) return;
+    const observer = new IntersectionObserver(
+      (entries) => {
+        for (const entry of entries)
+          if (entry.isIntersecting) {
+            entry.target.classList.add("landing-arrived");
+            observer.unobserve(entry.target);
+          }
+      },
+      { threshold: 0.12 },
+    );
+    document
+      .querySelectorAll(".public-home main > section")
+      .forEach((node) => observer.observe(node));
+    return () => observer.disconnect();
+  }, []);
+  function explore(event: React.MouseEvent<HTMLAnchorElement>, topic: number) {
+    if (event.ctrlKey || event.metaKey || event.shiftKey || event.altKey)
+      return;
+    event.preventDefault();
+    setSceneTopic(topic);
+    requestAnimationFrame(() => scrollToLanding("explore-example", "center"));
+  }
   return (
     <div className="public-home">
       <header className="public-header">
@@ -30,6 +55,17 @@ export function PublicHome({
         <a className="public-about-link" href="#how-it-works">
           Как это работает
         </a>
+        <button
+          type="button"
+          className="landing-help-trigger"
+          aria-label="Открыть помощь Некса"
+          onClick={() => setHelpOpen(true)}
+        >
+          <span className="mini-nex" aria-hidden="true">
+            ·ᴗ·
+          </span>
+          <span>Помощь</span>
+        </button>
         <div className="public-auth-actions">
           <button className="text-button" onClick={() => onAuth(false)}>
             Войти
@@ -78,10 +114,10 @@ export function PublicHome({
             <div className="scene-orbit orbit-one" />
             <div className="scene-orbit orbit-two" />
             <a
-              href="#explore"
+              href="#explore-example"
               className="scene-card scene-card-back"
               aria-label="Попробовать разговор о музыке"
-              onClick={() => setSceneTopic(1)}
+              onClick={(event) => explore(event, 1)}
             >
               <span className="scene-avatar">
                 <Headphones size={39} />
@@ -95,10 +131,10 @@ export function PublicHome({
               <span className="scene-tag">инди · концерты · винил</span>
             </a>
             <a
-              href="#explore"
+              href="#explore-example"
               className="scene-card scene-card-front"
               aria-label="Попробовать разговор о книгах"
-              onClick={() => setSceneTopic(0)}
+              onClick={(event) => explore(event, 0)}
             >
               <span className="scene-avatar">
                 <BookOpen size={39} />
@@ -325,30 +361,42 @@ export function PublicHome({
         </section>
       </main>
       <footer className="public-footer">
-        <div>
-          <a className="brand" href="/">
-            nexus ✦
-          </a>
-          <p>
-            Знакомства по общим интересам.
-            <br />
-            Личные истории помогают найти близких по духу людей.
-          </p>
-        </div>
-        <div>
-          <strong>Начать знакомство</strong>
-          <a href="#how-it-works">Как это работает</a>
-          <a href="#explore-title">Попробовать разговор</a>
-          <button onClick={() => onAuth(true)}>Найти свою волну</button>
-        </div>
-        <div>
-          <strong>Данные и поддержка</strong>
-          <a href="#questions">Частые вопросы</a>
-          <button onClick={onPrivacy}>О данных и приватности</button>
-          <span>Nexus · 2026 · 18+</span>
+        <div className="public-footer-content">
+          <div>
+            <a className="brand" href="/">
+              nexus ✦
+            </a>
+            <p>
+              Знакомства по общим интересам.
+              <br />
+              Личные истории помогают найти близких по духу людей.
+            </p>
+          </div>
+          <div>
+            <strong>Начать знакомство</strong>
+            <a href="#how-it-works">Как это работает</a>
+            <a href="#explore-example" onClick={(event) => explore(event, 0)}>
+              Попробовать разговор
+            </a>
+            <button onClick={() => onAuth(true)}>Найти свою волну</button>
+          </div>
+          <div>
+            <strong>Данные и поддержка</strong>
+            <a href="#questions">Частые вопросы</a>
+            <button type="button" onClick={() => setHelpOpen(true)}>
+              Спросить Некса
+            </button>
+            <button onClick={onPrivacy}>О данных и приватности</button>
+            <span>Nexus · 2026 · 18+</span>
+          </div>
         </div>
       </footer>
-      <LandingGuide onStart={() => onAuth(true)} />
+      {helpOpen && (
+        <LandingGuide
+          onClose={() => setHelpOpen(false)}
+          onPrivacy={onPrivacy}
+        />
+      )}
     </div>
   );
 }

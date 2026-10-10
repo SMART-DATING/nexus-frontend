@@ -60,50 +60,54 @@ export function LandingExplore({ topicIndex = 0 }: { topicIndex?: number }) {
           тему и попробуй, как выглядит знакомство с Нексом.
         </p>
       </div>
-      <div
-        className="explore-topics"
-        role="group"
-        aria-label="Пример разговора по интересам"
-      >
-        {topics.map((t, i) => (
-          <button
-            type="button"
-            key={t.name}
-            aria-pressed={selected === i}
-            onClick={() => setSelected(i)}
-          >
-            <span aria-hidden="true">{t.icon}</span>
-            {t.name}
-          </button>
-        ))}
-      </div>
-      <div className="explore-demo" key={topic.name}>
-        <div>
-          <span className="demo-caption">
-            Пример разговора · ответы не сохраняются
-          </span>
-          <WaveGuide>
-            <h3>{topic.question}</h3>
-            <p>Можно коротко. Можно голосом. Любой вопрос можно пропустить.</p>
-          </WaveGuide>
-          <div className="example-answer">
-            <span>Например, так</span>
-            <p>{topic.answer}</p>
-          </div>
+      <div className="explore-interaction" id="explore-example">
+        <div
+          className="explore-topics"
+          role="group"
+          aria-label="Пример разговора по интересам"
+        >
+          {topics.map((t, i) => (
+            <button
+              type="button"
+              key={t.name}
+              aria-pressed={selected === i}
+              onClick={() => setSelected(i)}
+            >
+              <span aria-hidden="true">{t.icon}</span>
+              {t.name}
+            </button>
+          ))}
         </div>
-        <aside>
-          <span className="meaning-orbit" aria-hidden="true">
-            <i>✦</i>
-            <b>♡</b>
-            <i>✧</i>
-          </span>
-          <h3>Общее — глубже галочек</h3>
-          <p>{topic.detail}</p>
-          <p>
-            Закрытые рассказы сравниваются по смыслу. Это ориентир для
-            знакомства, а не обещание идеальной пары.
-          </p>
-        </aside>
+        <div className="explore-demo" key={topic.name}>
+          <div>
+            <span className="demo-caption">
+              Пример разговора · ответы не сохраняются
+            </span>
+            <WaveGuide>
+              <h3>{topic.question}</h3>
+              <p>
+                Можно коротко. Можно голосом. Любой вопрос можно пропустить.
+              </p>
+            </WaveGuide>
+            <div className="example-answer">
+              <span>Например, так</span>
+              <p>{topic.answer}</p>
+            </div>
+          </div>
+          <aside>
+            <span className="meaning-orbit" aria-hidden="true">
+              <i>✦</i>
+              <b>♡</b>
+              <i>✧</i>
+            </span>
+            <h3>Общее — глубже галочек</h3>
+            <p>{topic.detail}</p>
+            <p>
+              Закрытые рассказы сравниваются по смыслу. Это ориентир для
+              знакомства, а не обещание идеальной пары.
+            </p>
+          </aside>
+        </div>
       </div>
     </section>
   );

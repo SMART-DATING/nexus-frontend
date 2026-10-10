@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { WaveGuide } from "./WaveGuide";
 const topics = [
   {
@@ -38,11 +38,16 @@ const topics = [
       "Не нужно подбирать правильные слова. Расскажи, что важно именно тебе.",
   },
 ];
-export function LandingExplore() {
-  const [selected, setSelected] = useState(0);
+export function LandingExplore({ topicIndex = 0 }: { topicIndex?: number }) {
+  const [selected, setSelected] = useState(topicIndex);
+  useEffect(() => setSelected(topicIndex), [topicIndex]);
   const topic = topics[selected];
   return (
-    <section className="landing-explore" aria-labelledby="explore-title">
+    <section
+      id="explore"
+      className="landing-explore"
+      aria-labelledby="explore-title"
+    >
       <div className="landing-section-heading">
         <span className="eyebrow">БОЛЬШЕ, ЧЕМ СПИСОК ИНТЕРЕСОВ</span>
         <h2 id="explore-title">

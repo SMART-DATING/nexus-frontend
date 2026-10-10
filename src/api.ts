@@ -6,6 +6,7 @@ export type Profile = {
   interests: string[];
   commonInterests?: string[];
   compatibilityScore?: number;
+  similarityFloor?: number;
   photos?: { id: number; position: number; url: string }[];
   photoCount?: number;
   photoAllowance?: number;

@@ -81,7 +81,7 @@ it.each([0, 0.684, 1])(
     expect(
       screen.getByText(`${Math.round(score * 100)}% совпадения`),
     ).toBeTruthy();
-    expect(screen.queryByText("С чего начать разговор")).toBeNull();
+    expect(screen.getByText("С чего начать разговор")).toBeTruthy();
   },
 );
 it("ignores small drags and vertical scrolls, submits one horizontal swipe", async () => {
@@ -109,15 +109,9 @@ it("supports keyboard likes and restores controls after a rejected request", asy
 });
 it("reveals interest-specific conversation ideas without recording a reaction", async () => {
   const { react } = setup();
-  expect(screen.queryByRole("button", { name: "Музыка" })).toBeNull();
-  await userEvent.click(screen.getByRole("button", { name: "Узнать поближе" }));
+  expect(screen.queryByRole("button", { name: "Узнать поближе" })).toBeNull();
   await userEvent.click(screen.getByRole("button", { name: "Музыка" }));
   expect(screen.getByText("Какой трек у тебя сейчас на повторе?")).toBeTruthy();
-  expect(
-    screen
-      .getByRole("button", { name: "Свернуть анкету" })
-      .getAttribute("aria-expanded"),
-  ).toBe("true");
   expect(react).not.toHaveBeenCalled();
 });
 
@@ -153,6 +147,6 @@ it("swipes photos inside the viewer without moving or reacting to the dating car
     "/two",
   );
   expect(card.className).not.toContain("leaving-");
-  expect(card.style.transform).toBe("translateX(0px) rotate(0deg)");
+  expect(card.style.getPropertyValue("--swipe-x")).toBe("0px");
   expect(react).not.toHaveBeenCalled();
 });

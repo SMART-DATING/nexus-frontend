@@ -8,6 +8,7 @@ import {
 } from "lucide-react";
 import type { Profile } from "./api";
 import { PhotoViewer } from "./PhotoViewer";
+import { useProfileMedia } from "./useProfileMedia";
 export function PhotoGallery({
   profile,
   onPhotoChange,
@@ -16,17 +17,19 @@ export function PhotoGallery({
   onPhotoChange?: (url?: string) => void;
 }) {
   const [index, setIndex] = useState(0);
+  const media = useProfileMedia(profile);
   const photos =
-    profile.photos ??
-    (profile.avatarUrl ? [{ id: 0, position: 0, url: profile.avatarUrl }] : []);
-  const [broken, setBroken] = useState(false);
+    media.profile.photos ??
+    (media.profile.avatarUrl
+      ? [{ id: 0, position: 0, url: media.profile.avatarUrl }]
+      : []);
+  const current = photos[Math.min(index, Math.max(0, photos.length - 1))];
+  const broken = !!current && media.failed.includes(current.url);
   const [viewer, setViewer] = useState(false);
   useEffect(() => {
     setIndex(0);
-    setBroken(false);
     setViewer(false);
   }, [profile.userId]);
-  useEffect(() => setBroken(false), [index, photos[index]?.url]);
   useEffect(
     () => onPhotoChange?.(photos[index]?.url),
     [index, photos[index]?.url, onPhotoChange],
@@ -37,7 +40,7 @@ export function PhotoGallery({
   );
   const hidden = Math.max(
     0,
-    (profile.photoCount ?? photos.length) - photos.length,
+    (media.profile.photoCount ?? photos.length) - photos.length,
   );
   return (
     <div
@@ -53,11 +56,11 @@ export function PhotoGallery({
     >
       {!!photos.length && !broken && (
         <img
-          key={`${photos[Math.min(index, photos.length - 1)].id}-${index}`}
+          key={current.url}
           src={photos[Math.min(index, photos.length - 1)].url}
           alt={`Фото ${index + 1} из ${photos.length}`}
           draggable={false}
-          onError={() => setBroken(true)}
+          onError={() => media.onError(current.url)}
         />
       )}
       {!!photos.length && !broken && (
@@ -75,6 +78,9 @@ export function PhotoGallery({
           photos={photos}
           initialIndex={Math.min(index, photos.length - 1)}
           onClose={() => setViewer(false)}
+          onError={media.onError}
+          onRetry={() => void media.refresh()}
+          loading={media.loading}
         />
       )}
       {!photos.length && (
@@ -103,7 +109,17 @@ export function PhotoGallery({
       {broken && (
         <div className="locked-gallery">
           <Camera size={28} />
-          <p>Обновите подборку, чтобы снова открыть фото.</p>
+          <p role="status">
+            {media.loading ? "Обновляем фото…" : "Не удалось загрузить фото."}
+          </p>
+          <button
+            type="button"
+            className="outline"
+            disabled={media.loading}
+            onClick={() => void media.refresh()}
+          >
+            Попробовать снова
+          </button>
         </div>
       )}
       {photos.length > 1 && (

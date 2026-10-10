@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { LandingGuide } from "./LandingGuide";
 import { LandingExplore } from "./LandingExplore";
 import {
   ArrowRight,
@@ -18,6 +19,7 @@ export function PublicHome({
   onPrivacy: () => void;
 }) {
   const [photoCount, setPhotoCount] = useState(2);
+  const [sceneTopic, setSceneTopic] = useState(0);
   return (
     <div className="public-home">
       <header className="public-header">
@@ -39,7 +41,11 @@ export function PublicHome({
         </div>
       </header>
       <main>
-        <section className="landing-hero" aria-labelledby="landing-title">
+        <section
+          id="welcome"
+          className="landing-hero"
+          aria-labelledby="landing-title"
+        >
           <div className="landing-copy">
             <span className="landing-kicker">
               <span />
@@ -71,7 +77,12 @@ export function PublicHome({
           >
             <div className="scene-orbit orbit-one" />
             <div className="scene-orbit orbit-two" />
-            <div className="scene-card scene-card-back">
+            <a
+              href="#explore"
+              className="scene-card scene-card-back"
+              aria-label="Попробовать разговор о музыке"
+              onClick={() => setSceneTopic(1)}
+            >
               <span className="scene-avatar">
                 <Headphones size={39} />
               </span>
@@ -82,8 +93,13 @@ export function PublicHome({
                 находишь себя.
               </strong>
               <span className="scene-tag">инди · концерты · винил</span>
-            </div>
-            <div className="scene-card scene-card-front">
+            </a>
+            <a
+              href="#explore"
+              className="scene-card scene-card-front"
+              aria-label="Попробовать разговор о книгах"
+              onClick={() => setSceneTopic(0)}
+            >
               <span className="scene-avatar">
                 <BookOpen size={39} />
               </span>
@@ -96,7 +112,7 @@ export function PublicHome({
                 хочется поговорить.
               </strong>
               <span className="scene-tag">книги · психология · кофе</span>
-            </div>
+            </a>
             <div className="scene-connection">
               <Heart size={25} />
             </div>
@@ -153,8 +169,8 @@ export function PublicHome({
             </article>
           </div>
         </section>
-        <LandingExplore />
-        <section className="landing-photo-rule">
+        <LandingExplore topicIndex={sceneTopic} />
+        <section id="photos" className="landing-photo-rule">
           <div
             className="photo-rule-art"
             aria-label="Попробуй правило взаимных фотографий"
@@ -191,22 +207,56 @@ export function PublicHome({
             </p>
           </div>
         </section>
-        <section className="landing-trust">
-          <LockKeyhole size={25} />
-          <h2>
-            Твоя история.
-            <br />
-            Твои границы.
-          </h2>
-          <p>
-            Выбирай, какие поля анкеты видят другие.
-            <br />
-            Личные рассказы нужны для подбора, а не для публикации.
-          </p>
-          <button className="text-button" onClick={onPrivacy}>
-            Как работают мои данные
-            <ArrowRight size={16} />
-          </button>
+        <section id="privacy" className="landing-trust">
+          <div className="trust-copy">
+            <span className="eyebrow">
+              <LockKeyhole size={16} /> ПОД ТВОИМ КОНТРОЛЕМ
+            </span>
+            <h2>
+              Твоя история.
+              <br />
+              Твои границы.
+            </h2>
+            <p>
+              Рассказывай столько, сколько хочется. Ты решаешь, что оставить в
+              анкете, а что — только для подбора.
+            </p>
+            <button className="outline" onClick={onPrivacy}>
+              Как работают мои данные
+              <ArrowRight size={16} />
+            </button>
+          </div>
+          <div className="trust-cards">
+            <article>
+              <span className="trust-icon">
+                <Heart size={20} />
+              </span>
+              <div>
+                <h3>В анкете — то, что выберешь</h3>
+                <p>Город и описание можно скрыть в настройках видимости.</p>
+              </div>
+            </article>
+            <article>
+              <span className="trust-icon">
+                <LockKeyhole size={20} />
+              </span>
+              <div>
+                <h3>Рассказы — только для тебя</h3>
+                <p>
+                  Их смысл помогает подбору. Другие участники не увидят текст.
+                </p>
+              </div>
+            </article>
+            <article>
+              <span className="trust-icon">
+                <MessageCircle size={20} />
+              </span>
+              <div>
+                <h3>Разговор — по взаимной симпатии</h3>
+                <p>Чат появится, когда вы оба захотите познакомиться.</p>
+              </div>
+            </article>
+          </div>
         </section>
         <section
           className="landing-faq"
@@ -250,19 +300,24 @@ export function PublicHome({
             <details>
               <summary>Что происходит после лайка?</summary>
               <p>
-                Если другой человек тоже выразит симпатию, появится чат.
-                Пропущенные анкеты могут вернуться, когда новые закончатся.
-                Лайкнутые повторно не показываются.
+                Если другой человек тоже выразит симпатию, появится чат. Сначала
+                идут самые близкие по рассказу люди, затем уровни ниже.
+                Пропущенные анкеты вернутся после всех уровней. Лайкнутые
+                повторно не показываются.
               </p>
             </details>
           </div>
         </section>
-        <section className="landing-last">
+        <section id="start" className="landing-last">
+          <span className="eyebrow">ОБЩЕЕ УЖЕ ГДЕ-ТО РЯДОМ</span>
           <h2>
             Возможно, вы уже
             <br />
             слушаете одну песню.
           </h2>
+          <p>
+            Начни с пары слов о себе. Всё остальное можно дополнить по пути.
+          </p>
           <button className="primary landing-cta" onClick={() => onAuth(true)}>
             Давайте познакомимся
             <ArrowRight size={19} />
@@ -293,6 +348,7 @@ export function PublicHome({
           <span>Локальный прототип · 18+</span>
         </div>
       </footer>
+      <LandingGuide onStart={() => onAuth(true)} />
     </div>
   );
 }

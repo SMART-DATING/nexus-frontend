@@ -57,7 +57,8 @@ import "./chapters.css";
 import "./chat-menu.css";
 import "./finale.css";
 import "./interests.css";
-import { AmbientBackdrop } from "./AmbientBackdrop";
+import "./ambient.css";
+import { AmbientBackdrop, type AmbientFeedback } from "./AmbientBackdrop";
 import { useStoryReminder } from "./useStoryReminder";
 import { WaveGuide } from "./WaveGuide";
 import { ChatPartner, BlockedUsers } from "./ChatControls";
@@ -98,6 +99,7 @@ const age = (birth: string) => {
   );
 };
 export function App() {
+  const ambient = useRef<AmbientFeedback>(null);
   const [ambientPhoto, setAmbientPhoto] = useState<string | undefined>();
   const [user, setUser] = useState<User | null>(null),
     [boot, setBoot] = useState(true),
@@ -745,7 +747,10 @@ export function App() {
     );
   return (
     <div className={`app is-${tab} ${selected ? "has-chat" : ""}`}>
-      <AmbientBackdrop photoUrl={ambientPhoto} />
+      <AmbientBackdrop
+        ref={ambient}
+        photoUrl={tab === "discover" ? ambientPhoto : undefined}
+      />
       <AppNavigation
         user={user}
         tab={tab}
@@ -969,6 +974,7 @@ export function App() {
                 busy={busy}
                 onReact={react}
                 onPhotoChange={setAmbientPhoto}
+                onSwipeProgress={(progress) => ambient.current?.swipe(progress)}
                 cycle={cycle}
                 reviewed={reviewed}
                 liked={liked}

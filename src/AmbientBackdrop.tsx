@@ -1,11 +1,39 @@
-import { useEffect, useState, type CSSProperties } from "react";
+import {
+  forwardRef,
+  useEffect,
+  useImperativeHandle,
+  useRef,
+  useState,
+  type CSSProperties,
+} from "react";
+
+export type AmbientFeedback = { swipe: (progress: number) => void };
 
 // A small local colour sample; no photo or derived data leaves the browser.
-export function AmbientBackdrop({ photoUrl }: { photoUrl?: string }) {
+export const AmbientBackdrop = forwardRef<
+  AmbientFeedback,
+  { photoUrl?: string }
+>(function AmbientBackdrop({ photoUrl }, ref) {
+  const backdrop = useRef<HTMLDivElement>(null);
+  useImperativeHandle(
+    ref,
+    () => ({
+      swipe(progress) {
+        const node = backdrop.current;
+        if (!node) return;
+        const amount = Math.max(-1, Math.min(1, progress));
+        node.dataset.swiping = amount === 0 ? "false" : "true";
+        node.style.setProperty("--ambient-like", `${Math.max(0, amount)}`);
+        node.style.setProperty("--ambient-skip", `${Math.max(0, -amount)}`);
+      },
+    }),
+    [],
+  );
   const [tone, setTone] = useState("108, 91, 216");
   useEffect(() => {
     let active = true;
     if (!photoUrl) {
+      setTone("108, 91, 216");
       return;
     }
     const photo = new Image();
@@ -49,12 +77,15 @@ export function AmbientBackdrop({ photoUrl }: { photoUrl?: string }) {
   }, [photoUrl]);
   return (
     <div
+      ref={backdrop}
       aria-hidden="true"
       className="ambient-backdrop"
       style={{ "--ambient-tone": tone } as CSSProperties}
     >
       <i />
       <b />
+      <span className="ambient-like" />
+      <span className="ambient-skip" />
     </div>
   );
-}
+});

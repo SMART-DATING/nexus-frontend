@@ -32,18 +32,20 @@ afterEach(() => {
 });
 function setup() {
   const react = vi.fn(async () => false);
+  const feedback = vi.fn();
   render(
     <SwipeDeck
       people={[person]}
       busy={false}
       onReact={react}
+      onSwipeProgress={feedback}
       onFocus={vi.fn()}
       cycle={1}
       reviewed={0}
       liked={0}
     />,
   );
-  return { react, card: screen.getByRole("article") };
+  return { react, feedback, card: screen.getByRole("article") };
 }
 function drag(card: HTMLElement, x: number, y = 0) {
   fireEvent.pointerDown(card, {
@@ -154,13 +156,14 @@ it("swipes photos inside the viewer without moving or reacting to the dating car
 it.each([true, false])(
   "button reaction %s tilts in the same direction as a gesture and recovers on refusal",
   async (like) => {
-    const { card, react } = setup();
+    const { card, react, feedback } = setup();
     await userEvent.click(
       screen.getByRole("button", {
         name: like ? "Нравится Саша" : "Пропустить Саша",
       }),
     );
     expect(react).toHaveBeenCalledWith(person, like);
+    expect(feedback).toHaveBeenLastCalledWith(like ? 1 : -1);
     const rotation = parseFloat(card.style.getPropertyValue("--exit-rotation"));
     expect(like ? rotation > 0 : rotation < 0).toBe(true);
     expect(
@@ -168,6 +171,7 @@ it.each([true, false])(
     ).toBe("1");
     expect(card.className).toContain(like ? "leaving-like" : "leaving-skip");
     await waitFor(() => expect(card.className).not.toContain("leaving-"));
+    expect(feedback).toHaveBeenLastCalledWith(0);
     expect(card.style.getPropertyValue("--swipe-x")).toBe("0px");
     expect(
       screen
@@ -176,3 +180,19 @@ it.each([true, false])(
     ).toBe(false);
   },
 );
+
+it("reports drag colour and restores neutral on cancellation and departure", async () => {
+  const { card, feedback } = setup();
+  fireEvent.pointerDown(card, {
+    pointerId: 1,
+    button: 0,
+    clientX: 300,
+    clientY: 300,
+  });
+  fireEvent.pointerMove(card, { pointerId: 1, clientX: 220, clientY: 300 });
+  await waitFor(() => expect(feedback).toHaveBeenLastCalledWith(-0.5));
+  fireEvent.pointerCancel(card, { pointerId: 1 });
+  expect(feedback).toHaveBeenLastCalledWith(0);
+  cleanup();
+  expect(feedback).toHaveBeenLastCalledWith(0);
+});

@@ -109,3 +109,52 @@ it("moves immediately when reduced motion is requested", () => {
   expect(scrollY).toBe(900);
   expect(pending.size).toBe(0);
 });
+
+it("returns from the footer to the final scene, then all the way to the header", () => {
+  cleanup();
+  const footer = document.createElement("footer");
+  footer.className = "public-footer";
+  document.body.append(footer);
+  vi.spyOn(footer, "getBoundingClientRect").mockImplementation(
+    () => ({ top: 2700 - scrollY, bottom: 3000 - scrollY }) as DOMRect,
+  );
+  vi.spyOn(document.documentElement, "scrollHeight", "get").mockReturnValue(
+    3000,
+  );
+  vi.spyOn(frames[0], "getBoundingClientRect").mockImplementation(
+    () => ({ top: 94 - scrollY, bottom: 900 - scrollY }) as DOMRect,
+  );
+  cleanup = installLandingNavigation();
+  vi.stubGlobal("scrollY", 2100);
+  for (const [i, destination] of [1800, 900, 0].entries()) {
+    const began = i * 800;
+    now = began;
+    document.body.dispatchEvent(
+      new WheelEvent("wheel", { deltaY: -80, bubbles: true, cancelable: true }),
+    );
+    advance(began);
+    advance(began + 240);
+    expect(scrollY).toBeGreaterThan(destination);
+    advance(began + 480);
+    expect(scrollY).toBe(destination);
+  }
+  showLandingFrame(footer);
+  advance(2400);
+  advance(2880);
+  expect(scrollY).toBe(2100); // Bottom destination is clamped, never past the page.
+});
+
+it("lets expanded tall scenes scroll internally before switching upward", () => {
+  vi.spyOn(frames[1], "getBoundingClientRect").mockImplementation(
+    () => ({ top: 900 - scrollY, bottom: 2300 - scrollY }) as DOMRect,
+  );
+  vi.stubGlobal("scrollY", 1250);
+  const wheel = new WheelEvent("wheel", {
+    deltaY: -80,
+    bubbles: true,
+    cancelable: true,
+  });
+  document.body.dispatchEvent(wheel);
+  expect(wheel.defaultPrevented).toBe(false);
+  expect(pending.size).toBe(0);
+});

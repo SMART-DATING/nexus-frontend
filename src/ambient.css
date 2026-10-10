@@ -1,0 +1,45 @@
+/* Slow movement stays behind the content; swipe feedback only changes opacity. */
+.ambient-backdrop i {
+  background:
+    radial-gradient(ellipse at 20% 20%, #4764c659, transparent 52%),
+    radial-gradient(ellipse at 85% 65%, #7549b94a, transparent 52%);
+  animation-duration: 34s;
+}
+.ambient-backdrop b {
+  animation-duration: 42s;
+}
+.ambient-backdrop > span {
+  position: absolute;
+  inset: -12%;
+  transition: opacity 700ms ease;
+}
+.ambient-backdrop[data-swiping="true"] > span {
+  transition-duration: 180ms;
+}
+.ambient-like {
+  background: radial-gradient(ellipse at 70% 48%, #3679e880, transparent 75%);
+  opacity: var(--ambient-like, 0);
+}
+.ambient-skip {
+  background: radial-gradient(ellipse at 30% 48%, #9254df80, transparent 75%);
+  opacity: var(--ambient-skip, 0);
+}
+.public-home .public-footer {
+  background: #0c1220c9;
+}
+@media (min-width: 900px) and (min-height: 600px) {
+  .public-home .landing-hero {
+    /* Header (94px) and the next-scene link (46px) belong to this screen. */
+    min-height: calc(100svh - 140px);
+    padding-block: clamp(24px, 4svh, 48px);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .ambient-backdrop i,
+  .ambient-backdrop b {
+    animation: none;
+  }
+  .ambient-backdrop > span {
+    transition: none;
+  }
+}

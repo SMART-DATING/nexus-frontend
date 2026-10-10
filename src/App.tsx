@@ -28,12 +28,14 @@ import {
   type Message,
   type Notice,
   type Property,
+  type Gender,
 } from "./api";
 import "./style.css";
 import "./swipe.css";
 import { SwipeDeck } from "./SwipeDeck";
 import { PhotoUpload } from "./PhotoUpload";
-import { ContextEditor } from "./ContextEditor";
+import { MatchingSetup } from "./MatchingSetup";
+import { GenderField, InterestedInField } from "./GenderFields";
 import "./semantic.css";
 import { Onboarding } from "./Onboarding";
 import "./layout.css";
@@ -54,6 +56,7 @@ import "./polish.css";
 import "./chapters.css";
 import "./chat-menu.css";
 import "./finale.css";
+import "./interests.css";
 import { AmbientBackdrop } from "./AmbientBackdrop";
 import { useStoryReminder } from "./useStoryReminder";
 import { WaveGuide } from "./WaveGuide";
@@ -860,6 +863,7 @@ export function App() {
                       await api("/preferences/me", "PUT", {
                         minAge: Number(d.get("minAge")),
                         maxAge: Number(d.get("maxAge")),
+                        interestedIn: d.get("interestedIn"),
                       });
                       await refresh();
                       const r = await api<{
@@ -879,6 +883,13 @@ export function App() {
                     }
                   }}
                 >
+                  <InterestedInField
+                    value={user.preferences.interestedIn ?? "all"}
+                  />
+                  <p className="preference-hint">
+                    Учитываем выбор обоих людей. При выборе конкретного пола
+                    анкеты без указанного пола не показываются.
+                  </p>
                   <label>
                     Возраст от
                     <input
@@ -907,17 +918,6 @@ export function App() {
                 </form>
               </Dialog>
             )}
-            <div className="discover-bar">
-              <span>
-                <span className="live-dot" />
-                {people[0]?.compatibilityScore !== undefined
-                  ? `Сходство от ${people[0].similarityFloor ?? Math.min(90, Math.floor(Math.max(0, people[0].compatibilityScore) * 10) * 10)}%`
-                  : "Подбор по твоей истории"}
-              </span>
-              <small>
-                Анкет впереди: {people[0]?.remainingCount ?? people.length}
-              </small>
-            </div>
             {!complete ? (
               <Empty
                 title="Давайте сначала познакомимся"
@@ -936,9 +936,9 @@ export function App() {
                 <h2>Новые лица ещё появятся</h2>
                 <p>
                   Вы поставили симпатии всем подходящим анкетам или фильтр пока
-                  слишком узкий. Попробуйте расширить возрастной диапазон.
-                  Пропущенные анкеты возвращаются автоматически, когда круг
-                  заканчивается.
+                  слишком узкий. Попробуйте изменить пол или возраст в
+                  предпочтениях. Пропущенные анкеты возвращаются автоматически,
+                  когда круг заканчивается.
                 </p>
                 <div className="empty-actions">
                   {
@@ -1005,21 +1005,11 @@ export function App() {
               )}
             </div>
             <div className="matching-editor" hidden={profileSection !== 2}>
-              <ContextEditor
-                interests={user.profile.interests}
-                onChanged={refresh}
+              <MatchingSetup
+                user={user}
+                interests={interests}
+                onSaved={refresh}
               />
-              <details className="matching-public-topics">
-                <summary>
-                  Темы в твоей анкете{" "}
-                  <small>Видны другим · можно дополнить позже</small>
-                </summary>
-                <PublicTopicsEditor
-                  user={user}
-                  interests={interests}
-                  onSaved={refresh}
-                />
-              </details>
             </div>
             <div className="profile-editor-view" hidden={profileSection === 2}>
               <ProfileTabs
@@ -1477,8 +1467,15 @@ function ProfileEditor({
 }: {
   user: User;
   busy: boolean;
-  onSave: (p: { properties: Property[]; interests: string[] }) => void;
+  onSave: (p: {
+    properties: Property[];
+    interests: string[];
+    gender: Gender;
+  }) => void;
 }) {
+  const [gender, setGender] = useState<Gender>(
+    user.profile.gender ?? "unspecified",
+  );
   const [props, setProps] = useState<Property[]>(
     ["display_name", "bio", "birth_date", "city"].map(
       (name) =>
@@ -1505,7 +1502,11 @@ function ProfileEditor({
       className="profile-form"
       onSubmit={(e) => {
         e.preventDefault();
-        onSave({ properties: props, interests: user.profile.interests });
+        onSave({
+          properties: props,
+          interests: user.profile.interests,
+          gender,
+        });
       }}
     >
       <div className="form-intro">
@@ -1543,6 +1544,9 @@ function ProfileEditor({
           </div>
         ))}
       </div>
+      <div className="gender-fields">
+        <GenderField value={gender} onChange={setGender} />
+      </div>
       <details className="privacy-settings">
         <summary>
           <LockKeyhole size={17} />
@@ -1569,78 +1573,6 @@ function ProfileEditor({
         {busy ? "Сохраняем…" : "Сохранить профиль"}
         <Check size={17} />
       </button>
-    </form>
-  );
-}
-
-function PublicTopicsEditor({
-  user,
-  interests,
-  onSaved,
-}: {
-  user: User;
-  interests: string[];
-  onSaved: () => Promise<unknown>;
-}) {
-  const [chosen, setChosen] = useState(user.profile.interests);
-  const [saving, setSaving] = useState(false);
-  const [error, setError] = useState("");
-  const [saved, setSaved] = useState(false);
-  return (
-    <form
-      className="public-topics-editor"
-      onSubmit={async (e) => {
-        e.preventDefault();
-        setSaving(true);
-        setError("");
-        setSaved(false);
-        try {
-          await api("/profiles/me", "PUT", {
-            properties: user.profile.properties,
-            interests: chosen,
-          });
-          await onSaved();
-          setSaved(true);
-        } catch (e) {
-          setError(
-            e instanceof Error ? e.message : "Не удалось сохранить темы",
-          );
-        } finally {
-          setSaving(false);
-        }
-      }}
-    >
-      <h2>
-        Публичные темы <small>{chosen.length}/10</small>
-      </h2>
-      <p>
-        Видны в анкете и помогают начать разговор. Личные рассказы ниже остаются
-        скрытыми.
-      </p>
-      <div className="interest-picker">
-        {interests.map((i) => (
-          <button
-            type="button"
-            key={i}
-            className={chosen.includes(i) ? "chosen" : ""}
-            aria-pressed={chosen.includes(i)}
-            disabled={saving || (!chosen.includes(i) && chosen.length >= 10)}
-            onClick={() => {
-              setSaved(false);
-              setChosen((old) =>
-                old.includes(i) ? old.filter((x) => x !== i) : [...old, i],
-              );
-            }}
-          >
-            {chosen.includes(i) && <Check size={14} />} {i}
-          </button>
-        ))}
-      </div>
-      <button className="outline" disabled={saving}>
-        {saving ? "Сохраняем…" : "Сохранить темы"}
-      </button>
-      {saved && <small role="status">Темы сохранены</small>}
-      {error && <p role="alert">{error}</p>}
     </form>
   );
 }

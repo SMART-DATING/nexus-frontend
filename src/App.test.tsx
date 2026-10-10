@@ -37,6 +37,7 @@ let liked = false;
 let unreadCount: number | undefined;
 let nextFeed: Promise<void> | undefined;
 beforeEach(() => {
+  vi.spyOn(window, "scrollTo").mockImplementation(() => {});
   sessionStorage.clear();
   window.history.replaceState(null, "", "/");
   requests = [];
@@ -222,7 +223,7 @@ describe("Nexus user flows", () => {
     expect(window.location.hash).toBe("#profile/story");
     first.unmount();
     render(<App />);
-    await screen.findByRole("region", { name: "Личные рассказы для подбора" });
+    await screen.findByRole("region", { name: "Твои интересы" });
     expect(
       screen
         .getByRole("button", { name: "Для подбора" })
@@ -243,7 +244,7 @@ describe("Nexus user flows", () => {
       password: "NexusDemo2026!",
     });
   });
-  it("keeps profile editing compact and moves public topics to the last tab without losing the draft", async () => {
+  it("starts matching with interests and questions without losing the profile draft", async () => {
     sessionStorage.setItem("nexus-token", "test-token");
     const ui = userEvent.setup();
     render(<App />);
@@ -254,8 +255,10 @@ describe("Nexus user flows", () => {
     expect(screen.queryByRole("button", { name: "Кино" })).toBeNull();
     await ui.click(screen.getByRole("button", { name: "Для подбора" }));
     await ui.click(await screen.findByRole("button", { name: "Кино" }));
-    await ui.click(screen.getByRole("button", { name: "Сохранить темы" }));
-    await screen.findByText("Темы сохранены");
+    await ui.click(
+      screen.getByRole("button", { name: "Дальше — три вопроса" }),
+    );
+    await screen.findByLabelText("Твой ответ");
     const topicSave = requests.find(
       (r) => r.path === "/profiles/me" && r.method === "PUT",
     )!.body as typeof profile;

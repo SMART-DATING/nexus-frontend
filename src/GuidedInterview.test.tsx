@@ -10,7 +10,7 @@ it("asks about selected interests and falls back to three general questions", ()
     "Твой ритм",
   ]);
   expect(interviewPrompts([])).toHaveLength(3);
-  expect(interviewPrompts(["Кофе"])).toEqual(interviewPrompts([]));
+  expect(interviewPrompts(["Кофе"])[0].topic).toBe("Кофе");
   expect(interviewPrompts(["Психология"])[0].topic).toBe("Психология");
 });
 it("keeps answers local, preserves them on Back and saves only reviewed text", async () => {

@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { installLandingNavigation } from "./landingMotion";
 import { LandingGuide, scrollToLanding } from "./LandingGuide";
 import { LandingExplore } from "./LandingExplore";
 import { LandingFinale, PrivacyExample, QuestionScene } from "./LandingFinale";
@@ -25,34 +26,7 @@ export function PublicHome({
   const [helpOpen, setHelpOpen] = useState(false);
   useEffect(() => {
     document.documentElement.classList.add("landing-scroll-mode");
-    const chapters = [
-      ...document.querySelectorAll<HTMLElement>(".landing-screen"),
-    ];
-    const reduced = window.matchMedia?.("(prefers-reduced-motion: reduce)");
-    let frame = 0;
-    const paint = () => {
-      frame = 0;
-      const height = window.innerHeight;
-      chapters.forEach((node) => {
-        const rect = node.getBoundingClientRect();
-        const distance = Math.max(0, rect.top, -rect.bottom + height) / height;
-        node.style.setProperty(
-          "--chapter-fade",
-          String(reduced?.matches ? 1 : 1 - Math.min(distance, 1) * 0.55),
-        );
-        node.style.setProperty(
-          "--chapter-shift",
-          `${reduced?.matches ? 0 : Math.min(distance, 1) * 26}px`,
-        );
-      });
-    };
-    const schedule = () => {
-      if (!frame) frame = requestAnimationFrame(paint);
-    };
-    window.addEventListener("scroll", schedule, { passive: true });
-    window.addEventListener("resize", schedule);
-    reduced?.addEventListener("change", schedule);
-    paint();
+    const cleanupNavigation = installLandingNavigation();
     const observer = window.IntersectionObserver
       ? new IntersectionObserver(
           (entries) => {
@@ -73,10 +47,7 @@ export function PublicHome({
       requestAnimationFrame(() => scrollToLanding(initial));
     return () => {
       observer?.disconnect();
-      cancelAnimationFrame(frame);
-      window.removeEventListener("scroll", schedule);
-      window.removeEventListener("resize", schedule);
-      reduced?.removeEventListener("change", schedule);
+      cleanupNavigation();
       document.documentElement.classList.remove("landing-scroll-mode");
     };
   }, []);

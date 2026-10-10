@@ -776,7 +776,7 @@ body:has(.public-home) {
 }
 @media (min-width: 900px) and (min-height: 700px) {
   .public-home .landing-hero {
-    min-height: calc(100svh - 156px);
+    min-height: calc(100svh - 140px);
     padding-block: 48px;
   }
   .public-home .landing-screen {
@@ -876,5 +876,44 @@ body:has(.public-home) {
   .public-home .scene-card:hover,
   .public-home .scene-card:focus-visible {
     scale: 1;
+  }
+}
+
+.public-home .landing-scroll {
+  margin: 0 auto;
+  min-height: 46px;
+  padding-block: 12px;
+}
+@media (min-width: 900px) and (max-height: 950px) {
+  .public-home .landing-screen > .landing-explore {
+    padding-block: 0;
+  }
+  .landing-explore .landing-section-heading {
+    margin-bottom: 16px;
+  }
+  .landing-explore .landing-section-heading h2 {
+    font-size: 40px;
+  }
+  .landing-explore .landing-section-heading > p {
+    font-size: 15px;
+    line-height: 1.65;
+    max-width: 680px;
+  }
+  .landing-explore .explore-topics {
+    margin-block: 16px;
+  }
+  .landing-explore .explore-demo {
+    padding: 28px;
+    gap: 32px;
+  }
+  .landing-explore .explore-demo aside {
+    padding-left: 28px;
+  }
+  .landing-explore .explore-demo h3 {
+    font-size: 22px;
+  }
+  .landing-explore .example-answer {
+    padding: 16px;
+    margin-top: 18px;
   }
 }

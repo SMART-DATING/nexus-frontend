@@ -35,10 +35,20 @@ export function showLandingFrame(frame: HTMLElement) {
   transition.request = requestAnimationFrame(tick);
 }
 
+function headerHeight() {
+  const header = document.querySelector<HTMLElement>(".public-header");
+  return header && getComputedStyle(header).position === "sticky"
+    ? header.getBoundingClientRect().height
+    : 0;
+}
+
 function frameTop(frame: HTMLElement) {
   // The first scene includes the header; the footer ends at the document edge.
   if (frame.matches(".landing-hero")) return 0;
-  const top = Math.max(0, frame.getBoundingClientRect().top + window.scrollY);
+  const top = Math.max(
+    0,
+    frame.getBoundingClientRect().top + window.scrollY - headerHeight(),
+  );
   const limit = document.documentElement.scrollHeight - window.innerHeight;
   return limit > 0 ? Math.min(top, limit) : top;
 }
@@ -65,7 +75,9 @@ export function installLandingNavigation() {
     }
     const containing = frames.findIndex((frame) => {
       const rect = frame.getBoundingClientRect();
-      return rect.top <= 12 && rect.bottom > 12;
+      return (
+        rect.top <= headerHeight() + 12 && rect.bottom > headerHeight() + 12
+      );
     });
     const index =
       containing >= 0
@@ -84,7 +96,8 @@ export function installLandingNavigation() {
     if (step < 0 && window.scrollY > frameTop(frames[index]) + 12) {
       // A partially visible viewport-sized scene returns to its own start.
       // Long content keeps ordinary scrolling until its top is reached.
-      if (rect.bottom - rect.top > window.innerHeight + 12) return null;
+      if (rect.bottom - rect.top > window.innerHeight - headerHeight() + 12)
+        return null;
       return frames[index];
     }
     return frames[index + step] ?? null;

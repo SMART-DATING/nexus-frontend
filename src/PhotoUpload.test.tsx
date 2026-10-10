@@ -3,6 +3,8 @@ import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { PhotoUpload } from "./PhotoUpload";
 import { api, type Profile } from "./api";
+import { installDialogMock } from "./testDialog";
+installDialogMock();
 vi.mock("./api", () => ({ api: vi.fn() }));
 const profile: Profile = { userId: 1, properties: [], interests: [] };
 beforeEach(() => {

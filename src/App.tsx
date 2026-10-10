@@ -58,6 +58,8 @@ import "./chat-menu.css";
 import "./finale.css";
 import "./interests.css";
 import "./ambient.css";
+import "./welcome.css";
+import { SetupChecklist, DiscoverySetup, InviteFriends } from "./WelcomeSetup";
 import { AmbientBackdrop, type AmbientFeedback } from "./AmbientBackdrop";
 import { useStoryReminder } from "./useStoryReminder";
 import { WaveGuide } from "./WaveGuide";
@@ -176,6 +178,19 @@ export function App() {
       window.scrollTo({ top: 0, behavior: "instant" }),
     );
   }
+  function openSetup(section: number) {
+    navigate("profile");
+    setProfileSection(section);
+    window.history.replaceState(
+      null,
+      "",
+      section === 2
+        ? "/#profile/story"
+        : section === 1
+          ? "/#profile/photos"
+          : "/#profile",
+    );
+  }
   useEffect(() => {
     const sync = () => {
       setAuthOpen(["#login", "#register"].includes(window.location.hash));
@@ -274,13 +289,16 @@ export function App() {
     !!user &&
     user.profile.properties.length === 4 &&
     (user.profile.contextCount ?? 0) > 0;
+  const ready =
+    complete &&
+    (user?.profile.photoCount ?? user?.profile.photos?.length ?? 0) > 0;
   useEffect(() => {
     if (!user) return;
     let alive = true;
     setLoading(true);
     setError("");
     const path =
-      tab === "discover" && complete
+      tab === "discover" && ready
         ? "/recommendations/next"
         : tab === "matches"
           ? "/matches"
@@ -328,7 +346,7 @@ export function App() {
     return () => {
       alive = false;
     };
-  }, [tab, user?.id, complete]);
+  }, [tab, user?.id, ready]);
   useEffect(() => {
     if (!user) return;
     let alive = true;
@@ -710,19 +728,32 @@ export function App() {
           user={user}
           interests={interests}
           onDone={async () => {
-            await refresh();
-            navigate("discover");
-            setToast("Твоя история сохранена. Пора знакомиться!");
+            const current = await refresh();
+            if (
+              (current.profile.photoCount ??
+                current.profile.photos?.length ??
+                0) > 0
+            ) {
+              navigate("discover");
+              setToast(
+                "Всё готово! Анкеты идут от большего сходства к меньшему.",
+              );
+            } else {
+              openSetup(1);
+              setToast(
+                "Рассказ сохранён. Осталось добавить хотя бы одно фото.",
+              );
+            }
           }}
           onLater={() => {
             void refresh()
-              .then(() => {
+              .then((current) => {
                 sessionStorage.setItem(
                   "nexus-onboarding-dismissed",
                   String(user.id),
                 );
                 setOnboardingDismissed(user.id);
-                navigate("profile");
+                openSetup(current.profile.properties.length === 4 ? 2 : 0);
               })
               .catch(report);
           }}
@@ -923,13 +954,8 @@ export function App() {
                 </form>
               </Dialog>
             )}
-            {!complete ? (
-              <Empty
-                title="Давайте сначала познакомимся"
-                text="Заполните основные данные и добавьте личный рассказ — по нему мы найдём близких по духу людей. Рассказ виден только вам."
-                action={() => navigate("profile")}
-                label="Заполнить профиль"
-              />
+            {!ready ? (
+              <DiscoverySetup profile={user.profile} onOpen={openSetup} />
             ) : loading && !people.length ? (
               <div className="boot">
                 <LoaderCircle className="spin" />
@@ -940,10 +966,10 @@ export function App() {
                 <Sparkles size={40} />
                 <h2>Новые лица ещё появятся</h2>
                 <p>
-                  Вы поставили симпатии всем подходящим анкетам или фильтр пока
-                  слишком узкий. Попробуйте изменить пол или возраст в
-                  предпочтениях. Пропущенные анкеты возвращаются автоматически,
-                  когда круг заканчивается.
+                  Сейчас нет новых анкет с учётом возраста и взаимных
+                  предпочтений. Низкий процент сходства не скрывает людей.
+                  Пропущенные анкеты возвращаются в следующем круге; те, кому ты
+                  уже поставил симпатию, ждут ответа.
                 </p>
                 <div className="empty-actions">
                   {
@@ -967,6 +993,7 @@ export function App() {
                     К чатам <ArrowRight size={17} />
                   </button>
                 </div>
+                <InviteFriends />
               </div>
             ) : (
               <SwipeDeck
@@ -1010,6 +1037,9 @@ export function App() {
                 </button>
               )}
             </div>
+            {!ready && (
+              <SetupChecklist profile={user.profile} onOpen={openSetup} />
+            )}
             <div className="matching-editor" hidden={profileSection !== 2}>
               <MatchingSetup
                 user={user}
@@ -1053,6 +1083,7 @@ export function App() {
                 photos={
                   <PhotoUpload
                     profile={user.profile}
+                    onDiscover={complete ? () => navigate("discover") : undefined}
                     onSaved={(profile) =>
                       setUser((old) => (old ? { ...old, profile } : old))
                     }

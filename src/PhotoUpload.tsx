@@ -11,13 +11,16 @@ import {
   LockKeyhole,
 } from "lucide-react";
 import { api, type Profile } from "./api";
+import { Dialog } from "./Dialog";
 import { useProfileMedia } from "./useProfileMedia";
 export function PhotoUpload({
   profile,
   onSaved,
+  onDiscover,
 }: {
   profile: Profile;
   onSaved: (p: Profile) => void;
+  onDiscover?: () => void;
 }) {
   const media = useProfileMedia(profile);
   const photos = media.profile.photos ?? [],
@@ -232,7 +235,7 @@ export function PhotoUpload({
         <p>
           {count
             ? `Вам открыто до ${count} фото в чужих анкетах. Остальные пока скрыты.`
-            : "Пока у вас нет фото, чужие фотографии скрыты. Знакомиться и переписываться можно и так."}
+            : "Добавь хотя бы одно фото, чтобы начать знакомства и видеть фотографии других людей."}
         </p>
       </div>
       <input
@@ -245,84 +248,120 @@ export function PhotoUpload({
         disabled={busy}
         onChange={(e) => select(Array.from(e.target.files ?? []))}
       />
-      {!!previews.length && (
-        <div className="upload-preview">
-          <p>
-            {replacing !== null
-              ? "Новое фото для замены"
-              : "Проверьте выбранные кадры перед загрузкой"}
-          </p>
-          <div>
-            {previews.map((src, i) => (
-              <img key={src} src={src} alt={`Предпросмотр фото ${i + 1}`} />
-            ))}
-          </div>
-        </div>
-      )}
       <div className="photo-actions">
-        {files.length ? (
-          <>
-            <button
-              type="button"
-              className="primary"
-              disabled={busy}
-              onClick={() => void save()}
-            >
-              <Check size={16} />
-              {busy ? "Сохраняем…" : "Сохранить фото"}
-            </button>
-            <button
-              type="button"
-              className="text-button"
-              disabled={busy}
-              onClick={cancel}
-            >
-              <X size={15} />
-              Отмена
-            </button>
-          </>
-        ) : (
-          <button
-            type="button"
-            className="outline"
-            disabled={busy || count >= 6}
-            onClick={() => choose()}
-          >
-            <Upload size={16} />
-            Добавить фото
-          </button>
-        )}
+        <button
+          type="button"
+          className="outline"
+          disabled={busy || count >= 6}
+          onClick={() => choose()}
+        >
+          <Upload size={16} /> Добавить фото
+        </button>
         <small>JPEG или PNG · до 5 МБ каждое</small>
       </div>
+      {!!files.length && (
+        <Dialog
+          title={replacing === null ? "Добавить фото?" : "Заменить фото?"}
+          className="photo-confirm-dialog"
+          onClose={() => {
+            if (!busy) cancel();
+          }}
+        >
+          <div aria-busy={busy}>
+            <p>
+              {replacing === null
+                ? "Эти кадры появятся в твоей анкете. Первый станет главным, если у тебя ещё нет фото."
+                : "Новое фото займёт место выбранного кадра."}
+            </p>
+            <div className="photo-confirm-preview">
+              {previews.map((src, i) => (
+                <img key={src} src={src} alt={`Предпросмотр фото ${i + 1}`} />
+              ))}
+            </div>
+            {error && (
+              <p role="alert" className="photo-error">
+                {error}
+              </p>
+            )}
+            <div className="photo-confirm-actions">
+              <button
+                type="button"
+                className="outline"
+                disabled={busy}
+                onClick={cancel}
+              >
+                Отмена
+              </button>
+              <button
+                type="button"
+                className="primary"
+                disabled={busy}
+                onClick={() => void save()}
+              >
+                <Check size={18} />
+                {busy ? "Сохраняем…" : "Сохранить фото"}
+              </button>
+            </div>
+          </div>
+        </Dialog>
+      )}
       {confirm !== null && (
-        <div className="photo-delete-confirm">
-          <p>
-            Удалить это фото? Доступное вам число чужих фото тоже уменьшится.
-          </p>
-          <button
-            type="button"
-            className="text-button danger"
-            disabled={busy}
-            onClick={() => void remove(confirm)}
-          >
-            Да, удалить фото
-          </button>
-          <button
-            type="button"
-            className="text-button"
-            disabled={busy}
-            onClick={() => setConfirm(null)}
-          >
-            Оставить фото
-          </button>
-        </div>
+        <Dialog
+          title="Удалить фото?"
+          className="photo-confirm-dialog"
+          onClose={() => {
+            if (!busy) setConfirm(null);
+          }}
+        >
+          <div aria-busy={busy}>
+            <div className="photo-confirm-preview">
+              <img
+                src={photos.find((p) => p.id === confirm)?.url}
+                alt="Фото для удаления"
+              />
+            </div>
+            <p>
+              Этот кадр исчезнет из анкеты. Тебе станет доступно на одно фото
+              меньше у других людей.
+            </p>
+            {error && (
+              <p role="alert" className="photo-error">
+                {error}
+              </p>
+            )}
+            <div className="photo-confirm-actions">
+              <button
+                type="button"
+                className="outline"
+                disabled={busy}
+                onClick={() => setConfirm(null)}
+              >
+                Оставить фото
+              </button>
+              <button
+                type="button"
+                className="primary danger"
+                disabled={busy}
+                onClick={() => void remove(confirm)}
+              >
+                <Trash2 size={18} />
+                {busy ? "Удаляем…" : "Да, удалить фото"}
+              </button>
+            </div>
+          </div>
+        </Dialog>
       )}
       {saved && (
-        <p role="status" className="photo-success">
-          Фото обновлены
-        </p>
+        <div className="photo-success">
+          <p role="status">Фото обновлены</p>
+          {!!count && onDiscover && (
+            <button type="button" className="primary" onClick={onDiscover}>
+              К знакомствам <ArrowRight size={18} />
+            </button>
+          )}
+        </div>
       )}
-      {error && (
+      {error && !files.length && confirm === null && (
         <p role="alert" className="photo-error">
           {error}
         </p>

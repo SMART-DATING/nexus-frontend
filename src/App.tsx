@@ -1,3 +1,4 @@
+import { createPortal } from "react-dom";
 import React, { useEffect, useState, useRef, type FormEvent } from "react";
 import {
   Heart,
@@ -64,6 +65,7 @@ import { AmbientBackdrop, type AmbientFeedback } from "./AmbientBackdrop";
 import { Toast } from "./Toast";
 import "./refinements.css";
 import "./scene-details.css";
+import "./flow.css";
 import { useStoryReminder } from "./useStoryReminder";
 import { WaveGuide } from "./WaveGuide";
 import { ChatPartner, BlockedUsers } from "./ChatControls";
@@ -813,9 +815,7 @@ export function App() {
                 0) > 0
             ) {
               navigate("discover");
-              setToast(
-                "Всё готово! Можно знакомиться.",
-              );
+              setToast("Всё готово! Можно знакомиться.");
             } else {
               openSetup(1);
               setToast(
@@ -1482,14 +1482,17 @@ function MatchCelebration({
 }) {
   const dialog = useRef<HTMLDivElement>(null);
   useEffect(() => {
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
     const previous = document.activeElement as HTMLElement | null;
     const element = dialog.current;
     element?.querySelector<HTMLButtonElement>("button")?.focus();
     return () => {
+      document.body.style.overflow = previousOverflow;
       if (previous?.isConnected) previous.focus();
     };
   }, []);
-  return (
+  return createPortal(
     <div
       className="match-celebration"
       role="dialog"
@@ -1542,7 +1545,8 @@ function MatchCelebration({
           </button>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 }
 function Empty({

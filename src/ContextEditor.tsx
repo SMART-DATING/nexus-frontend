@@ -39,6 +39,7 @@ export function ContextEditor({
     [error, setError] = useState(""),
     [saved, setSaved] = useState(false),
     [confirm, setConfirm] = useState<number | null>(null);
+  const [validationAttempt, setValidationAttempt] = useState(0);
   const [listening, setListening] = useState(false);
   async function load() {
     const r = await api<{ items: Context[]; modelAvailable: boolean }>(
@@ -70,11 +71,16 @@ export function ContextEditor({
     setTitle(item?.title ?? "Что для меня важно");
     setContent(item?.content ?? "");
     setError("");
+    setValidationAttempt(0);
     setSaved(false);
     setConfirm(null);
   }
   async function save(e: React.FormEvent) {
     e.preventDefault();
+    if (content.trim().length < 20) {
+      setValidationAttempt((n) => n + 1);
+      return;
+    }
     setBusy(true);
     setError("");
     setSaved(false);
@@ -232,6 +238,7 @@ export function ContextEditor({
           <VoiceInput
             label="Личный рассказ"
             value={content}
+            validationAttempt={validationAttempt}
             onChange={setContent}
             disabled={busy}
             onListeningChange={setListening}
@@ -251,9 +258,7 @@ export function ContextEditor({
               </button>
               <button
                 className="primary"
-                disabled={
-                  busy || !ready || !available || content.trim().length < 20
-                }
+                disabled={busy || !ready || !available}
               >
                 <Check size={16} />
                 {busy ? "Ищем смысл…" : "Сохранить личный рассказ"}

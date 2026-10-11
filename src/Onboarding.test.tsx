@@ -42,11 +42,12 @@ it("persists basic data before asking tailored questions and does not duplicate 
   fireEvent.change(screen.getByLabelText("Город"), {
     target: { value: "Москва" },
   });
-  await userEvent.selectOptions(screen.getByLabelText("Твой пол"), "female");
-  await userEvent.selectOptions(
-    screen.getByLabelText("Кого хочешь встретить"),
-    "male",
+  await userEvent.click(screen.getByRole("combobox", { name: "Твой пол" }));
+  await userEvent.click(screen.getByRole("option", { name: "Женщина" }));
+  await userEvent.click(
+    screen.getByRole("combobox", { name: "Кого хочешь встретить" }),
   );
+  await userEvent.click(screen.getByRole("option", { name: "Мужчин" }));
   await userEvent.click(
     screen.getByRole("button", { name: "Давай познакомимся" }),
   );

@@ -1,0 +1,279 @@
+/* The same slow blue/violet light fills every route. */
+.ambient-backdrop i {
+  background:
+    radial-gradient(ellipse at 24% 28%, #496bda9c, transparent 61%),
+    radial-gradient(ellipse at 82% 74%, #8252c590, transparent 60%);
+  animation: public-blue-flow 12s ease-in-out infinite alternate;
+}
+.ambient-backdrop b {
+  background:
+    radial-gradient(ellipse at 72% 24%, #785bd4b8, transparent 58%),
+    radial-gradient(ellipse at 18% 80%, #386acd99, transparent 58%);
+  mask-image: none;
+  animation: public-purple-flow 16s ease-in-out infinite alternate;
+}
+.choice-field {
+  position: relative;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.choice-control {
+  position: relative;
+}
+.choice-label {
+  font-weight: 600;
+}
+.choice-field small {
+  color: #aeb9d2;
+  font-size: 12px;
+  font-weight: 400;
+  line-height: 1.5;
+}
+.choice-trigger {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  width: 100%;
+  min-height: 52px;
+  padding: 16px 20px;
+  border: 1px solid #535b7e;
+  border-radius: 18px;
+  color: #e4e7f5;
+  background: #101a2e;
+  text-align: left;
+  font: inherit;
+  font-weight: 600;
+  transition:
+    background 220ms ease,
+    border-color 220ms ease,
+    box-shadow 220ms ease,
+    transform 220ms ease;
+}
+.choice-trigger:hover,
+.choice-trigger[aria-expanded="true"] {
+  border-color: #a597ef;
+  background: #202342;
+  box-shadow: 0 6px 25px #6452b523;
+}
+.choice-trigger:active {
+  transform: scale(0.99);
+}
+.choice-trigger svg {
+  flex-shrink: 0;
+  transition: transform 240ms ease;
+}
+.choice-trigger[aria-expanded="true"] svg {
+  transform: rotate(180deg);
+}
+.choice-options {
+  position: absolute;
+  z-index: 12;
+  top: calc(100% + 8px);
+  left: 0;
+  right: 0;
+  display: grid;
+  gap: 4px;
+  padding: 8px;
+  border: 1px solid #8d81cb70;
+  border-radius: 20px;
+  background: #1a233bf5;
+  backdrop-filter: blur(20px);
+  box-shadow: 0 18px 45px #060b244d;
+  opacity: 0;
+  transform: translateY(-8px) scale(0.98);
+  visibility: hidden;
+  pointer-events: none;
+  transition:
+    opacity 180ms ease,
+    transform 220ms cubic-bezier(0.2, 0.7, 0.3, 1),
+    visibility 0s 220ms;
+}
+.choice-options {
+  overflow-y: auto;
+}
+.choice-options[data-side="above"] {
+  top: auto;
+  bottom: calc(100% + 8px);
+}
+.choice-options[data-open="true"] {
+  visibility: visible;
+  pointer-events: auto;
+  opacity: 1;
+  transform: translateY(0) scale(1);
+  transition-delay: 0s;
+}
+.choice-options button {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-height: 44px;
+  padding: 12px 14px;
+  border: 0;
+  border-radius: 13px;
+  background: transparent;
+  text-align: left;
+  color: #e4e7f5;
+  font: inherit;
+  transition:
+    background 180ms ease,
+    transform 180ms ease;
+}
+.choice-options button:hover,
+.choice-options button:focus {
+  outline: none;
+  background: #7c6bc633;
+}
+.choice-options button[aria-selected="true"] {
+  background: linear-gradient(110deg, #4964b849, #7960be49);
+  color: #d7cdff;
+}
+.choice-options button:active {
+  transform: scale(0.98);
+}
+.onboarding-screen button {
+  transition:
+    transform 220ms cubic-bezier(0.2, 0.7, 0.3, 1),
+    background 220ms ease,
+    box-shadow 220ms ease,
+    border-color 220ms ease;
+}
+.onboarding-screen button:not(:disabled):hover {
+  box-shadow: 0 8px 24px #6360d125;
+}
+.onboarding-screen button:not(:disabled):active {
+  transform: scale(0.98);
+}
+.interview-progress i {
+  transition:
+    background 320ms ease,
+    box-shadow 320ms ease;
+}
+.interview-progress i.done {
+  box-shadow: 0 0 12px #7667e73b;
+}
+.voice-composer.is-invalid {
+  border-color: #ee9cb7;
+  box-shadow: 0 0 0 3px #dc82ae20;
+}
+.voice-composer.is-invalid:focus-within {
+  border-color: #ee9cb7;
+  box-shadow: 0 0 0 3px #dc82ae20;
+}
+.story-validation {
+  margin: 0 0 12px;
+  color: #ffbbd0;
+  font-size: 14px;
+  line-height: 1.5;
+}
+.voice-composer.shake-0 {
+  animation: story-shake-even 360ms ease;
+}
+.voice-composer.shake-1 {
+  animation: story-shake-odd 360ms ease;
+}
+@keyframes story-shake-even {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  25%,
+  65% {
+    transform: translateX(-5px);
+  }
+  45%,
+  80% {
+    transform: translateX(5px);
+  }
+}
+@keyframes story-shake-odd {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  25%,
+  65% {
+    transform: translateX(-5px);
+  }
+  45%,
+  80% {
+    transform: translateX(5px);
+  }
+}
+.match-celebration {
+  inset: 0;
+  width: 100%;
+  height: 100dvh;
+  max-width: none;
+  margin: 0;
+  z-index: 100;
+  overflow-y: auto;
+  background:
+    radial-gradient(ellipse at 30% 35%, #304a8c73, transparent 65%),
+    radial-gradient(ellipse at 75% 65%, #694ba073, transparent 65%), #0b1022ed;
+}
+.match-celebration .celebration-card {
+  width: min(720px, 100%);
+  padding: clamp(20px, 4vh, 48px) 12px;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  overflow: visible;
+}
+@media (prefers-reduced-motion: reduce) {
+  .ambient-backdrop i,
+  .ambient-backdrop b {
+    animation: none;
+  }
+  .choice-trigger,
+  .choice-trigger svg,
+  .choice-options,
+  .choice-options button,
+  .onboarding-screen button,
+  .interview-progress i {
+    transition: none;
+  }
+  .voice-composer.shake-0,
+  .voice-composer.shake-1 {
+    animation: none;
+  }
+}
+
+.match-celebration .celebration-icon {
+  width: min(360px, 100%);
+  height: auto;
+  gap: 24px;
+  margin-bottom: 32px;
+}
+.match-celebration .celebration-icon .avatar {
+  width: clamp(78px, 10vw, 120px);
+  height: clamp(78px, 10vw, 120px);
+  flex-shrink: 0;
+}
+.match-celebration .celebration-card h2 {
+  margin: 12px 0 20px;
+  font-size: clamp(40px, 5vw, 68px);
+  letter-spacing: -2px;
+}
+.match-celebration .celebration-card p {
+  max-width: 510px;
+  margin: 0 auto 32px;
+  font-size: 17px;
+  line-height: 1.6;
+}
+.match-celebration .celebration-actions {
+  max-width: 420px;
+  margin-inline: auto;
+}
+@media (max-height: 600px) {
+  .match-celebration .celebration-icon {
+    margin-bottom: 16px;
+  }
+  .match-celebration .celebration-card p {
+    margin-bottom: 20px;
+  }
+}

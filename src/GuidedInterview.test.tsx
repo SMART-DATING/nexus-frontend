@@ -67,7 +67,14 @@ it("allows skipping everything without creating an empty story", async () => {
         name: "Сохранить и знакомиться",
       }) as HTMLButtonElement
     ).disabled,
-  ).toBe(true);
+  ).toBe(false);
+  await userEvent.click(
+    screen.getByRole("button", { name: "Сохранить и знакомиться" }),
+  );
+  expect(screen.getByRole("alert").textContent).toContain("добавь ещё 20");
+  expect(
+    screen.getByLabelText("Твой личный рассказ").getAttribute("aria-invalid"),
+  ).toBe("true");
   await userEvent.click(screen.getByRole("button", { name: "Расскажу позже" }));
   expect(later).toHaveBeenCalledOnce();
   expect(save).not.toHaveBeenCalled();
@@ -97,4 +104,27 @@ it("keeps the reviewed draft after a failed save and permits retry", async () =>
     screen.getByRole("button", { name: "Сохранить и знакомиться" }),
   );
   expect(save).toHaveBeenCalledTimes(2);
+});
+
+it("counts completed questions from zero and fills all three only on review", async () => {
+  const { container } = render(
+    <GuidedInterview interests={[]} onSave={vi.fn()} />,
+  );
+  expect(screen.getByRole("progressbar").getAttribute("aria-valuenow")).toBe(
+    "0",
+  );
+  expect(container.querySelectorAll(".interview-progress .done")).toHaveLength(
+    0,
+  );
+  for (let i = 1; i <= 3; i++) {
+    await userEvent.click(
+      screen.getByRole("button", { name: "Пропустить вопрос" }),
+    );
+    expect(screen.getByRole("progressbar").getAttribute("aria-valuenow")).toBe(
+      String(i),
+    );
+    expect(
+      container.querySelectorAll(".interview-progress .done"),
+    ).toHaveLength(i);
+  }
 });

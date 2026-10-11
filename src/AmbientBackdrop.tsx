@@ -12,8 +12,8 @@ export type AmbientFeedback = { swipe: (progress: number) => void };
 // A small local colour sample; no photo or derived data leaves the browser.
 export const AmbientBackdrop = forwardRef<
   AmbientFeedback,
-  { photoUrl?: string; publicPage?: boolean }
->(function AmbientBackdrop({ photoUrl, publicPage = false }, ref) {
+  { photo?: HTMLImageElement; publicPage?: boolean }
+>(function AmbientBackdrop({ photo, publicPage = false }, ref) {
   const backdrop = useRef<HTMLDivElement>(null);
   useImperativeHandle(
     ref,
@@ -29,16 +29,21 @@ export const AmbientBackdrop = forwardRef<
     }),
     [],
   );
+  useEffect(() => {
+    const sync = () => {
+      if (backdrop.current) backdrop.current.dataset.paused = String(document.hidden);
+    };
+    sync();
+    document.addEventListener("visibilitychange", sync);
+    return () => document.removeEventListener("visibilitychange", sync);
+  }, []);
   const [tone, setTone] = useState("108, 91, 216");
   useEffect(() => {
-    let active = true;
-    if (!photoUrl) {
+    if (!photo) {
       setTone("108, 91, 216");
       return;
     }
-    const photo = new Image();
-    photo.onload = () => {
-      if (!active) return;
+    // Reuse the displayed image: private photo URLs deliberately bypass HTTP caching.
       try {
         const canvas = document.createElement("canvas");
         canvas.width = 16;
@@ -64,17 +69,7 @@ export const AmbientBackdrop = forwardRef<
       } catch {
         setTone("108, 91, 216");
       }
-    };
-    photo.onerror = () => {
-      if (active) setTone("108, 91, 216");
-    };
-    photo.src = photoUrl;
-    return () => {
-      active = false;
-      photo.onload = null;
-      photo.onerror = null;
-    };
-  }, [photoUrl]);
+  }, [photo]);
   return (
     <div
       ref={backdrop}

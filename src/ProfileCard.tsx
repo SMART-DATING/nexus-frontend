@@ -7,11 +7,13 @@ export function ProfileCard({
   profile: p,
   own = false,
   onPhotoChange,
+  onPhotoLoaded,
   children,
 }: {
   profile: Profile;
   own?: boolean;
   onPhotoChange?: (url?: string) => void;
+  onPhotoLoaded?: (photo?: HTMLImageElement) => void;
   children?: ReactNode;
 }) {
   const common = p.commonInterests ?? [];
@@ -39,7 +41,7 @@ export function ProfileCard({
         )}
       </div>
       <div className={`swipe-portrait art-${p.userId % 6}`}>
-        <PhotoGallery profile={p} onPhotoChange={onPhotoChange} />
+        <PhotoGallery profile={p} onPhotoChange={onPhotoChange} onPhotoLoaded={onPhotoLoaded} />
         {children}
       </div>
       <div className="swipe-story">

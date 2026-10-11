@@ -12,9 +12,11 @@ import { useProfileMedia } from "./useProfileMedia";
 export function PhotoGallery({
   profile,
   onPhotoChange,
+  onPhotoLoaded,
 }: {
   profile: Profile;
   onPhotoChange?: (url?: string) => void;
+  onPhotoLoaded?: (photo?: HTMLImageElement) => void;
 }) {
   const [index, setIndex] = useState(0);
   const media = useProfileMedia(profile);
@@ -26,6 +28,9 @@ export function PhotoGallery({
   const current = photos[Math.min(index, Math.max(0, photos.length - 1))];
   const broken = !!current && media.failed.includes(current.url);
   const [viewer, setViewer] = useState(false);
+  useEffect(() => {
+    if (!current || broken) onPhotoLoaded?.(undefined);
+  }, [current?.url, broken, onPhotoLoaded]);
   useEffect(() => {
     setIndex(0);
     setViewer(false);
@@ -60,6 +65,8 @@ export function PhotoGallery({
           src={photos[Math.min(index, photos.length - 1)].url}
           alt={`Фото ${index + 1} из ${photos.length}`}
           draggable={false}
+          decoding="async"
+          onLoad={(event) => onPhotoLoaded?.(event.currentTarget)}
           onError={() => media.onError(current.url)}
         />
       )}

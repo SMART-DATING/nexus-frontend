@@ -156,7 +156,7 @@ export function PublicHome({
             </p>
             <button
               className="primary landing-cta"
-              onClick={() => onAuth(true)}
+              onClick={() => onAuth(false)}
             >
               Найти свою волну
               <ArrowRight size={20} />
@@ -427,7 +427,7 @@ export function PublicHome({
           </section>
         </div>
         <div className="landing-screen">
-          <LandingFinale onStart={() => onAuth(true)} />
+          <LandingFinale onStart={() => onAuth(false)} />
         </div>
       </main>
       <footer className="public-footer">
@@ -448,7 +448,7 @@ export function PublicHome({
             <a href="#explore-example" onClick={(event) => explore(event, 0)}>
               Попробовать разговор
             </a>
-            <button onClick={() => onAuth(true)}>Найти свою волну</button>
+            <button onClick={() => onAuth(false)}>Найти свою волну</button>
           </div>
           <div>
             <strong>Данные и поддержка</strong>

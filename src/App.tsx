@@ -107,7 +107,7 @@ const age = (birth: string) => {
 };
 export function App() {
   const ambient = useRef<AmbientFeedback>(null);
-  const [ambientPhoto, setAmbientPhoto] = useState<string | undefined>();
+  const [ambientPhoto, setAmbientPhoto] = useState<HTMLImageElement | undefined>();
   const [user, setUser] = useState<User | null>(null),
     [boot, setBoot] = useState(true),
     [tab, setTab] = useState<Tab>(() => readRoute().tab),
@@ -858,7 +858,7 @@ export function App() {
     <div className={`app is-${tab} ${selected ? "has-chat" : ""}`}>
       <AmbientBackdrop
         ref={ambient}
-        photoUrl={tab === "discover" ? ambientPhoto : undefined}
+        photo={tab === "discover" ? ambientPhoto : undefined}
       />
       <AppNavigation
         user={user}
@@ -1071,7 +1071,7 @@ export function App() {
                 people={people}
                 busy={busy}
                 onReact={react}
-                onPhotoChange={setAmbientPhoto}
+                onPhotoLoaded={setAmbientPhoto}
                 onSwipeProgress={(progress) => ambient.current?.swipe(progress)}
                 cycle={cycle}
                 reviewed={reviewed}

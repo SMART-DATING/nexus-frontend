@@ -8,6 +8,7 @@ export function SwipeDeck({
   busy,
   onReact,
   onPhotoChange,
+  onPhotoLoaded,
   onSwipeProgress,
 }: {
   people: Profile[];
@@ -18,12 +19,20 @@ export function SwipeDeck({
   reviewed: number;
   liked: number;
   onPhotoChange?: (url?: string) => void;
+  onPhotoLoaded?: (photo?: HTMLImageElement) => void;
   onSwipeProgress?: (progress: number) => void;
 }) {
   const p = people[0],
     name = value(p, "display_name");
   const [leaving, setLeaving] = useState<"like" | "skip" | null>(null);
   const [dragging, setDragging] = useState(false);
+  const [showWaiting, setShowWaiting] = useState(false);
+  useEffect(() => {
+    setShowWaiting(false);
+    if (!busy) return;
+    const timer = window.setTimeout(() => setShowWaiting(true), 2000);
+    return () => window.clearTimeout(timer);
+  }, [busy]);
   const card = useRef<HTMLElement>(null);
   const feedback = useRef(onSwipeProgress);
   feedback.current = onSwipeProgress;
@@ -186,6 +195,7 @@ export function SwipeDeck({
               key={p.userId}
               profile={p}
               onPhotoChange={onPhotoChange}
+              onPhotoLoaded={onPhotoLoaded}
             >
               <span aria-hidden="true" className="swipe-stamp stamp-like">
                 НРАВИТСЯ ♡
@@ -195,7 +205,7 @@ export function SwipeDeck({
               </span>
             </ProfileCard>
           </article>
-          {busy && (
+          {busy && showWaiting && (
             <span className="deck-updating" role="status">
               Момент, ищем твою волну…
             </span>

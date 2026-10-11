@@ -109,6 +109,23 @@ afterEach(() => {
   vi.unstubAllGlobals();
 });
 describe("Nexus user flows", () => {
+  it.each(["Найти свою волну", "Давайте познакомимся"])(
+    "%s opens sign-in first and allows switching to signup and back",
+    async (label) => {
+      const ui = userEvent.setup();
+      render(<App />);
+      await ui.click((await screen.findAllByRole("button", { name: label }))[0]);
+      expect(screen.getByRole("dialog", { name: "С возвращением" })).toBeTruthy();
+      expect(screen.getByLabelText("Email или логин")).toBeTruthy();
+      expect(screen.queryByLabelText("Повтори пароль")).toBeNull();
+      await ui.click(screen.getByRole("button", { name: "Первый раз здесь? Зарегистрироваться" }));
+      expect(screen.getByRole("dialog", { name: "Начнём знакомство" })).toBeTruthy();
+      expect(screen.getByLabelText("Повтори пароль")).toBeTruthy();
+      await ui.click(screen.getByRole("button", { name: "Уже есть аккаунт? Войти" }));
+      expect(screen.getByRole("dialog", { name: "С возвращением" })).toBeTruthy();
+      expect(requests.some((r) => r.path.startsWith("/auth/"))).toBe(false);
+    },
+  );
   it("requires matching passwords at signup and sends the login only after correction", async () => {
     const ui = userEvent.setup();
     render(<App />);

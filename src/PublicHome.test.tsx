@@ -48,7 +48,7 @@ it("explains interests and reciprocal photos without starting signup or saving e
   await userEvent.click(
     screen.getAllByRole("button", { name: "Найти свою волну" })[0],
   );
-  expect(auth).toHaveBeenCalledWith(true);
+  expect(auth).toHaveBeenCalledWith(false);
 });
 
 it("opens help only on request and keeps the destination chapter heading in view", async () => {

@@ -1,4 +1,12 @@
 /* The same slow blue/violet light fills every route. */
+.ambient-backdrop {
+  contain: strict;
+}
+.ambient-backdrop i,
+.ambient-backdrop b {
+  will-change: transform, opacity;
+  backface-visibility: hidden;
+}
 .ambient-backdrop i {
   background:
     radial-gradient(ellipse at 24% 28%, #496bda9c, transparent 61%),
@@ -277,3 +285,6 @@
     margin-bottom: 20px;
   }
 }
+
+.ambient-backdrop[data-paused="true"] i,
+.ambient-backdrop[data-paused="true"] b { animation-play-state: paused; }

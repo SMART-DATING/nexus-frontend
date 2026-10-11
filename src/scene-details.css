@@ -1,5 +1,5 @@
-/* Match the editor's centered column while retaining the chat's viewport height. */
-.app.is-matches .workspace {
+/* Discovery and chats share the editor's centered column. */
+.app:is(.is-discover, .is-matches) .workspace {
   width: 100%;
   max-width: 1080px;
   margin-inline: auto;
@@ -233,7 +233,7 @@
   }
 }
 @media (max-width: 760px) {
-  .app.is-matches .workspace {
+  .app:is(.is-discover, .is-matches) .workspace {
     padding-inline: 14px;
   }
 }

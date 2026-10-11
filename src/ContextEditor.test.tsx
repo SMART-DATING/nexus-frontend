@@ -102,3 +102,34 @@ it("updates the saved story on retry if refreshing the profile failed", async ()
     expect.any(Object),
   );
 });
+
+it("explains short drafts on save, repeats feedback and saves once corrected", async () => {
+  vi.mocked(api).mockResolvedValue({ items: [], modelAvailable: true });
+  const changed = vi.fn();
+  const { container } = render(<ContextEditor onChanged={changed} />);
+  const field = await screen.findByLabelText("Личный рассказ");
+  await vi.waitFor(() =>
+    expect(
+      (
+        screen.getByRole("button", {
+          name: "Сохранить личный рассказ",
+        }) as HTMLButtonElement
+      ).disabled,
+    ).toBe(false),
+  );
+  fireEvent.change(field, { target: { value: "Книги" } });
+  const save = screen.getByRole("button", { name: "Сохранить личный рассказ" });
+  await userEvent.click(save);
+  expect(screen.getByRole("alert").textContent).toContain("добавь ещё 15");
+  expect(document.activeElement).toBe(field);
+  expect(container.querySelector(".shake-1")).toBeTruthy();
+  await userEvent.click(save);
+  expect(container.querySelector(".shake-0")).toBeTruthy();
+  expect(vi.mocked(api).mock.calls.every((c) => !c[1])).toBe(true);
+  fireEvent.change(field, {
+    target: { value: "Люблю читать книги и обсуждать истории с друзьями." },
+  });
+  expect(screen.queryByRole("alert")).toBeNull();
+  await userEvent.click(save);
+  await vi.waitFor(() => expect(changed).toHaveBeenCalledOnce());
+});

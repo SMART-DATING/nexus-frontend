@@ -135,6 +135,8 @@ export function GuidedInterview({
     [draft, setDraft] = useState(""),
     [busy, setBusy] = useState(false),
     [error, setError] = useState("");
+  const [validationAttempt, setValidationAttempt] = useState(0);
+  const completed = review ? questions.length : index;
   const q = questions[index];
   const [listening, setListening] = useState(false);
   function next() {
@@ -153,6 +155,10 @@ export function GuidedInterview({
     }
   }
   async function save() {
+    if (draft.trim().length < 20) {
+      setValidationAttempt((n) => n + 1);
+      return;
+    }
     setBusy(true);
     setError("");
     try {
@@ -177,13 +183,18 @@ export function GuidedInterview({
           <Sparkles size={15} />
           Твоя история
         </span>
-        <span>
-          {review ? "Последний штрих" : `${index + 1} из ${questions.length}`}
-        </span>
+        <span>{`${completed} из ${questions.length}`}</span>
       </div>
-      <div className="interview-progress" aria-label="Ход знакомства">
+      <div
+        className="interview-progress"
+        role="progressbar"
+        aria-label="Ход знакомства"
+        aria-valuemin={0}
+        aria-valuemax={questions.length}
+        aria-valuenow={completed}
+      >
         {questions.map((p, i) => (
-          <i key={p.id} className={review || i <= index ? "done" : ""} />
+          <i key={p.id} className={i < completed ? "done" : ""} />
         ))}
       </div>
       <div
@@ -212,6 +223,7 @@ export function GuidedInterview({
       </div>
       <VoiceInput
         key={`answer-${review ? "review" : q.id}`}
+        validationAttempt={review ? validationAttempt : 0}
         maxLength={review ? 6000 : 1800}
         label={review ? "Твой личный рассказ" : "Твой ответ"}
         value={review ? draft : (answers[q.id] ?? "")}
@@ -244,7 +256,7 @@ export function GuidedInterview({
             <button
               type="button"
               className="primary"
-              disabled={busy || draft.trim().length < 20}
+              disabled={busy}
               onClick={() => void save()}
             >
               <Check size={17} />

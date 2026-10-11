@@ -32,6 +32,8 @@ export function VoiceInput({
   disabled = false,
   maxLength = 6000,
   onListeningChange,
+  validationAttempt = 0,
+  minimumLength = 20,
 }: {
   value: string;
   onChange: (s: string) => void;
@@ -40,6 +42,8 @@ export function VoiceInput({
   disabled?: boolean;
   maxLength?: number;
   onListeningChange?: (listening: boolean) => void;
+  validationAttempt?: number;
+  minimumLength?: number;
 }) {
   const id = useId(),
     recognition = useRef<Recognition | null>(null),
@@ -72,6 +76,12 @@ export function VoiceInput({
     },
     [],
   );
+  const invalid = validationAttempt > 0 && value.trim().length < minimumLength;
+  const input = useRef<HTMLTextAreaElement>(null);
+  useEffect(() => {
+    if (validationAttempt && invalid)
+      input.current?.focus({ preventScroll: true });
+  }, [validationAttempt, invalid]);
   function start() {
     if (!Constructor || disabled) return;
     setError("");
@@ -136,10 +146,15 @@ export function VoiceInput({
     }
   }
   return (
-    <div className={`voice-composer ${listening ? "is-listening" : ""}`}>
+    <div
+      className={`voice-composer ${listening ? "is-listening" : ""} ${invalid ? `is-invalid shake-${validationAttempt % 2}` : ""}`}
+    >
       <label htmlFor={id}>{label}</label>
       <textarea
         id={id}
+        ref={input}
+        aria-invalid={invalid || undefined}
+        aria-describedby={invalid ? `${id}-validation` : undefined}
         value={value}
         maxLength={maxLength}
         rows={5}
@@ -147,6 +162,12 @@ export function VoiceInput({
         onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder}
       />
+      {invalid && (
+        <p id={`${id}-validation`} className="story-validation" role="alert">
+          Пока слишком коротко. Нужно хотя бы {minimumLength} символов — добавь
+          ещё {minimumLength - value.trim().length}.
+        </p>
+      )}
       <div className="composer-toolbar">
         <span>
           {listening ? (

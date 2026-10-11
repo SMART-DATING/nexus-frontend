@@ -3,6 +3,7 @@ import { WaveGuide } from "./WaveGuide";
 const topics = [
   {
     name: "Книги",
+    activity: "reading",
     icon: "📚",
     question: "Какая история осталась с тобой надолго?",
     answer:
@@ -12,6 +13,7 @@ const topics = [
   },
   {
     name: "Музыка",
+    activity: "music",
     icon: "🎧",
     question: "Что у тебя сейчас на повторе?",
     answer:
@@ -21,6 +23,7 @@ const topics = [
   },
   {
     name: "Природа",
+    activity: "nature",
     icon: "🌿",
     question: "Где получается выдохнуть?",
     answer:
@@ -30,6 +33,7 @@ const topics = [
   },
   {
     name: "Общение",
+    activity: "chat",
     icon: "💬",
     question: "С какими людьми тебе хорошо?",
     answer:
@@ -37,7 +41,7 @@ const topics = [
     detail:
       "Не нужно подбирать правильные слова. Расскажи, что важно именно тебе.",
   },
-];
+] as const;
 export function LandingExplore({ topicIndex = 0 }: { topicIndex?: number }) {
   const [selected, setSelected] = useState(topicIndex);
   useEffect(() => setSelected(topicIndex), [topicIndex]);
@@ -83,7 +87,7 @@ export function LandingExplore({ topicIndex = 0 }: { topicIndex?: number }) {
             <span className="demo-caption">
               Пример разговора · ответы не сохраняются
             </span>
-            <WaveGuide>
+            <WaveGuide activity={topic.activity}>
               <h3>{topic.question}</h3>
               <p>
                 Можно коротко. Можно голосом. Любой вопрос можно пропустить.

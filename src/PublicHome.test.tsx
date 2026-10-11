@@ -5,6 +5,7 @@ import {
   screen,
   within,
   waitFor,
+  act,
 } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { PublicHome } from "./PublicHome";
@@ -13,6 +14,7 @@ installDialogMock();
 afterEach(() => {
   cleanup();
   vi.restoreAllMocks();
+  vi.unstubAllGlobals();
   history.replaceState(null, "", "/");
 });
 it("demonstrates visibility without changing an account or starting signup", async () => {
@@ -158,4 +160,33 @@ it("uses the chosen photo count in both parts of the headline", async () => {
     );
     expect(screen.getByRole("heading", { name: title })).toBeTruthy();
   }
+});
+
+it("closes a FAQ answer after its card leaves the viewport and keeps it closed on return", async () => {
+  let notify: ((entries: { isIntersecting: boolean }[]) => void) | undefined;
+  vi.stubGlobal(
+    "IntersectionObserver",
+    class {
+      constructor(
+        private callback: (entries: { isIntersecting: boolean }[]) => void,
+      ) {}
+      observe(target: Element) {
+        if (target.matches(".landing-faq-item")) notify = this.callback;
+      }
+      unobserve() {}
+      disconnect() {}
+    },
+  );
+  render(<PublicHome onAuth={vi.fn()} onPrivacy={vi.fn()} />);
+  const question = screen.getByRole("button", {
+    name: "Можно рассказать голосом?",
+  });
+  await userEvent.click(question);
+  expect(question.getAttribute("aria-expanded")).toBe("true");
+  act(() => notify!([{ isIntersecting: true }]));
+  expect(question.getAttribute("aria-expanded")).toBe("true");
+  act(() => notify!([{ isIntersecting: false }]));
+  expect(question.getAttribute("aria-expanded")).toBe("false");
+  act(() => notify!([{ isIntersecting: true }]));
+  expect(question.getAttribute("aria-expanded")).toBe("false");
 });

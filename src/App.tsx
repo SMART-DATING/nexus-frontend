@@ -63,6 +63,7 @@ import { SetupChecklist, DiscoverySetup, InviteFriends } from "./WelcomeSetup";
 import { AmbientBackdrop, type AmbientFeedback } from "./AmbientBackdrop";
 import { Toast } from "./Toast";
 import "./refinements.css";
+import "./scene-details.css";
 import { useStoryReminder } from "./useStoryReminder";
 import { WaveGuide } from "./WaveGuide";
 import { ChatPartner, BlockedUsers } from "./ChatControls";

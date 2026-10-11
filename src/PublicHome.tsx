@@ -71,6 +71,19 @@ export function PublicHome({
   return (
     <div
       className="public-home"
+      onPointerDown={(event) => {
+        const control = (event.target as HTMLElement).closest<HTMLElement>(
+          "button,a",
+        );
+        if (control) control.dataset.pointerFocus = "true";
+      }}
+      onKeyDown={(event) => {
+        event.currentTarget
+          .querySelectorAll<HTMLElement>("[data-pointer-focus]")
+          .forEach((control) => {
+            delete control.dataset.pointerFocus;
+          });
+      }}
       onClick={(event) => {
         if (
           event.defaultPrevented ||
@@ -365,6 +378,7 @@ export function PublicHome({
               <LandingFaqItem
                 question="Мой личный рассказ увидят другие?"
                 expanded={openQuestion === 0}
+                onClose={() => setOpenQuestion(null)}
                 onToggle={() => setOpenQuestion(openQuestion === 0 ? null : 0)}
               >
                 <p>
@@ -376,6 +390,7 @@ export function PublicHome({
               <LandingFaqItem
                 question="Нужно отвечать на все вопросы?"
                 expanded={openQuestion === 1}
+                onClose={() => setOpenQuestion(null)}
                 onToggle={() => setOpenQuestion(openQuestion === 1 ? null : 1)}
               >
                 <p>
@@ -387,6 +402,7 @@ export function PublicHome({
               <LandingFaqItem
                 question="Можно рассказать голосом?"
                 expanded={openQuestion === 2}
+                onClose={() => setOpenQuestion(null)}
                 onToggle={() => setOpenQuestion(openQuestion === 2 ? null : 2)}
               >
                 <p>
@@ -399,6 +415,7 @@ export function PublicHome({
               <LandingFaqItem
                 question="Что происходит после лайка?"
                 expanded={openQuestion === 3}
+                onClose={() => setOpenQuestion(null)}
                 onToggle={() => setOpenQuestion(openQuestion === 3 ? null : 3)}
               >
                 <p>

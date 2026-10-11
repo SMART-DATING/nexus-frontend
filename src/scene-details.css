@@ -1,0 +1,245 @@
+/* Match the editor's centered column while retaining the chat's viewport height. */
+.app.is-matches .workspace {
+  width: 100%;
+  max-width: 1080px;
+  margin-inline: auto;
+  padding-inline: 28px;
+}
+.public-home :is(button, a)[data-pointer-focus="true"]:focus {
+  outline: none;
+}
+
+/* Accessories belong to Nex's silhouette, without changing the scene layout. */
+.nex-activity {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+.guide-character:has(.nex-activity) .guide-spark {
+  display: none;
+}
+.nex-book {
+  position: absolute;
+  width: 112%;
+  height: auto;
+  left: -6%;
+  bottom: -8%;
+  fill: #e6e6ff;
+  stroke: #454175;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  filter: drop-shadow(0 4px 4px #19204440);
+}
+.nex-book .nex-page {
+  fill: #c4c6f7;
+  transform-box: fill-box;
+  transform-origin: left;
+  animation: nex-turn-page 5s ease-in-out infinite;
+}
+.nex-hand {
+  position: absolute;
+  bottom: 6%;
+  width: 14%;
+  height: 20%;
+  border-radius: 50%;
+  background: #9e8cf4;
+  border: 1px solid #e5dbff70;
+}
+.hand-left {
+  left: -8%;
+  transform: rotate(-18deg);
+}
+.hand-right {
+  right: -8%;
+  transform: rotate(18deg);
+}
+.activity-reading .guide-face i {
+  transform: translateY(-6px);
+}
+.activity-reading .guide-face b {
+  opacity: 0;
+}
+.nex-headphones {
+  position: absolute;
+  inset: -8% -6% 28%;
+  border: 4px solid #343359;
+  border-bottom: none;
+  border-radius: 50% 50% 0 0;
+}
+.nex-headphones :is(i, b) {
+  position: absolute;
+  width: 13px;
+  height: 24px;
+  top: 52%;
+  border: 2px solid #b8b7f5;
+  border-radius: 7px;
+  background: #3e3a68;
+}
+.nex-headphones i {
+  left: -8px;
+}
+.nex-headphones b {
+  right: -8px;
+}
+.activity-music:not(.is-waving) {
+  animation: nex-music-bob 2s ease-in-out infinite;
+}
+.nex-note {
+  position: absolute;
+  right: -16%;
+  top: -20%;
+  color: #d3c9ff;
+  font-size: 23px;
+  animation: nex-note-rise 3s ease-in-out infinite;
+}
+.second-note {
+  left: -20%;
+  right: auto;
+  top: 5%;
+  animation-delay: -1.5s;
+  font-size: 18px;
+}
+.nex-sprig {
+  position: absolute;
+  right: -12%;
+  bottom: -4%;
+  width: 48%;
+  height: 80%;
+  fill: #9fd7bf;
+  stroke: #436b65;
+  stroke-width: 2;
+  stroke-linecap: round;
+  transform-origin: bottom center;
+  animation: nex-leaf-sway 4s ease-in-out infinite;
+}
+.sprig-stem {
+  fill: none;
+}
+.activity-nature .guide-face i {
+  transform: translate(-3px, -3px);
+}
+.nex-butterfly {
+  position: absolute;
+  width: 20px;
+  height: 16px;
+  left: -12%;
+  top: -10%;
+  animation: nex-butterfly-float 5s ease-in-out infinite;
+}
+.nex-butterfly :is(i, b) {
+  position: absolute;
+  width: 10px;
+  height: 14px;
+  border-radius: 70% 70% 40% 40%;
+  background: #e1c5f4;
+  transform-origin: right;
+  animation: nex-wing 0.7s ease-in-out infinite alternate;
+}
+.nex-butterfly b {
+  right: 0;
+  transform-origin: left;
+  background: #a9caff;
+}
+.nex-chat-bubble {
+  position: absolute;
+  right: -15%;
+  top: -12%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  width: 34px;
+  height: 25px;
+  border-radius: 12px 12px 12px 3px;
+  border: 1px solid #a9a6e6;
+  background: #e1e3ff;
+  box-shadow: 0 4px 12px #17173525;
+}
+.nex-chat-bubble i {
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: #6d65ae;
+  animation: nex-chat-dot 1.8s ease-in-out infinite;
+}
+.nex-chat-bubble i:nth-child(2) {
+  animation-delay: 0.15s;
+}
+.nex-chat-bubble i:nth-child(3) {
+  animation-delay: 0.3s;
+}
+@keyframes nex-turn-page {
+  0%,
+  60%,
+  100% {
+    transform: scaleX(1);
+  }
+  75% {
+    transform: scaleX(0.08);
+  }
+}
+@keyframes nex-music-bob {
+  0%,
+  100% {
+    transform: rotate(-3deg) translateY(0);
+  }
+  50% {
+    transform: rotate(3deg) translateY(-3px);
+  }
+}
+@keyframes nex-note-rise {
+  0%,
+  100% {
+    transform: translateY(3px);
+    opacity: 0.35;
+  }
+  50% {
+    transform: translateY(-7px);
+    opacity: 1;
+  }
+}
+@keyframes nex-leaf-sway {
+  0%,
+  100% {
+    transform: rotate(-8deg);
+  }
+  50% {
+    transform: rotate(8deg);
+  }
+}
+@keyframes nex-butterfly-float {
+  0%,
+  100% {
+    transform: translate(0, 0);
+  }
+  50% {
+    transform: translate(9px, -6px);
+  }
+}
+@keyframes nex-wing {
+  to {
+    transform: scaleX(0.45);
+  }
+}
+@keyframes nex-chat-dot {
+  0%,
+  55%,
+  100% {
+    transform: translateY(0);
+  }
+  25% {
+    transform: translateY(-3px);
+  }
+}
+@media (max-width: 760px) {
+  .app.is-matches .workspace {
+    padding-inline: 14px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .guide-character:has(.nex-activity),
+  .nex-activity * {
+    animation: none !important;
+  }
+}
